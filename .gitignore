@@ -1,0 +1,6 @@
+venv_arkconinv/
+__pycache__/
+*.pyc
+.vscode/
+config/conexiones.json
+Docs/
