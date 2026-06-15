@@ -152,7 +152,7 @@ class DialogImportarCategorias(tk.Toplevel):
             sqlite_cursor = sqlite_conn.cursor()
 
             # Limpiar tabla
-            sqlite_cursor.execute("DELETE FROM ark_categoria")
+            # sqlite_cursor.execute("DELETE FROM ark_categoria")
 
             # INSERT con 60 columnas (52 datos + 8 auditoría)
             query_sqlite = """
@@ -216,8 +216,15 @@ class DialogImportarCategorias(tk.Toplevel):
             self.after(0, self._finalizar_importacion, True, total)
 
         except Exception as e:
-            self.after(0, self._finalizar_importacion, False, str(e))
-
+            error_msg = str(e)
+            if "UNIQUE constraint failed" in error_msg:
+                error_msg = (
+                    "Se encontraron registros duplicados.\n"
+                    "La operación será detenida.\n"
+                    "Revise e intente de nuevo."
+                )
+            self.after(0, self._finalizar_importacion, False, 0, error_msg)
+            
     def _actualizar_progreso(self, valor):
         self.progress['value'] = valor
 

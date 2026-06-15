@@ -62,8 +62,8 @@ class DialogImportarDepositos(tk.Toplevel):
             rows = cursor.fetchall()
             conn.close()
             
-            self.uo_data = {row[0]: f"{row[1]} - {row[2]}" for row in rows}
-            self.cmb_uo['values'] = list(self.uo_data.values())
+            self.uo_data = {row[0]: {"codigo": row[1], "nombre": row[2], "display": f"{row[1]} - {row[2]}"} for row in rows}
+            self.cmb_uo['values'] = [data["display"] for data in self.uo_data.values()]
             if self.uo_data:
                 self.cmb_uo.current(0)
         except Exception as e:
@@ -93,17 +93,29 @@ class DialogImportarDepositos(tk.Toplevel):
             messagebox.showwarning("Advertencia", "Debe seleccionar una Unidad Operativa.")
             return
 
-        selected_uo_id = list(self.uo_data.keys())[self.cmb_uo.current()]
-        
         self.btn_importar.config(state=tk.DISABLED)
         self.progress['value'] = 0
         
-        thread = threading.Thread(target=self._ejecutar_importacion, args=(selected_uo_id,), daemon=True)
+        thread = threading.Thread(target=self._ejecutar_importacion, daemon=True)
         thread.start()
 
-    def _ejecutar_importacion(self, uo_id):
+    def _ejecutar_importacion(self):
         try:
-            # Cargar credenciales
+            uo_display = self.cmb_uo.get()
+            uo_id = None
+            uo_codigo = None
+            uo_nombre = None
+            
+            for uid, data in self.uo_data.items():
+                if data["display"] == uo_display:
+                    uo_id = uid
+                    uo_codigo = data["codigo"]
+                    uo_nombre = data["nombre"]
+                    break
+            
+            if uo_id is None:
+                raise Exception("No se pudo identificar la Unidad Operativa seleccionada.")
+
             with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
                 conexiones = json.load(f)
             if not conexiones:
@@ -114,16 +126,13 @@ class DialogImportarDepositos(tk.Toplevel):
             user = conn_info['usuario']
             pwd = conn_info['password']
 
-            # Conectar a DBISAM
             conn_str = f"DSN={dsn};UID={user};PWD={pwd};"
             dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
             cursor_dbisam = dbisam_conn.cursor()
 
-            # SELECT con los 8 campos de DBISAM
             query_dbisam = """
-                SELECT FDP_CODIGO, FDP_DESCRIPCION, FDP_STATUS,
-                FDP_DESCRIPCIONDETALLADA, FDP_RESPONSABLE, BASE_AUTOINCREMENT,
-                FDP_CODE, FDP_SERIE
+                SELECT FDP_CODIGO, FDP_DESCRIPCION, FDP_STATUS, FDP_DESCRIPCIONDETALLADA,
+                FDP_RESPONSABLE, BASE_AUTOINCREMENT, FDP_CODE, FDP_SERIE
                 FROM Sdepositos
             """
             cursor_dbisam.execute(query_dbisam)
@@ -131,44 +140,40 @@ class DialogImportarDepositos(tk.Toplevel):
             total = len(rows)
             dbisam_conn.close()
 
-            # Conectar a SQLite
             sqlite_conn = get_db_connection()
             sqlite_cursor = sqlite_conn.cursor()
 
-            # Limpiar tabla
-            sqlite_cursor.execute("DELETE FROM ark_depositos")
-
-            # INSERT con 17 columnas (8 datos + 1 uo_id + 8 auditoría)
             query_sqlite = """
-                INSERT INTO ark_depositos (
-                    dep_codigo, dep_descripcion, dep_status,
-                    dep_descripciondetallada, dep_responsable, dep_base_autoincrement,
-                    dep_code, dep_serie, dep_uo_origen,
+                INSERT OR IGNORE INTO ark_depositos (
+                    dep_codigo, dep_descripcion, dep_status, dep_descripciondetallada,
+                    dep_responsable, dep_base_autoincrement, dep_code, dep_serie,
+                    dep_uo_origen, dep_uo_codigo, dep_uo_nombre,
                     dep_SystemDate, dep_SystemTime, dep_NameMachine, dep_UserCreator,
                     dep_LastUpdateDate, dep_LastUpdateTime, dep_LastMachine, dep_UserLastUpdate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
 
-            # Valores de auditoría
             user_creator = get_current_user()
             machine_name = get_machine_name()
             sys_date = date.today().isoformat()
             sys_time = datetime.now().time().isoformat()
             
             audit_values = [
-                sys_date,           # dep_SystemDate
-                sys_time,           # dep_SystemTime
-                machine_name,       # dep_NameMachine
-                user_creator,       # dep_UserCreator
-                sys_date,           # dep_LastUpdateDate
-                sys_time,           # dep_LastUpdateTime
-                machine_name,       # dep_LastMachine
-                user_creator        # dep_UserLastUpdate
+                sys_date, sys_time, machine_name, user_creator,
+                sys_date, sys_time, machine_name, user_creator
             ]
 
-            # Insertar registros
             for i, row in enumerate(rows):
-                data = list(row) + [uo_id] + audit_values
+                data = []
+                for value in row:
+                    if type(value).__name__ == 'Decimal':
+                        data.append(float(value) if value is not None else None)
+                    else:
+                        data.append(value)
+                
+                data.extend([uo_id, uo_codigo, uo_nombre])
+                data.extend(audit_values)
+                
                 sqlite_cursor.execute(query_sqlite, data)
 
                 if (i + 1) % 10 == 0 or i == total - 1:
@@ -178,12 +183,11 @@ class DialogImportarDepositos(tk.Toplevel):
             sqlite_conn.commit()
             sqlite_conn.close()
 
-           # self.after(0, self._finalizar_importacion, True)
             self.after(0, self._finalizar_importacion, True, total)
 
         except Exception as e:
-            self.after(0, self._finalizar_importacion, False, str(e))
-
+            self.after(0, self._finalizar_importacion, False, 0, str(e))
+            
     def _actualizar_progreso(self, valor):
         self.progress['value'] = valor
 

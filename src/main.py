@@ -18,6 +18,11 @@ from ui.dialog_inventario import DialogInventario
 from ui.dialog_importar_categorias import DialogImportarCategorias
 from ui.dialog_importar_depositos import DialogImportarDepositos
 from ui.dialog_importar_inventario import DialogImportarInventario
+from ui.dialog_reporte_depositos import DialogReporteDepositos
+from ui.dialog_reporte_categorias import DialogReporteCategorias
+from ui.dialog_reporte_inventario import DialogReporteInventario
+from PIL import Image, ImageTk
+from core.path_utils import get_icon_path, get_logo_path
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,8 +35,11 @@ class ArkConInvApp(tk.Tk):
         init_database()
         self.title("ArkConInv - Consolidación de Inventario")
         self.minsize(800, 600)
-        
         self._center_window(800, 600)
+        try:
+            self.iconbitmap(get_icon_path())
+        except tk.TclError:
+            pass # Evita error si el icono no se encuentra en tiempo de ejecución
 
         self._create_menu()
         self._create_main_frame()
@@ -69,6 +77,9 @@ class ArkConInvApp(tk.Tk):
 
         menu_reportes = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Reportes", menu=menu_reportes)
+        menu_reportes.add_command(label="General de Depósitos", command=self._abrir_reporte_depositos)
+        menu_reportes.add_command(label="General de Categorias", command=self._abrir_reporte_categorias)
+        menu_reportes.add_command(label="General de Inventario", command=self._abrir_reporte_inventario)
         menu_reportes.add_command(label="Movimiento Art. 177 ISLR", command=self._placeholder)
 
         menu_config = tk.Menu(menubar, tearoff=0)
@@ -87,8 +98,27 @@ class ArkConInvApp(tk.Tk):
         menu_salida.add_command(label="Cerrar Aplicación", command=self._confirmar_salida)
 
     def _create_main_frame(self):
-        self.main_frame = ttk.Frame(self)
+        # Configurar un estilo personalizado para el fondo del main_frame
+        style = ttk.Style()
+        # Color azul cielo claro similar al fondo del logo (puedes ajustar el hex si lo deseas)
+        style.configure('Main.TFrame', background="#AED6F1") 
+        
+        self.main_frame = ttk.Frame(self, style='Main.TFrame')
         self.main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Cargar y mostrar el logo en la parte superior derecha
+        try:
+            from core.path_utils import get_logo_path
+            from PIL import Image, ImageTk
+            
+            logo_path = get_logo_path()
+            image = Image.open(logo_path)
+            self.logo_image = ImageTk.PhotoImage(image)
+            logo_label = ttk.Label(self.main_frame, image=self.logo_image, background='#EAF2F8')
+            logo_label.image = self.logo_image # Evita que el garbage collector elimine la imagen
+            logo_label.pack(side=tk.TOP, anchor=tk.NE, padx=10, pady=10)
+        except Exception as e:
+            print(f"No se pudo cargar el logo: {e}")
 
     def _create_status_bar(self):
         self.status_bar = ttk.Frame(self)
@@ -176,6 +206,15 @@ class ArkConInvApp(tk.Tk):
 
     def _placeholder(self):
         messagebox.showinfo("Información", "Funcionalidad en desarrollo.")
+    
+    def _abrir_reporte_depositos(self):
+        DialogReporteDepositos(self)
+    
+    def _abrir_reporte_categorias(self):
+        DialogReporteCategorias(self)
+    
+    def _abrir_reporte_inventario(self):
+        DialogReporteInventario(self)
 
 
 if __name__ == "__main__":

@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS ark_users (
 -- 4-Categoria
 CREATE TABLE IF NOT EXISTS ark_categoria (
     cat_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
-    cat_codigo	TEXT,
+    cat_codigo	TEXT NOT NULL UNIQUE,
     cat_descripcion	TEXT,
     cat_descripciondetallada	TEXT,
     cat_status	INTEGER,
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS ark_categoria (
 -- 5-Inventario
 CREATE TABLE IF NOT EXISTS ark_inventario (
     inv_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
-    inv_codigo	TEXT,
+    inv_codigo	TEXT NOT NULL UNIQUE,
     inv_descripcion	TEXT,
     inv_categoria	TEXT,
     inv_descripciondetallada	TEXT,
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS ark_inventario (
     inv_subcategoria	TEXT,
     inv_pesoafectacosto	INTEGER,
     inv_impresora	TEXT,
-    base_autoincrement	INTEGER,
+    inv_base_autoincrement	INTEGER,
     inv_zextra1	REAL,
     inv_zextra2	REAL,
     inv_zextra3	REAL,
@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS ark_inventario (
 -- 6-Depositos
 CREATE TABLE IF NOT EXISTS ark_depositos (
 	dep_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
-	dep_codigo	TEXT,
+	dep_codigo	TEXT NOT NULL,
 	dep_descripcion	TEXT,
 	dep_status	INTEGER,
 	dep_descripciondetallada	TEXT,
@@ -233,6 +233,8 @@ CREATE TABLE IF NOT EXISTS ark_depositos (
 	dep_code	TEXT,
 	dep_serie	TEXT,
 	dep_uo_origen	INTEGER,
+    dep_uo_codigo TEXT,
+    dep_uo_nombre TEXT,
 	dep_SystemDate TEXT DEFAULT (date('now')),
 	dep_SystemTime TEXT DEFAULT (time('now')),
 	dep_NameMachine TEXT,
@@ -242,4 +244,6 @@ CREATE TABLE IF NOT EXISTS ark_depositos (
 	dep_LastMachine TEXT,
 	dep_UserLastUpdate TEXT,
 	FOREIGN KEY (dep_uo_origen) REFERENCES ark_unds_operativas(uo_id)
+    
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_depositos_uo_codigo ON ark_depositos (dep_codigo, dep_uo_origen);

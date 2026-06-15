@@ -144,7 +144,7 @@ class DialogImportarInventario(tk.Toplevel):
             sqlite_conn = get_db_connection()
             sqlite_cursor = sqlite_conn.cursor()
 
-            sqlite_cursor.execute("DELETE FROM ark_inventario")
+            # sqlite_cursor.execute("DELETE FROM ark_inventario")
 
             query_sqlite = """
                 INSERT INTO ark_inventario (
@@ -159,7 +159,7 @@ class DialogImportarInventario(tk.Toplevel):
                     inv_creacion, inv_inventarioinicialunidades, inv_inventarioinicialcosto,
                     inv_capacidad, inv_existdecimal, inv_compuestoseriales, inv_vendedorfijo,
                     inv_vendedorfijoactivo, inv_modelo, inv_subcategoria, inv_pesoafectacosto,
-                    inv_impresora, base_autoincrement, inv_zextra1, inv_zextra2, inv_zextra3,
+                    inv_impresora, inv_base_autoincrement, inv_zextra1, inv_zextra2, inv_zextra3,
                     inv_zextra4, inv_zextra5, inv_zextra6, inv_zextra1venta, inv_zextra2venta,
                     inv_zextra3venta, inv_zextra4venta, inv_zextra5venta, inv_zextra6venta,
                     inv_zextra1ventamod, inv_zextra2ventamod, inv_zextra3ventamod, inv_zextra4ventamod,
@@ -203,7 +203,14 @@ class DialogImportarInventario(tk.Toplevel):
             self.after(0, self._finalizar_importacion, True, total)
 
         except Exception as e:
-            self.after(0, self._finalizar_importacion, False, str(e))
+            error_msg = str(e)
+            if "UNIQUE constraint failed" in error_msg:
+                error_msg = (
+                    "Se encontraron registros duplicados.\n"
+                    "La operación será detenida.\n"
+                    "Revise e intente de nuevo."
+                )
+            self.after(0, self._finalizar_importacion, False, 0, error_msg)
 
     def _actualizar_progreso(self, valor):
         self.progress['value'] = valor
