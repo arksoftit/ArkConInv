@@ -1,83 +1,100 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog, messagebox
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.embedded_db import get_db_connection
+from core.generar_pdf import generar_reporte_inventario
 
 class DialogReporteInventario(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Reporte General de Inventario")
-        self.geometry("1100x650")
-        self.resizable(True, True)
+        self.geometry("500x350")
+        self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
 
         parent.update_idletasks()
-        x = parent.winfo_x() + (parent.winfo_width() // 2) - (1100 // 2)
-        y = parent.winfo_y() + (parent.winfo_height() // 2) - (650 // 2)
+        x = parent.winfo_x() + (parent.winfo_width() // 2) - (500 // 2)
+        y = parent.winfo_y() + (parent.winfo_height() // 2) - (350 // 2)
         self.geometry(f"+{x}+{y}")
 
+        self.categoria_data = {}
         self._create_widgets()
-        self._cargar_datos()
+        self._cargar_categorias()
 
     def _create_widgets(self):
-        frame = ttk.Frame(self, padding=10)
+        frame = ttk.Frame(self, padding=20)
         frame.pack(fill=tk.BOTH, expand=True)
 
-        columns = ("ID", "Código", "Descripción", "Categoría", "Status", "Unidad")
-        self.tree = ttk.Treeview(frame, columns=columns, show="headings")
+        # Filtro 1: Status
+        ttk.Label(frame, text="Status:").grid(row=0, column=0, sticky=tk.W, pady=10)
+        self.cmb_status = ttk.Combobox(frame, state="readonly", width=40, values=["Todos", "Activo", "Inactivo"])
+        self.cmb_status.set("Todos")
+        self.cmb_status.grid(row=0, column=1, pady=10, padx=10)
+
+        # Filtro 2: Categoría
+        ttk.Label(frame, text="Categoría:").grid(row=1, column=0, sticky=tk.W, pady=10)
+        self.cmb_categoria = ttk.Combobox(frame, state="readonly", width=40)
+        self.cmb_categoria.grid(row=1, column=1, pady=10, padx=10)
+
+        ttk.Separator(frame, orient=tk.HORIZONTAL).grid(row=2, column=0, columnspan=2, sticky=tk.EW, pady=20)
+
+        btn_frame = ttk.Frame(frame)
+        btn_frame.grid(row=3, column=0, columnspan=2, pady=10)
         
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Código", text="Código")
-        self.tree.heading("Descripción", text="Descripción")
-        self.tree.heading("Categoría", text="Categoría")
-        self.tree.heading("Status", text="Status")
-        self.tree.heading("Unidad", text="Unidad")
-        
-        self.tree.column("ID", width=50, anchor=tk.CENTER)
-        self.tree.column("Código", width=100)
-        self.tree.column("Descripción", width=500)
-        self.tree.column("Categoría", width=80)
-        self.tree.column("Status", width=80, anchor=tk.CENTER)
-        self.tree.column("Unidad", width=100)
+        ttk.Button(btn_frame, text="Generar PDF", command=self._generar_pdf).pack(side=tk.LEFT, padx=10)
+        ttk.Button(btn_frame, text="Cerrar", command=self.destroy).pack(side=tk.LEFT, padx=10)
 
-        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        btn_frame = ttk.Frame(self)
-        btn_frame.pack(fill=tk.X, padx=10, pady=10)
-
-        ttk.Button(btn_frame, text="Refrescar", command=self._cargar_datos).pack(side=tk.LEFT, padx=5)
-        
-        self.lbl_contador = ttk.Label(btn_frame, text="Total de registros: 0", anchor=tk.CENTER, font=("Segoe UI", 9, "bold"))
-        self.lbl_contador.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
-
-        ttk.Button(btn_frame, text="Cerrar", command=self.destroy).pack(side=tk.RIGHT, padx=5)
-
-    def _cargar_datos(self):
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        
-        total_registros = 0
+    def _cargar_categorias(self):
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT inv_IDauto, inv_codigo, inv_descripcion, 
-                       inv_categoria, inv_status, inv_unidad
-                FROM ark_inventario
-                ORDER BY inv_codigo
-            """)
+            cursor.execute("SELECT cat_codigo, cat_descripcion FROM ark_categoria ORDER BY cat_codigo")
             rows = cursor.fetchall()
-            for row in rows:
-                status_text = "Activo" if row[4] == 1 else "Inactivo"
-                self.tree.insert("", "end", values=(
-                    row[0], row[1], row[2], row[3], status_text, row[5]
-                ))
-                total_registros += 1
             conn.close()
+            
+            self.categoria_data = {"Todas": "Todas las Categorías"}
+            for row in rows:
+                self.categoria_data[row[0]] = f"{row[0]} - {row[1]}"
+                
+            self.cmb_categoria['values'] = list(self.categoria_data.values())
+            self.cmb_categoria.current(0)
         except Exception as e:
-            print(f"Error al cargar reporte de inventario: {e}")
+            messagebox.showerror("Error", f"No se pudieron cargar las categorías: {e}")
+
+    def _generar_pdf(self):
+        ruta_salida = filedialog.asksaveasfilename(
+            title="Guardar Reporte de Inventario",
+            defaultextension=".pdf",
+            filetypes=[("Archivos PDF", "*.pdf")],
+            initialfile="Reporte_General_Inventario.pdf"
+        )
         
-        self.lbl_contador.config(text=f"Total de registros: {total_registros}")
+        if not ruta_salida:
+            return
+            
+        try:
+            self.config(cursor="watch")
+            self.update()
+            
+            status_filtro = self.cmb_status.get()
+            
+            # Pasar el string completo concatenado (ej: "00009 - MAQUINAS")
+            categoria_filtro = self.cmb_categoria.get()
+            
+            generar_reporte_inventario(
+                ruta_salida, 
+                status_filtro=status_filtro, 
+                categoria_filtro=categoria_filtro
+            )
+            
+            self.config(cursor="")
+            messagebox.showinfo("Éxito", f"Reporte generado exitosamente en:\n{ruta_salida}")
+            os.startfile(ruta_salida)
+            
+        except Exception as e:
+            self.config(cursor="")
+            messagebox.showerror("Error", f"Ocurrió un error al generar el PDF:\n{e}")
