@@ -18,9 +18,11 @@ from ui.dialog_inventario import DialogInventario
 from ui.dialog_importar_categorias import DialogImportarCategorias
 from ui.dialog_importar_depositos import DialogImportarDepositos
 from ui.dialog_importar_inventario import DialogImportarInventario
+from ui.dialog_import_transacciones import DialogImportTransacciones
 from ui.dialog_reporte_depositos import DialogReporteDepositos
 from ui.dialog_reporte_categorias import DialogReporteCategorias
 from ui.dialog_reporte_inventario import DialogReporteInventario
+
 from PIL import Image, ImageTk
 from core.path_utils import get_icon_path, get_logo_path
 
@@ -73,7 +75,7 @@ class ArkConInvApp(tk.Tk):
         menu_importaciones.add_command(label="Importar Depósitos", command=self._abrir_importar_depositos)
         menu_importaciones.add_command(label="Importar Categorías", command=self._abrir_importar_categorias)
         menu_importaciones.add_command(label="Importar Inventario", command=self._abrir_importar_inventario)
-        menu_importaciones.add_command(label="Importar Movimientos", command=self._abrir_importar_movimientos)
+        menu_importaciones.add_command(label="Importar Transacciones", command=self._abrir_importar_transacciones)
 
         menu_reportes = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Reportes", menu=menu_reportes)
@@ -200,9 +202,8 @@ class ArkConInvApp(tk.Tk):
     def _abrir_importar_inventario(self):
         DialogImportarInventario(self)
     
-    def _abrir_importar_movimientos(self):
-     #   DialogImportarMovimientos(self)
-        messagebox.showinfo("Información", "Funcionalidad en desarrollo.")
+    def _abrir_importar_transacciones(self):
+        DialogImportTransacciones(self)
 
     def _placeholder(self):
         messagebox.showinfo("Información", "Funcionalidad en desarrollo.")

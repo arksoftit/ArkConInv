@@ -1,4 +1,8 @@
 -- H:\Desarrollos\MyPython\Tkinter\ArkConInv\ArkConInvDB\database\schema.sql
+-- ============================================================================
+-- ESQUEMA DE BASE DE DATOS ARKCONINV
+-- Consolidación de Inventario Multi-Unidad Operativa
+-- ============================================================================
 
 -- 1-Empresas
 CREATE TABLE IF NOT EXISTS ark_company (
@@ -23,6 +27,7 @@ CREATE TABLE IF NOT EXISTS ark_company (
     com_UserCreator TEXT,
     com_LastUpdateDate TEXT,
     com_LastUpdateTime TEXT,
+    com_LastMachine TEXT,
     com_UserLastUpdate TEXT
 );
 
@@ -43,7 +48,7 @@ CREATE TABLE IF NOT EXISTS ark_unds_operativas (
     uo_LastUpdateDate TEXT,
     uo_LastUpdateTime TEXT,
     uo_LastMachine TEXT,
-    uo_UserLastUpdate TEXT,  
+    uo_UserLastUpdate TEXT,
     FOREIGN KEY (uo_empresa_id) REFERENCES ark_company (com_IDauto)
 );
 
@@ -68,9 +73,10 @@ CREATE TABLE IF NOT EXISTS ark_users (
     usr_LastUpdateDate TEXT,
     usr_LastUpdateTime TEXT,
     usr_LastMachine TEXT,
-    usr_UserLastUpdate TEXT,    
+    usr_UserLastUpdate TEXT,
     FOREIGN KEY (id_company) REFERENCES ark_company(com_IDauto)
 );
+
 -- 4-Categoria
 CREATE TABLE IF NOT EXISTS ark_categoria (
     cat_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,6 +141,7 @@ CREATE TABLE IF NOT EXISTS ark_categoria (
     cat_LastMachine TEXT,
     cat_UserLastUpdate TEXT
 );
+
 -- 5-Inventario
 CREATE TABLE IF NOT EXISTS ark_inventario (
     inv_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -221,29 +228,591 @@ CREATE TABLE IF NOT EXISTS ark_inventario (
     inv_UserLastUpdate TEXT,
     FOREIGN KEY (inv_categoria) REFERENCES ark_categoria(cat_IDauto)
 );
+
 -- 6-Depositos
 CREATE TABLE IF NOT EXISTS ark_depositos (
-	dep_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
-	dep_codigo	TEXT NOT NULL,
-	dep_descripcion	TEXT,
-	dep_status	INTEGER,
-	dep_descripciondetallada	TEXT,
-	dep_responsable	TEXT,
-	dep_base_autoincrement	INTEGER,
-	dep_code	TEXT,
-	dep_serie	TEXT,
-	dep_uo_origen	INTEGER,
+    dep_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    dep_codigo	TEXT NOT NULL,
+    dep_descripcion	TEXT,
+    dep_status	INTEGER,
+    dep_descripciondetallada	TEXT,
+    dep_responsable	TEXT,
+    dep_base_autoincrement	INTEGER,
+    dep_code	TEXT,
+    dep_serie	TEXT,
+    dep_uo_origen	INTEGER,
     dep_uo_codigo TEXT,
     dep_uo_nombre TEXT,
-	dep_SystemDate TEXT DEFAULT (date('now')),
-	dep_SystemTime TEXT DEFAULT (time('now')),
-	dep_NameMachine TEXT,
-	dep_UserCreator TEXT,
-	dep_LastUpdateDate TEXT,
-	dep_LastUpdateTime TEXT,
-	dep_LastMachine TEXT,
-	dep_UserLastUpdate TEXT,
-	FOREIGN KEY (dep_uo_origen) REFERENCES ark_unds_operativas(uo_id)
-    
+    dep_SystemDate TEXT DEFAULT (date('now')),
+    dep_SystemTime TEXT DEFAULT (time('now')),
+    dep_NameMachine TEXT,
+    dep_UserCreator TEXT,
+    dep_LastUpdateDate TEXT,
+    dep_LastUpdateTime TEXT,
+    dep_LastMachine TEXT,
+    dep_UserLastUpdate TEXT,
+    FOREIGN KEY (dep_uo_origen) REFERENCES ark_unds_operativas(uo_id)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_depositos_uo_codigo ON ark_depositos (dep_codigo, dep_uo_origen);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_depositos_uo_codigo ON ark_depositos (dep_codigo, dep_uo_origen);
+
+-- ============================================================================
+-- TABLAS DE TRANSACCIONES 
+-- ============================================================================
+
+-- 7-Transacciones (Cabecera - Homóloga de SOperacionInv)
+CREATE TABLE IF NOT EXISTS ark_transacciones (
+    trn_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    trn_uo_id INTEGER NOT NULL,
+    trn_uo_Codigo TEXT NOT NULL,
+    trn_autoincrement INTEGER,
+    trn_documento TEXT NOT NULL,
+    trn_tipo INTEGER NOT NULL,
+    trn_status INTEGER,
+    trn_visible INTEGER,
+    trn_fechaemision TEXT,
+    trn_depositosource INTEGER,
+    trn_depositodestino INTEGER,
+    trn_totalitems INTEGER,
+    trn_totalitemsinicial INTEGER,
+    trn_moneda INTEGER,
+    trn_factorcambio REAL,
+    trn_totalcosto REAL,
+    trn_totalcostoreal REAL,
+    trn_clasificacion INTEGER,
+    trn_descripclasify TEXT,
+    trn_user INTEGER,
+    trn_autorizadopor TEXT,
+    trn_proposito TEXT,
+    trn_responsable TEXT,
+    trn_detalle TEXT,
+    trn_tienelotes INTEGER,
+    trn_updateitems INTEGER,
+    trn_totalbruto REAL,
+    trn_descuento1porcent REAL,
+    trn_descuento1monto REAL,
+    trn_descuento1origen INTEGER,
+    trn_descuento2porcent REAL,
+    trn_descuento2monto REAL,
+    trn_descuento2origen INTEGER,
+    trn_descuentoparcial REAL,
+    trn_fleteporcent REAL,
+    trn_fletemoneda REAL,
+    trn_fleteorigen INTEGER,
+    trn_baseimponible REAL,
+    trn_baseimponible2 REAL,
+    trn_impuesto1porcent REAL,
+    trn_impuesto1monto REAL,
+    trn_impuesto2porcent REAL,
+    trn_impuesto2monto REAL,
+    trn_descuentocuadre REAL,
+    trn_totalneto REAL,
+    trn_fechavencido TEXT,
+    trn_diasvencimiento INTEGER,
+    trn_rifcliente TEXT,
+    trn_nitcliente TEXT,
+    trn_personacontacto TEXT,
+    trn_telefonocontacto TEXT,
+    trn_direcciondespacho TEXT,
+    trn_detallecomentario TEXT,
+    trn_ordencompra TEXT,
+    trn_planillaimportacion TEXT,
+    trn_existeplanillaimportacion INTEGER,
+    trn_porcentfletesinasignar REAL,
+    trn_saldooperacion REAL,
+    trn_monedapago INTEGER,
+    trn_formadepago TEXT,
+    trn_totalprecio REAL,
+    trn_vuelto REAL,
+    trn_autorizados INTEGER,
+    trn_excento INTEGER,
+    trn_costodeventa REAL,
+    trn_tipooperacionorigen INTEGER,
+    trn_documentoorigen TEXT,
+    trn_fromcompuestos INTEGER,
+    trn_vendedorasignado TEXT,
+    trn_zonaventa TEXT,
+    trn_pendingforprint INTEGER,
+    trn_cobradorasignado TEXT,
+    trn_comisioncobros REAL,
+    trn_comisioncobrosbloqueada INTEGER,
+    trn_facturasloterandom TEXT,
+    trn_multiplevendedor INTEGER,
+    trn_multipledeposito INTEGER,
+    trn_timesaved INTEGER,
+    trn_tipoprecio INTEGER,
+    base_autoincrement INTEGER,
+    trn_serie TEXT,
+    trn_nameformato TEXT,
+    trn_machinename TEXT,
+    trn_comisionventa REAL,
+    trn_montopagado REAL,
+    trn_montoperiodo REAL,
+    trn_porcentperiodo REAL,
+    trn_hora TEXT,
+    trn_guiadespacho TEXT,
+    trn_norecibocaja TEXT,
+    trn_ctocosto TEXT,
+    trn_costoactualnacional REAL,
+    trn_costoactualex REAL,
+    trn_prefixinventario TEXT,
+    trn_numerocontrol TEXT,
+    trn_costoajustado REAL,
+    trn_factorreferencia REAL,
+    trn_finicial REAL,
+    trn_fintereses REAL,
+    trn_finteresesp REAL,
+    trn_fmanejo REAL,
+    trn_fmanejop REAL,
+    trn_fextraordinaria REAL,
+    trn_fctdextraordinaria INTEGER,
+    trn_fintextraordinaria REAL,
+    trn_fmtocuota REAL,
+    trn_fctdcuota INTEGER,
+    trn_fcobranza REAL,
+    trn_totalfinanciado REAL,
+    trn_detallegiros TEXT,
+    trn_saldofinanciar REAL,
+    trn_primeracuota TEXT,
+    trn_capitalcuotaextra REAL,
+    trn_credicard TEXT,
+    trn_maquinafiscal TEXT,
+    trn_totalpaginas INTEGER,
+    trn_sucursalorigen INTEGER,
+    trn_fechalibro TEXT,
+    trn_ivaintereses REAL,
+    trn_reimpresafiscal INTEGER,
+    trn_dctofiscalorigen TEXT,
+    trn_fechafactura TEXT,
+    trn_dctoiva REAL,
+    trn_monedacambio TEXT,
+    trn_tipofactorcambio INTEGER,
+    trn_origencambio INTEGER,
+    trn_factorvuelto REAL,
+    trn_codecambio TEXT,
+    trn_vueltoorg REAL,
+    trn_vtanapago INTEGER,
+    trn_factorreferencia2 REAL,
+    trn_multivuelto TEXT,
+    trn_extrafield01 TEXT,
+    trn_extrafield02 TEXT,
+    trn_extrafield03 TEXT,
+    trn_extrafield04 TEXT,
+    trn_extrafield05 TEXT,
+    trn_baseigtf REAL,
+    trn_extrafield06 TEXT,
+    trn_imprentaasignacion TEXT,
+    trn_imprentahora TEXT,
+    trn_statusimprenta INTEGER,
+    trn_imprentadocorigen TEXT,
+    trn_imprentamotivo TEXT,
+    trn_imprentafechaorigen TEXT,
+    trn_imprentaserieorigen TEXT,
+    trn_imprentamtoorigen REAL,
+    trn_imprentacorrelativo	TEXT,
+    trn_imprentacontrolorigen	TEXT,
+    trn_mtootroscargos REAL,
+    trn_SystemDate TEXT DEFAULT (date('now')),
+    trn_SystemTime TEXT DEFAULT (time('now')),
+    trn_NameMachine TEXT,
+    trn_UserCreator TEXT,
+    trn_LastUpdateDate TEXT,
+    trn_LastUpdateTime TEXT,
+    trn_LastMachine TEXT,
+    trn_UserLastUpdate TEXT,
+    FOREIGN KEY (trn_uo_id) REFERENCES ark_unds_operativas(uo_id)
+    FOREIGN KEY (trn_tipo) REFERENCES ark_tipos_operacion(topo_id),
+    FOREIGN KEY (trn_status) REFERENCES ark_status_operacion(stpo_id)
+);
+
+-- 8-Detalle Transacciones de Ventas (Homóloga de SDetalleVenta)
+CREATE TABLE IF NOT EXISTS ark_detalletranvtas (
+    dtv_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    dtv_uo_id INTEGER NOT NULL,
+    dtv_uo_Codigo TEXT NOT NULL,
+    dtv_tipooperacion INTEGER NOT NULL,
+    dtv_codigo TEXT NOT NULL,
+    dtv_linea INTEGER NOT NULL,
+    dtv_documento TEXT NOT NULL,
+    dtv_autoincrement INTEGER NOT NULL,
+    dtv_clienteproveedor TEXT,
+    dtv_documentoorigen TEXT,
+    dtv_lineaorigen INTEGER,
+    dtv_clasificacion INTEGER,
+    dtv_status INTEGER,
+    dtv_visible INTEGER,
+    dtv_costo REAL,
+    dtv_cantidad REAL,
+    dtv_cantidadpendiente REAL,
+    dtv_lote TEXT,
+    dtv_loterandom INTEGER,
+    dtv_newlote INTEGER,
+    dtv_depositosource INTEGER,
+    dtv_depositotarget INTEGER,
+    dtv_operacion_autoincrement INTEGER,
+    dtv_decimales INTEGER,
+    dtv_decimalespen INTEGER,
+    dtv_serialnumber INTEGER,
+    dtv_usaseriales INTEGER,
+    dtv_usadepositos INTEGER,
+    dtv_costooperacion REAL,
+    dtv_memodetalle TEXT,
+    dtv_moneda INTEGER,
+    dtv_factorcambio REAL,
+    dtv_detallecostosimportacio TEXT,
+    dtv_detalleplanillaimportac TEXT,
+    dtv_existedetalleimportacio INTEGER,
+    dtv_existedetalledecostos INTEGER,
+    dtv_alicuotafleteotros REAL,
+    dtv_impuesto1 REAL,
+    dtv_porcentimpuesto1 INTEGER,
+    dtv_montoimpuesto1 REAL,
+    dtv_impuesto2 REAL,
+    dtv_porcentimpuesto2 INTEGER,
+    dtv_montoimpuesto2 REAL,
+    dtv_origenprice INTEGER,
+    dtv_porcentdescparcial REAL,
+    dtv_descuentoparcial REAL,
+    dtv_preciosindescuento REAL,
+    dtv_preciocondescuento REAL,
+    dtv_preciodeventa REAL,
+    dtv_rounddesctparcial INTEGER,
+    dtv_comisionfija REAL,
+    dtv_comisionfijap INTEGER,
+    dtv_unddescarga REAL,
+    dtv_undcapacidad REAL,
+    dtv_unddetallada INTEGER,
+    dtv_indexprices INTEGER,
+    dtv_partesusanseriales INTEGER,
+    dtv_costodeventas REAL,
+    dtv_descripcionoferta TEXT,
+    dtv_vendedorasignado TEXT,
+    dtv_montocomision REAL,
+    dtv_preciobasecomision REAL,
+    dtv_comisionbloqueada INTEGER,
+    dtv_comisionyapagada INTEGER,
+    dtv_documentoliberacion TEXT,
+    dtv_tipodecomision INTEGER,
+    dtv_priceforcomision INTEGER,
+    dtv_fechaoperacion TEXT,
+    dtv_user INTEGER,
+    dtv_porcentdescuento1 REAL,
+    dtv_porcentdescuento2 REAL,
+    dtv_costosupdate INTEGER,
+    dtv_base_autoincrement INTEGER,
+    dtv_totalpeso REAL,
+    dtv_ctocosto INTEGER,
+    dtv_autorizado TEXT,
+    dtv_markperiodo INTEGER,
+    dtv_ctocostostr TEXT,
+    dtv_costoactualnacional REAL,
+    dtv_costoactualext REAL,
+    dtv_prefixinventario TEXT,
+    dtv_costoajustado REAL,
+    dtv_fechalibro TEXT,
+    dtv_montoliquidado REAL,
+    dtv_tipodocumentoorigen INTEGER,
+    dtv_statusdocumentoorigen INTEGER,
+    dtv_dctoiva REAL,
+    dtv_montoimpuesto1dcto REAL,
+    dtv_preciodeventadcto REAL,
+    dtv_SystemDate TEXT DEFAULT (date('now')),
+    dtv_SystemTime TEXT DEFAULT (time('now')),
+    dtv_NameMachine TEXT,
+    dtv_UserCreator TEXT,
+    dtv_LastUpdateDate TEXT,
+    dtv_LastUpdateTime TEXT,
+    dtv_LastMachine TEXT,
+    dtv_UserLastUpdate TEXT,
+    FOREIGN KEY (dtv_uo_id) REFERENCES ark_unds_operativas(uo_id),
+    FOREIGN KEY (dtv_codigo) REFERENCES ark_inventario(inv_codigo)
+);
+
+-- 9-Detalle Transacciones de Compras (Homóloga de SDetalleCompra)
+CREATE TABLE IF NOT EXISTS ark_detalletrancomp (
+    dtc_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    dtc_uo_id INTEGER NOT NULL,
+    dtc_uo_Codigo TEXT NOT NULL,
+    dtc_tipooperacion INTEGER NOT NULL,
+    dtc_codigo TEXT NOT NULL,
+    dtc_linea INTEGER NOT NULL,
+    dtc_documento TEXT NOT NULL,
+    dtc_autoincrement INTEGER NOT NULL,
+    dtc_clienteproveedor TEXT,
+    dtc_tipodocumentoorigen INTEGER,
+    dtc_statusdocumentoorigen INTEGER,
+    dtc_documentoorigen TEXT,
+    dtc_lineaorigen INTEGER,
+    dtc_clasificacion INTEGER,
+    dtc_status INTEGER,
+    dtc_visible INTEGER,
+    dtc_costo REAL,
+    dtc_cantidad REAL,
+    dtc_cantidadpendiente REAL,
+    dtc_lote TEXT,
+    dtc_loterandom INTEGER,
+    dtc_newlote INTEGER,
+    dtc_depositosource INTEGER,
+    dtc_depositotarget INTEGER,
+    dtc_operacion_autoincrement INTEGER,
+    dtc_decimales INTEGER,
+    dtc_decimalespen INTEGER,
+    dtc_serialnumber INTEGER,
+    dtc_usaseriales INTEGER,
+    dtc_usadepositos INTEGER,
+    dtc_costooperacion REAL,
+    dtc_memodetalle TEXT,
+    dtc_moneda INTEGER,
+    dtc_factorcambio REAL,
+    dtc_detallecostosimportacio TEXT,
+    dtc_detalleplanillaimportac TEXT,
+    dtc_existedetalleimportacio INTEGER,
+    dtc_existedetalledecostos INTEGER,
+    dtc_alicuotafleteotros REAL,
+    dtc_impuesto1 REAL,
+    dtc_porcentimpuesto1 INTEGER,
+    dtc_montoimpuesto1 REAL,
+    dtc_impuesto2 REAL,
+    dtc_porcentimpuesto2 INTEGER,
+    dtc_montoimpuesto2 REAL,
+    dtc_origenprice INTEGER,
+    dtc_porcentdescparcial REAL,
+    dtc_descuentoparcial REAL,
+    dtc_preciosindescuento REAL,
+    dtc_preciocondescuento REAL,
+    dtc_preciodeventa REAL,
+    dtc_rounddesctparcial INTEGER,
+    dtc_comisionfija REAL,
+    dtc_comisionfijap INTEGER,
+    dtc_unddescarga REAL,
+    dtc_undcapacidad REAL,
+    dtc_unddetallada INTEGER,
+    dtc_indexprices INTEGER,
+    dtc_partesusanseriales INTEGER,
+    dtc_costodeventas REAL,
+    dtc_descripcionoferta TEXT,
+    dtc_vendedorasignado TEXT,
+    dtc_montocomision REAL,
+    dtc_preciobasecomision REAL,
+    dtc_comisionbloqueada INTEGER,
+    dtc_comisionyapagada INTEGER,
+    dtc_documentoliberacion TEXT,
+    dtc_tipodecomision INTEGER,
+    dtc_priceforcomision INTEGER,
+    dtc_fechaoperacion TEXT,
+    dtc_user INTEGER,
+    dtc_porcentdescuento1 REAL,
+    dtc_porcentdescuento2 REAL,
+    dtc_costosupdate INTEGER,
+    dtc_base_autoincrement INTEGER,
+    dtc_totalpeso REAL,
+    dtc_ctocosto INTEGER,
+    dtc_autorizado TEXT,
+    dtc_markperiodo INTEGER,
+    dtc_ctocostostr TEXT,
+    dtc_costoactualnacional REAL,
+    dtc_costoactualext REAL,
+    dtc_prefixinventario TEXT,
+    dtc_costoajustado REAL,
+    dtc_fechalibro TEXT,
+    dtc_SystemDate TEXT DEFAULT (date('now')),
+    dtc_SystemTime TEXT DEFAULT (time('now')),
+    dtc_NameMachine TEXT,
+    dtc_UserCreator TEXT,
+    dtc_LastUpdateDate TEXT,
+    dtc_LastUpdateTime TEXT,
+    dtc_LastMachine TEXT,
+    dtc_UserLastUpdate TEXT,
+    FOREIGN KEY (dtc_uo_id) REFERENCES ark_unds_operativas(uo_id),
+    FOREIGN KEY (dtc_codigo) REFERENCES ark_inventario(inv_codigo)
+);
+
+-- 10-Detalle Transacciones de Inventario (Homóloga de SDetalleInv)
+CREATE TABLE IF NOT EXISTS ark_detalletraninv (
+    dti_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    dti_uo_id INTEGER NOT NULL,
+    dti_uo_Codigo TEXT NOT NULL,
+    dti_tipooperacion INTEGER NOT NULL,
+    dti_codigo TEXT NOT NULL,
+    dti_linea INTEGER NOT NULL,
+    dti_documento TEXT NOT NULL,
+    dti_autoincrement INTEGER NOT NULL,
+    dti_clienteproveedor TEXT,
+    dti_tipodocumentoorigen INTEGER,
+    dti_statusdocumentoorigen INTEGER,
+    dti_documentoorigen TEXT,
+    dti_lineaorigen INTEGER,
+    dti_clasificacion INTEGER,
+    dti_status INTEGER,
+    dti_visible INTEGER,
+    dti_costo REAL,
+    dti_cantidad REAL,
+    dti_cantidadpendiente REAL,
+    dti_lote TEXT,
+    dti_loterandom INTEGER,
+    dti_newlote INTEGER,
+    dti_depositosource INTEGER,
+    dti_depositotarget INTEGER,
+    dti_operacion_autoincrement INTEGER,
+    dti_decimales INTEGER,
+    dti_decimalespen INTEGER,
+    dti_serialnumber INTEGER,
+    dti_usaseriales INTEGER,
+    dti_usadepositos INTEGER,
+    dti_costooperacion REAL,
+    dti_memodetalle TEXT,
+    dti_moneda INTEGER,
+    dti_factorcambio REAL,
+    dti_detallecostosimportacio TEXT,
+    dti_detalleplanillaimportac TEXT,
+    dti_existedetalleimportacio INTEGER,
+    dti_existedetalledecostos INTEGER,
+    dti_alicuotafleteotros REAL,
+    dti_impuesto1 REAL,
+    dti_porcentimpuesto1 INTEGER,
+    dti_montoimpuesto1 REAL,
+    dti_impuesto2 REAL,
+    dti_porcentimpuesto2 INTEGER,
+    dti_montoimpuesto2 REAL,
+    dti_origenprice INTEGER,
+    dti_porcentdescparcial REAL,
+    dti_descuentoparcial REAL,
+    dti_preciosindescuento REAL,
+    dti_preciocondescuento REAL,
+    dti_preciodeventa REAL,
+    dti_rounddesctparcial INTEGER,
+    dti_comisionfija REAL,
+    dti_comisionfijap INTEGER,
+    dti_unddescarga REAL,
+    dti_undcapacidad REAL,
+    dti_unddetallada INTEGER,
+    dti_indexprices INTEGER,
+    dti_partesusanseriales INTEGER,
+    dti_costodeventas REAL,
+    dti_descripcionoferta TEXT,
+    dti_vendedorasignado TEXT,
+    dti_montocomision REAL,
+    dti_preciobasecomision REAL,
+    dti_comisionbloqueada INTEGER,
+    dti_comisionyapagada INTEGER,
+    dti_documentoliberacion TEXT,
+    dti_tipodecomision INTEGER,
+    dti_priceforcomision INTEGER,
+    dti_fechaoperacion TEXT,
+    dti_user INTEGER,
+    dti_porcentdescuento1 REAL,
+    dti_porcentdescuento2 REAL,
+    dti_costosupdate INTEGER,
+    dti_base_autoincrement INTEGER,
+    dti_totalpeso REAL,
+    dti_ctocosto INTEGER,
+    dti_autorizado TEXT,
+    dti_markperiodo INTEGER,
+    dti_ctocostostr TEXT,
+    dti_costoactualnacional REAL,
+    dti_costoactualext REAL,
+    dti_prefixinventario TEXT,
+    dti_costoajustado REAL,
+    dti_fechalibro TEXT,
+    dti_SystemDate TEXT DEFAULT (date('now')),
+    dti_SystemTime TEXT DEFAULT (time('now')),
+    dti_NameMachine TEXT,
+    dti_UserCreator TEXT,
+    dti_LastUpdateDate TEXT,
+    dti_LastUpdateTime TEXT,
+    dti_LastMachine TEXT,
+    dti_UserLastUpdate TEXT,
+    FOREIGN KEY (dti_uo_id) REFERENCES ark_unds_operativas(uo_id),
+    FOREIGN KEY (dti_codigo) REFERENCES ark_inventario(inv_codigo)
+);
+
+-- 11- Tabla de Tipos de Operación
+CREATE TABLE IF NOT EXISTS ark_tipos_operacion (
+    topo_id INTEGER PRIMARY KEY,
+    topo_descripcion TEXT NOT NULL,
+    topo_categoria TEXT NOT NULL,  -- 'INVENTARIO', 'COMPRA', 'VENTA', 'SERVICIO'
+    topo_afecta_inventario INTEGER NOT NULL  -- 1=Si, 0=No
+);
+
+-- Tabla de Status de Operaciones
+CREATE TABLE IF NOT EXISTS ark_status_operacion (
+    stpo_id INTEGER PRIMARY KEY,
+    stpo_descripcion TEXT NOT NULL,
+    stpo_es_activa INTEGER NOT NULL  -- 1=Si (se importa), 0=No (se ignora)
+);
+
+-- Insertar datos iniciales
+INSERT OR IGNORE INTO ark_tipos_operacion VALUES
+(1, 'Traslados', 'INVENTARIO', 1),
+(2, 'Cargos', 'INVENTARIO', 1),
+(3, 'Descargos', 'INVENTARIO', 1),
+(4, 'Ajustes', 'INVENTARIO', 1),
+(5, 'Órdenes de Compras', 'COMPRA', 0),
+(6, 'Compras', 'COMPRA', 1),
+(7, 'Devolución de Compras', 'COMPRA', 1),
+(8, 'Notas de Entrega en Compras', 'COMPRA', 1),
+(9, 'Presupuestos', 'VENTA', 0),
+(10, 'Pedidos', 'VENTA', 0),
+(11, 'Facturas', 'VENTA', 1),
+(12, 'Devolución de Ventas', 'VENTA', 1),
+(13, 'Notas de Entrega en Ventas', 'VENTA', 1),
+(14, 'Apartados', 'VENTA', 0),
+(23, 'Órdenes de Servicios', 'SERVICIO', 0);
+
+INSERT OR IGNORE INTO ark_status_operacion VALUES
+(1, 'Procesada', 1),
+(2, 'Espera', 0),
+(3, 'Eliminadas', 0),
+(4, 'Tránsito', 0),
+(5, 'Anulada', 0);
+
+-- ============================================================================
+-- ÍNDICES PARA OPTIMIZACIÓN DE CONSULTAS
+-- ============================================================================
+
+-- Índices para ark_transacciones (Cabecera)
+CREATE INDEX IF NOT EXISTS idx_trn_uo_fecha_tipo 
+    ON ark_transacciones(trn_uo_id, trn_fechaemision, trn_tipo);
+CREATE INDEX IF NOT EXISTS idx_trn_documento 
+    ON ark_transacciones(trn_documento);
+CREATE INDEX IF NOT EXISTS idx_trn_status_visible 
+    ON ark_transacciones(trn_status, trn_visible);
+CREATE INDEX IF NOT EXISTS idx_trn_autoincrement 
+    ON ark_transacciones(trn_autoincrement);
+CREATE INDEX IF NOT EXISTS idx_trn_depositos 
+    ON ark_transacciones(trn_depositosource, trn_depositodestino);
+
+-- Índices para ark_detalletranvtas (Detalle Ventas)
+CREATE INDEX IF NOT EXISTS idx_dtv_codigo_fecha 
+    ON ark_detalletranvtas(dtv_codigo, dtv_fechaoperacion);
+CREATE INDEX IF NOT EXISTS idx_dtv_uo_codigo 
+    ON ark_detalletranvtas(dtv_uo_id, dtv_codigo);
+CREATE INDEX IF NOT EXISTS idx_dtv_operacion_autoincrement 
+    ON ark_detalletranvtas(dtv_operacion_autoincrement);
+CREATE INDEX IF NOT EXISTS idx_dtv_documento 
+    ON ark_detalletranvtas(dtv_documento);
+CREATE INDEX IF NOT EXISTS idx_dtv_depositotarget 
+    ON ark_detalletranvtas(dtv_depositotarget);
+
+-- Índices para ark_detalletrancomp (Detalle Compras)
+CREATE INDEX IF NOT EXISTS idx_dtc_codigo_fecha 
+    ON ark_detalletrancomp(dtc_codigo, dtc_fechaoperacion);
+CREATE INDEX IF NOT EXISTS idx_dtc_uo_codigo 
+    ON ark_detalletrancomp(dtc_uo_id, dtc_codigo);
+CREATE INDEX IF NOT EXISTS idx_dtc_operacion_autoincrement 
+    ON ark_detalletrancomp(dtc_operacion_autoincrement);
+CREATE INDEX IF NOT EXISTS idx_dtc_documento 
+    ON ark_detalletrancomp(dtc_documento);
+CREATE INDEX IF NOT EXISTS idx_dtc_depositotarget 
+    ON ark_detalletrancomp(dtc_depositotarget);
+
+-- Índices para ark_detalletraninv (Detalle Movimientos de Inventario)
+CREATE INDEX IF NOT EXISTS idx_dti_codigo_fecha 
+    ON ark_detalletraninv(dti_codigo, dti_fechaoperacion);
+CREATE INDEX IF NOT EXISTS idx_dti_uo_codigo 
+    ON ark_detalletraninv(dti_uo_id, dti_codigo);
+CREATE INDEX IF NOT EXISTS idx_dti_operacion_autoincrement 
+    ON ark_detalletraninv(dti_operacion_autoincrement);
+CREATE INDEX IF NOT EXISTS idx_dti_documento 
+    ON ark_detalletraninv(dti_documento);
+CREATE INDEX IF NOT EXISTS idx_dti_depositos 
+    ON ark_detalletraninv(dti_depositosource, dti_depositotarget);

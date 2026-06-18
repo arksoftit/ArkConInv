@@ -1,0 +1,5 @@
+# Detectar archivos de texto y normalizar saltos de línea
+* text=auto
+
+# Forzar LF para archivos de Python
+*.py text eol=lf
