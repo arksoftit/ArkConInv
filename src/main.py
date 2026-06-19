@@ -68,7 +68,14 @@ class ArkConInvApp(tk.Tk):
 
         menu_transacciones = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Transacciones", menu=menu_transacciones)
+        menu_transacciones.add_command(label="Preliminar", command=self._placeholder)
+        menu_transacciones.add_command(label="Iniciales", command=self._placeholder)
         menu_transacciones.add_command(label="Cálculo de Existencias", command=self._placeholder)
+        menu_transacciones.add_command(label="Ajustes de Existencias", command=self._placeholder)
+        menu_transacciones.add_command(label="Recalculo de un Periodo", command=self._placeholder)
+        menu_transacciones.add_command(label="Cierre de un Periodo", command=self._placeholder)
+        
+        
         
         menu_importaciones = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Importaciones", menu=menu_importaciones)

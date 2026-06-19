@@ -166,7 +166,134 @@ COLUMNAS_DESTINO_DTV = [
     'dtv_LastUpdateDate', 'dtv_LastUpdateTime', 'dtv_LastMachine', 'dtv_UserLastUpdate'
 ]
 
-# def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, status_valor, tablas, dsn, usuario, password):
+# -------------------- IMPORT SDetalleCompra --------------------
+CAMPOS_SDETALLECOM  = [
+    'FDI_TIPOOPERACION', 'FDI_CODIGO', 'FDI_LINEA', 'FDI_DOCUMENTO',
+    'FDI_AUTOINCREMENT', 'FDI_CLIENTEPROVEEDOR', 'FDI_TIPODOCUMENTOORIGEN',
+    'FDI_STATUSDOCUMENTOORIGEN', 'FDI_DOCUMENTOORIGEN', 'FDI_LINEAORIGEN',
+    'FDI_CLASIFICACION', 'FDI_STATUS', 'FDI_VISIBLE', 'FDI_COSTO',
+    'FDI_CANTIDAD', 'FDI_CANTIDADPENDIENTE', 'FDI_LOTE', 'FDI_LOTERANDOM',
+    'FDI_NEWLOTE', 'FDI_DEPOSITOSOURCE', 'FDI_DEPOSITOTARGET',
+    'FDI_OPERACION_AUTOINCREMENT', 'FDI_DECIMALES', 'FDI_DECIMALESPEN',
+    'FDI_SERIALNUMBER', 'FDI_USASERIALES', 'FDI_USADEPOSITOS',
+    'FDI_COSTOOPERACION', 'FDI_MEMODETALLE', 'FDI_MONEDA', 'FDI_FACTORCAMBIO',
+    'FDI_DETALLECOSTOSIMPORTACION', 'FDI_DETALLEPLANILLAIMPORTACION',
+    'FDI_EXISTEDETALLEIMPORTACION', 'FDI_EXISTEDETALLEDECOSTOS',
+    'FDI_ALICUOTAFLETEOTROS', 'FDI_IMPUESTO1', 'FDI_PORCENTIMPUESTO1',
+    'FDI_MONTOIMPUESTO1', 'FDI_IMPUESTO2', 'FDI_PORCENTIMPUESTO2',
+    'FDI_MONTOIMPUESTO2', 'FDI_ORIGENPRICE', 'FDI_PORCENTDESCPARCIAL',
+    'FDI_DESCUENTOPARCIAL', 'FDI_PRECIOSINDESCUENTO', 'FDI_PRECIOCONDESCUENTO',
+    'FDI_PRECIODEVENTA', 'FDI_ROUNDDESCTPARCIAL', 'FDI_COMISIONFIJA',
+    'FDI_COMISIONFIJAP', 'FDI_UNDDESCARGA', 'FDI_UNDCAPACIDAD',
+    'FDI_UNDDETALLADA', 'FDI_INDEXPRICES', 'FDI_PARTESUSANSERIALES',
+    'FDI_COSTODEVENTAS', 'FDI_DESCRIPCIONOFERTA', 'FDI_VENDEDORASIGNADO',
+    'FDI_MONTOCOMISION', 'FDI_PRECIOBASECOMISION', 'FDI_COMISIONBLOQUEADA',
+    'FDI_COMISIONYAPAGADA', 'FDI_DOCUMENTOLIBERACION', 'FDI_TIPODECOMISION',
+    'FDI_PRICEFORCOMISION', 'FDI_FECHAOPERACION', 'FDI_USER',
+    'FDI_PORCENTDESCUENTO1', 'FDI_PORCENTDESCUENTO2', 'FDI_COSTOSUPDATE',
+    'BASE_AUTOINCREMENT', 'FDI_TOTALPESO', 'FDI_CTOCOSTO', 'FDI_AUTORIZADO',
+    'FDI_MARKPERIODO', 'FDI_CTOCOSTOSTR', 'FDI_COSTOACTUALNACIONAL',
+    'FDI_COSTOACTUALEXT', 'FDI_PREFIXINVENTARIO', 'FDI_COSTOAJUSTADO',
+    'FDI_FECHALIBRO'
+]
+
+COLUMNAS_DESTINO_DTC = [
+    'dtc_uo_id', 'dtc_uo_Codigo',
+    'dtc_tipooperacion', 'dtc_codigo', 'dtc_linea', 'dtc_documento',
+    'dtc_autoincrement', 'dtc_clienteproveedor', 'dtc_tipodocumentoorigen',
+    'dtc_statusdocumentoorigen', 'dtc_documentoorigen', 'dtc_lineaorigen',
+    'dtc_clasificacion', 'dtc_status', 'dtc_visible', 'dtc_costo',
+    'dtc_cantidad', 'dtc_cantidadpendiente', 'dtc_lote', 'dtc_loterandom',
+    'dtc_newlote', 'dtc_depositosource', 'dtc_depositotarget',
+    'dtc_operacion_autoincrement', 'dtc_decimales', 'dtc_decimalespen',
+    'dtc_serialnumber', 'dtc_usaseriales', 'dtc_usadepositos',
+    'dtc_costooperacion', 'dtc_memodetalle', 'dtc_moneda', 'dtc_factorcambio',
+    'dtc_detallecostosimportacion', 'dtc_detalleplanillaimportacion',
+    'dtc_existedetalleimportacion', 'dtc_existedetalledecostos',
+    'dtc_alicuotafleteotros', 'dtc_impuesto1', 'dtc_porcentimpuesto1',
+    'dtc_montoimpuesto1', 'dtc_impuesto2', 'dtc_porcentimpuesto2',
+    'dtc_montoimpuesto2', 'dtc_origenprice', 'dtc_porcentdescparcial',
+    'dtc_descuentoparcial', 'dtc_preciosindescuento', 'dtc_preciocondescuento',
+    'dtc_preciodeventa', 'dtc_rounddesctparcial', 'dtc_comisionfija',
+    'dtc_comisionfijap', 'dtc_unddescarga', 'dtc_undcapacidad',
+    'dtc_unddetallada', 'dtc_indexprices', 'dtc_partesusanseriales',
+    'dtc_costodeventas', 'dtc_descripcionoferta', 'dtc_vendedorasignado',
+    'dtc_montocomision', 'dtc_preciobasecomision', 'dtc_comisionbloqueada',
+    'dtc_comisionyapagada', 'dtc_documentoliberacion', 'dtc_tipodecomision',
+    'dtc_priceforcomision', 'dtc_fechaoperacion', 'dtc_user',
+    'dtc_porcentdescuento1', 'dtc_porcentdescuento2', 'dtc_costosupdate',
+    'dtc_base_autoincrement', 'dtc_totalpeso', 'dtc_ctocosto', 'dtc_autorizado',
+    'dtc_markperiodo', 'dtc_ctocostostr', 'dtc_costoactualnacional',
+    'dtc_costoactualext', 'dtc_prefixinventario', 'dtc_costoajustado',
+    'dtc_fechalibro',
+    'dtc_SystemDate', 'dtc_SystemTime', 'dtc_NameMachine', 'dtc_UserCreator',
+    'dtc_LastUpdateDate', 'dtc_LastUpdateTime', 'dtc_LastMachine', 'dtc_UserLastUpdate'
+]
+
+CAMPOS_SDETALLEINV = [
+    'FDI_TIPOOPERACION', 'FDI_CODIGO', 'FDI_LINEA', 'FDI_DOCUMENTO',
+    'FDI_AUTOINCREMENT', 'FDI_CLIENTEPROVEEDOR', 'FDI_TIPODOCUMENTOORIGEN',
+    'FDI_STATUSDOCUMENTOORIGEN', 'FDI_DOCUMENTOORIGEN', 'FDI_LINEAORIGEN',
+    'FDI_CLASIFICACION', 'FDI_STATUS', 'FDI_VISIBLE', 'FDI_COSTO',
+    'FDI_CANTIDAD', 'FDI_CANTIDADPENDIENTE', 'FDI_LOTE', 'FDI_LOTERANDOM',
+    'FDI_NEWLOTE', 'FDI_DEPOSITOSOURCE', 'FDI_DEPOSITOTARGET',
+    'FDI_OPERACION_AUTOINCREMENT', 'FDI_DECIMALES', 'FDI_DECIMALESPEN',
+    'FDI_SERIALNUMBER', 'FDI_USASERIALES', 'FDI_USADEPOSITOS',
+    'FDI_COSTOOPERACION', 'FDI_MEMODETALLE', 'FDI_MONEDA', 'FDI_FACTORCAMBIO',
+    'FDI_DETALLECOSTOSIMPORTACION', 'FDI_DETALLEPLANILLAIMPORTACION',
+    'FDI_EXISTEDETALLEIMPORTACION', 'FDI_EXISTEDETALLEDECOSTOS',
+    'FDI_ALICUOTAFLETEOTROS', 'FDI_IMPUESTO1', 'FDI_PORCENTIMPUESTO1',
+    'FDI_MONTOIMPUESTO1', 'FDI_IMPUESTO2', 'FDI_PORCENTIMPUESTO2',
+    'FDI_MONTOIMPUESTO2', 'FDI_ORIGENPRICE', 'FDI_PORCENTDESCPARCIAL',
+    'FDI_DESCUENTOPARCIAL', 'FDI_PRECIOSINDESCUENTO', 'FDI_PRECIOCONDESCUENTO',
+    'FDI_PRECIODEVENTA', 'FDI_ROUNDDESCTPARCIAL', 'FDI_COMISIONFIJA',
+    'FDI_COMISIONFIJAP', 'FDI_UNDDESCARGA', 'FDI_UNDCAPACIDAD',
+    'FDI_UNDDETALLADA', 'FDI_INDEXPRICES', 'FDI_PARTESUSANSERIALES',
+    'FDI_COSTODEVENTAS', 'FDI_DESCRIPCIONOFERTA', 'FDI_VENDEDORASIGNADO',
+    'FDI_MONTOCOMISION', 'FDI_PRECIOBASECOMISION', 'FDI_COMISIONBLOQUEADA',
+    'FDI_COMISIONYAPAGADA', 'FDI_DOCUMENTOLIBERACION', 'FDI_TIPODECOMISION',
+    'FDI_PRICEFORCOMISION', 'FDI_FECHAOPERACION', 'FDI_USER',
+    'FDI_PORCENTDESCUENTO1', 'FDI_PORCENTDESCUENTO2', 'FDI_COSTOSUPDATE',
+    'BASE_AUTOINCREMENT', 'FDI_TOTALPESO', 'FDI_CTOCOSTO', 'FDI_AUTORIZADO',
+    'FDI_MARKPERIODO', 'FDI_CTOCOSTOSTR', 'FDI_COSTOACTUALNACIONAL',
+    'FDI_COSTOACTUALEXT', 'FDI_PREFIXINVENTARIO', 'FDI_COSTOAJUSTADO',
+    'FDI_FECHALIBRO'
+]
+
+COLUMNAS_DESTINO_DTI = [
+    'dti_uo_id', 'dti_uo_Codigo',
+    'dti_tipooperacion', 'dti_codigo', 'dti_linea', 'dti_documento',
+    'dti_autoincrement', 'dti_clienteproveedor', 'dti_tipodocumentoorigen',
+    'dti_statusdocumentoorigen', 'dti_documentoorigen', 'dti_lineaorigen',
+    'dti_clasificacion', 'dti_status', 'dti_visible', 'dti_costo',
+    'dti_cantidad', 'dti_cantidadpendiente', 'dti_lote', 'dti_loterandom',
+    'dti_newlote', 'dti_depositosource', 'dti_depositotarget',
+    'dti_operacion_autoincrement', 'dti_decimales', 'dti_decimalespen',
+    'dti_serialnumber', 'dti_usaseriales', 'dti_usadepositos',
+    'dti_costooperacion', 'dti_memodetalle', 'dti_moneda', 'dti_factorcambio',
+    'dti_detallecostosimportacion', 'dti_detalleplanillaimportacion',
+    'dti_existedetalleimportacion', 'dti_existedetalledecostos',
+    'dti_alicuotafleteotros', 'dti_impuesto1', 'dti_porcentimpuesto1',
+    'dti_montoimpuesto1', 'dti_impuesto2', 'dti_porcentimpuesto2',
+    'dti_montoimpuesto2', 'dti_origenprice', 'dti_porcentdescparcial',
+    'dti_descuentoparcial', 'dti_preciosindescuento', 'dti_preciocondescuento',
+    'dti_preciodeventa', 'dti_rounddesctparcial', 'dti_comisionfija',
+    'dti_comisionfijap', 'dti_unddescarga', 'dti_undcapacidad',
+    'dti_unddetallada', 'dti_indexprices', 'dti_partesusanseriales',
+    'dti_costodeventas', 'dti_descripcionoferta', 'dti_vendedorasignado',
+    'dti_montocomision', 'dti_preciobasecomision', 'dti_comisionbloqueada',
+    'dti_comisionyapagada', 'dti_documentoliberacion', 'dti_tipodecomision',
+    'dti_priceforcomision', 'dti_fechaoperacion', 'dti_user',
+    'dti_porcentdescuento1', 'dti_porcentdescuento2', 'dti_costosupdate',
+    'dti_base_autoincrement', 'dti_totalpeso', 'dti_ctocosto', 'dti_autorizado',
+    'dti_markperiodo', 'dti_ctocostostr', 'dti_costoactualnacional',
+    'dti_costoactualext', 'dti_prefixinventario', 'dti_costoajustado',
+    'dti_fechalibro',
+    'dti_SystemDate', 'dti_SystemTime', 'dti_NameMachine', 'dti_UserCreator',
+    'dti_LastUpdateDate', 'dti_LastUpdateTime', 'dti_LastMachine', 'dti_UserLastUpdate'
+]
+
+
 def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, status_valor, tablas, dsn, usuario, password, callback_progreso=None):
     try:
         conn_str = f"DSN={dsn};UID={usuario};PWD={password};"
@@ -243,7 +370,7 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
             
             resultados.append(f"Transacciones: {total} registros (Versión {version})")
 
-        # Procesar SDetalleVenta si está en la lista
+        # Procesar SDetalleVtas si está en la lista
         if "SDetalleVenta" in tablas:
             resultado_detalle = importar_sdetalleventa(
                 uo_id, uo_codigo, uo_nombre,
@@ -251,10 +378,28 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
                 dsn, usuario, password, callback_progreso
             )
             resultados.append(resultado_detalle)
+            
+        # Procesar SDetalleCompra si está en la lista
+        if "SDetalleCompra" in tablas:
+            resultado_com = importar_SDetalleCompra(
+                uo_id, uo_codigo, uo_nombre,
+                fecha_desde, fecha_hasta, deposito_id,
+                dsn, usuario, password, callback_progreso
+            )
+            resultados.append(resultado_com)
+            
+        if "SDetalleInv" in tablas:
+            resultado_inv = importar_sdetalleinv(
+                uo_id, uo_codigo, uo_nombre,
+                fecha_desde, fecha_hasta, deposito_id,
+                dsn, usuario, password, callback_progreso
+            )
+            resultados.append(resultado_inv)
 
         dbisam_conn.close()
 
         return f"Importación completada.\n" + "\n".join(resultados)
+    
 
     except Exception as e:
         raise e
@@ -283,9 +428,10 @@ def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
 
         sqlite_conn = get_db_connection()
         sqlite_cursor = sqlite_conn.cursor()
-
-        placeholders = ', '.join(['?'] * len(COLUMNAS_DESTINO_DTV))
-        query_sqlite = f"INSERT OR IGNORE INTO ark_detalletranvtas ({', '.join(COLUMNAS_DESTINO_DTV)}) VALUES ({placeholders})"
+        
+        columnas_insert = [col for col in COLUMNAS_DESTINO_DTV if col != 'dtv_Idauto']
+        placeholders = ', '.join(['?'] * len(columnas_insert))
+        query_sqlite = f"INSERT OR IGNORE INTO ark_detalletranvtas ({', '.join(columnas_insert)}) VALUES ({placeholders})"
 
         user_creator = get_current_user()
         machine_name = get_machine_name()
@@ -326,6 +472,142 @@ def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
         sqlite_conn.close()
 
         return f"Detalle de Ventas: {total} registros importados"
+
+    except Exception as e:
+        raise e
+
+def importar_SDetalleCompra(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, dsn, usuario, password, callback_progreso=None):
+    try:
+        conn_str = f"DSN={dsn};UID={usuario};PWD={password};"
+        dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
+        cursor_dbisam = dbisam_conn.cursor()
+
+        # Construir consulta con JOIN a SOperacionInv
+        query_dbisam = f"""
+            SELECT {', '.join(CAMPOS_SDETALLECOM)}
+            FROM SDetalleCompra d
+            INNER JOIN SOperacionInv c ON d.FDI_OPERACION_AUTOINCREMENT = c.FTI_AUTOINCREMENT
+            WHERE c.FTI_FECHAEMISION >= '{fecha_desde}' AND c.FTI_FECHAEMISION <= '{fecha_hasta}'
+        """
+        
+        if deposito_id != 0:
+            query_dbisam += f" AND (d.FDI_DEPOSITOSOURCE = {deposito_id} OR d.FDI_DEPOSITOTARGET = {deposito_id})"
+
+        cursor_dbisam.execute(query_dbisam)
+        rows = cursor_dbisam.fetchall()
+        total = len(rows)
+        dbisam_conn.close()
+
+        sqlite_conn = get_db_connection()
+        sqlite_cursor = sqlite_conn.cursor()
+
+        # Excluir dtc_Idauto del INSERT
+        columnas_insert = [col for col in COLUMNAS_DESTINO_DTC if col != 'dtc_Idauto']
+        placeholders = ', '.join(['?'] * len(columnas_insert))
+        query_sqlite = f"INSERT OR IGNORE INTO ark_detalletrancomp ({', '.join(columnas_insert)}) VALUES ({placeholders})"
+
+        user_creator = get_current_user()
+        machine_name = get_machine_name()
+        sys_date = date.today().isoformat()
+        sys_time = datetime.now().strftime("%H:%M:%S")
+        audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
+
+        for i, row in enumerate(rows):
+            data = [uo_id, uo_codigo]  # dtc_uo_id y dtc_uo_Codigo
+
+            for value in row:
+                if isinstance(value, (bytes, bytearray)):
+                    data.append(value.decode('utf-8', errors='replace'))
+                elif type(value).__name__ == 'Decimal':
+                    data.append(float(value) if value is not None else None)
+                elif isinstance(value, datetime):
+                    data.append(value.isoformat())
+                elif isinstance(value, date):
+                    data.append(value.isoformat())
+                elif isinstance(value, time):
+                    data.append(value.strftime("%H:%M:%S"))
+                else:
+                    data.append(value)
+
+            data.extend(audit_values)
+            sqlite_cursor.execute(query_sqlite, data)
+
+            if (i + 1) % 50 == 0 or i == total - 1:
+                porcentaje = int(((i + 1) / total) * 100)
+                if callback_progreso:
+                    callback_progreso(porcentaje, f"Importando detalle de compras {i + 1} de {total}...")
+
+        sqlite_conn.commit()
+        sqlite_conn.close()
+
+        return f"Detalle de Compras: {total} registros importados"
+
+    except Exception as e:
+        raise e
+    
+def importar_sdetalleinv(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, dsn, usuario, password, callback_progreso=None):
+    try:
+        conn_str = f"DSN={dsn};UID={usuario};PWD={password};"
+        dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
+        cursor_dbisam = dbisam_conn.cursor()
+
+        query_dbisam = f"""
+            SELECT {', '.join(CAMPOS_SDETALLEINV)}
+            FROM SDetalleInv
+            WHERE FDI_FECHAOPERACION >= '{fecha_desde}' AND FDI_FECHAOPERACION <= '{fecha_hasta}'
+        """
+        
+        if deposito_id != 0:
+            query_dbisam += f" AND (FDI_DEPOSITOSOURCE = {deposito_id} OR FDI_DEPOSITOTARGET = {deposito_id})"
+
+        cursor_dbisam.execute(query_dbisam)
+        rows = cursor_dbisam.fetchall()
+        total = len(rows)
+        dbisam_conn.close()
+
+        sqlite_conn = get_db_connection()
+        sqlite_cursor = sqlite_conn.cursor()
+
+        # Excluir dti_Idauto del INSERT
+        columnas_insert = [col for col in COLUMNAS_DESTINO_DTI if col != 'dti_Idauto']
+        placeholders = ', '.join(['?'] * len(columnas_insert))
+        query_sqlite = f"INSERT OR IGNORE INTO ark_detalletraninv ({', '.join(columnas_insert)}) VALUES ({placeholders})"
+
+        user_creator = get_current_user()
+        machine_name = get_machine_name()
+        sys_date = date.today().isoformat()
+        sys_time = datetime.now().strftime("%H:%M:%S")
+        audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
+
+        for i, row in enumerate(rows):
+            data = [uo_id, uo_codigo]  # dti_uo_id, dti_uo_Codigo
+
+            for value in row:
+                if isinstance(value, (bytes, bytearray)):
+                    data.append(value.decode('utf-8', errors='replace'))
+                elif type(value).__name__ == 'Decimal':
+                    data.append(float(value) if value is not None else None)
+                elif isinstance(value, datetime):
+                    data.append(value.isoformat())
+                elif isinstance(value, date):
+                    data.append(value.isoformat())
+                elif isinstance(value, time):
+                    data.append(value.strftime("%H:%M:%S"))
+                else:
+                    data.append(value)
+
+            data.extend(audit_values)
+            sqlite_cursor.execute(query_sqlite, data)
+
+            if (i + 1) % 50 == 0 or i == total - 1:
+                porcentaje = int(((i + 1) / total) * 100)
+                if callback_progreso:
+                    callback_progreso(porcentaje, f"Importando detalle de inventario {i + 1} de {total}...")
+
+        sqlite_conn.commit()
+        sqlite_conn.close()
+
+        return f"Detalle de Inventario: {total} registros importados"
 
     except Exception as e:
         raise e
