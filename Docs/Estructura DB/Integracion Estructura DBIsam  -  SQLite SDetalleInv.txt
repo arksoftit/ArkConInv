@@ -1,0 +1,84 @@
+Source Inventory Table Structure SDetalleInv		Destination Inventory Table Structure ark_detalletraninv	
+Column name	Data type	Column name	Data type
+FDI_TIPOOPERACION	AUTOINC NOT NULL	dti_tipooperacion	
+FDI_CODIGO	VARCHAR(40) NOT NULL	dti_codigo	
+FDI_LINEA	AUTOINC NOT NULL	dti_linea	
+FDI_DOCUMENTO	VARCHAR(30) NOT NULL	dti_documento	
+FDI_AUTOINCREMENT	AUTOINC NOT NULL	dti_autoincrement	
+FDI_CLIENTEPROVEEDOR	VARCHAR(40)	dti_clienteproveedor	
+FDI_TIPODOCUMENTOORIGEN	SMALLINT	dti_tipodocumentoorigen	
+FDI_STATUSDOCUMENTOORIGEN	SMALLINT	dti_statusdocumentoorigen	
+FDI_DOCUMENTOORIGEN	VARCHAR(20)	dti_documentoorigen	
+FDI_LINEAORIGEN	AUTOINC	dti_lineaorigen	
+FDI_CLASIFICACION	AUTOINC	dti_clasificacion	
+FDI_STATUS	AUTOINC	dti_status	
+FDI_VISIBLE	BOOLEAN	dti_visible	
+FDI_COSTO	FLOAT	dti_costo	
+FDI_CANTIDAD	FLOAT	dti_cantidad	
+FDI_CANTIDADPENDIENTE	FLOAT	dti_cantidadpendiente	
+FDI_LOTE	VARCHAR(100)	dti_lote	
+FDI_LOTERANDOM	AUTOINC	dti_loterandom	
+FDI_NEWLOTE	BOOLEAN	dti_newlote	
+FDI_DEPOSITOSOURCE	AUTOINC	dti_depositosource	
+FDI_DEPOSITOTARGET	AUTOINC	dti_depositotarget	
+FDI_OPERACION_AUTOINCREMENT	AUTOINC	dti_operacion_autoincrement	
+FDI_DECIMALES	BOOLEAN	dti_decimales	
+FDI_DECIMALESPEN	BOOLEAN	dti_decimalespen	
+FDI_SERIALNUMBER	AUTOINC	dti_serialnumber	
+FDI_USASERIALES	BOOLEAN	dti_usaseriales	
+FDI_USADEPOSITOS	BOOLEAN	dti_usadepositos	
+FDI_COSTOOPERACION	FLOAT	dti_costooperacion	
+FDI_MEMODETALLE	LONGVARCHAR	dti_memodetalle	
+FDI_MONEDA	AUTOINC	dti_moneda	
+FDI_FACTORCAMBIO	FLOAT	dti_factorcambio	
+FDI_DETALLECOSTOSIMPORTACIO	"N""    LONGVARBINARY"	dti_detallecostosimportacio	
+FDI_DETALLEPLANILLAIMPORTAC	"ION""  LONGVARBINARY"	dti_detalleplanillaimportac	
+FDI_EXISTEDETALLEIMPORTACIO	"N""    BOOLEAN"	dti_existedetalleimportacio	
+FDI_EXISTEDETALLEDECOSTOS	BOOLEAN	dti_existedetalledecostos	
+FDI_ALICUOTAFLETEOTROS	FLOAT	dti_alicuotafleteotros	
+FDI_IMPUESTO1	FLOAT	dti_impuesto1	
+FDI_PORCENTIMPUESTO1	BOOLEAN	dti_porcentimpuesto1	
+FDI_MONTOIMPUESTO1	FLOAT	dti_montoimpuesto1	
+FDI_IMPUESTO2	FLOAT	dti_impuesto2	
+FDI_PORCENTIMPUESTO2	BOOLEAN	dti_porcentimpuesto2	
+FDI_MONTOIMPUESTO2	FLOAT	dti_montoimpuesto2	
+FDI_ORIGENPRICE	AUTOINC	dti_origenprice	
+FDI_PORCENTDESCPARCIAL	FLOAT	dti_porcentdescparcial	
+FDI_DESCUENTOPARCIAL	FLOAT	dti_descuentoparcial	
+FDI_PRECIOSINDESCUENTO	FLOAT	dti_preciosindescuento	
+FDI_PRECIOCONDESCUENTO	FLOAT	dti_preciocondescuento	
+FDI_PRECIODEVENTA	FLOAT	dti_preciodeventa	
+FDI_ROUNDDESCTPARCIAL	AUTOINC	dti_rounddesctparcial	
+FDI_COMISIONFIJA	FLOAT	dti_comisionfija	
+FDI_COMISIONFIJAP	BOOLEAN	dti_comisionfijap	
+FDI_UNDDESCARGA	FLOAT	dti_unddescarga	
+FDI_UNDCAPACIDAD	FLOAT	dti_undcapacidad	
+FDI_UNDDETALLADA	BOOLEAN	dti_unddetallada	
+FDI_INDEXPRICES	AUTOINC	dti_indexprices	
+FDI_PARTESUSANSERIALES	BOOLEAN	dti_partesusanseriales	
+FDI_COSTODEVENTAS	FLOAT	dti_costodeventas	
+FDI_DESCRIPCIONOFERTA	VARCHAR(100)	dti_descripcionoferta	
+FDI_VENDEDORASIGNADO	VARCHAR(50)	dti_vendedorasignado	
+FDI_MONTOCOMISION	FLOAT	dti_montocomision	
+FDI_PRECIOBASECOMISION	FLOAT	dti_preciobasecomision	
+FDI_COMISIONBLOQUEADA	BOOLEAN	dti_comisionbloqueada	
+FDI_COMISIONYAPAGADA	BOOLEAN	dti_comisionyapagada	
+FDI_DOCUMENTOLIBERACION	VARCHAR(20)	dti_documentoliberacion	
+FDI_TIPODECOMISION	AUTOINC	dti_tipodecomision	
+FDI_PRICEFORCOMISION	AUTOINC	dti_priceforcomision	
+FDI_FECHAOPERACION	DATE	dti_fechaoperacion	
+FDI_USER	AUTOINC	dti_user	
+FDI_PORCENTDESCUENTO1	FLOAT	dti_porcentdescuento1	
+FDI_PORCENTDESCUENTO2	FLOAT	dti_porcentdescuento2	
+FDI_COSTOSUPDATE	BOOLEAN	dti_costosupdate	
+BASE_AUTOINCREMENT	AUTOINC	base_autoincrement	
+FDI_TOTALPESO	FLOAT	dti_totalpeso	
+FDI_CTOCOSTO	AUTOINC	dti_ctocosto	
+FDI_AUTORIZADO	VARCHAR(10)	dti_autorizado	
+FDI_MARKPERIODO	BOOLEAN	dti_markperiodo	
+FDI_CTOCOSTOSTR	VARCHAR(30)	dti_ctocostostr	
+FDI_COSTOACTUALNACIONAL	FLOAT	dti_costoactualnacional	
+FDI_COSTOACTUALEXT	FLOAT	dti_costoactualext	
+FDI_PREFIXINVENTARIO	VARCHAR(10)	dti_prefixinventario	
+FDI_COSTOAJUSTADO	FLOAT	dti_costoajustado	
+FDI_FECHALIBRO	DATE	dti_fechalibro	

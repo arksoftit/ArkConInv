@@ -1,0 +1,77 @@
+import tkinter as tk
+from tkinter import ttk
+from db.embedded_db import get_db_connection
+
+class DialogInventario(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Maestro de Inventario")
+        self.geometry("900x600")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        parent.update_idletasks()
+        x = parent.winfo_x() + (parent.winfo_width() // 2) - (900 // 2)
+        y = parent.winfo_y() + (parent.winfo_height() // 2) - (600 // 2)
+        self.geometry(f"+{x}+{y}")
+
+        self._create_widgets()
+        self._cargar_datos()
+
+    def _create_widgets(self):
+        frame = ttk.Frame(self, padding=10)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        columns = ("ID", "Código", "Descripción", "Categoría", "Status", "Unidad")
+        self.tree = ttk.Treeview(frame, columns=columns, show="headings")
+        self.tree.heading("ID", text="ID")
+        self.tree.heading("Código", text="Código")
+        self.tree.heading("Descripción", text="Descripción")
+        self.tree.heading("Categoría", text="Categoría")
+        self.tree.heading("Status", text="Status")
+        self.tree.heading("Unidad", text="Unidad")
+        self.tree.column("ID", width=50, anchor=tk.CENTER)
+        self.tree.column("Código", width=100)
+        self.tree.column("Descripción", width=400)
+        self.tree.column("Categoría", width=80)
+        self.tree.column("Status", width=80, anchor=tk.CENTER)
+        self.tree.column("Unidad", width=100)
+
+        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        btn_frame = ttk.Frame(self)
+        btn_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        ttk.Button(btn_frame, text="Refrescar", command=self._cargar_datos).pack(side=tk.LEFT, padx=5)
+        
+        self.lbl_contador = ttk.Label(btn_frame, text="Total de registros: 0", anchor=tk.CENTER, font=("Segoe UI", 9, "bold"))
+        self.lbl_contador.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
+
+        ttk.Button(btn_frame, text="Cerrar", command=self.destroy).pack(side=tk.RIGHT, padx=5)
+
+    def _cargar_datos(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        total_registros = 0
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT inv_IDauto, inv_codigo, inv_descripcion, inv_categoria, inv_status, inv_unidad 
+                FROM ark_inventario
+            """)
+            rows = cursor.fetchall()
+            for row in rows:
+                status_text = "Activo" if row[4] == 1 else "Inactivo"
+                self.tree.insert("", "end", values=(row[0], row[1], row[2], row[3], status_text, row[5]))
+                total_registros += 1
+            conn.close()
+        except Exception as e:
+            print(f"Error al cargar inventario: {e}")
+        
+        self.lbl_contador.config(text=f"Total de registros: {total_registros}")

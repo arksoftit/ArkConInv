@@ -1,0 +1,84 @@
+Source Inventory Table Structure SDetalleCompra		Destination Inventory Table Structure ark_detalletrancomp	
+Column name	Data type	Column name	Data type
+FDI_TIPOOPERACION	AUTOINC NOT NULL	dtc_tipooperacion	
+FDI_CODIGO	VARCHAR(40) NOT NULL	dtc_codigo	
+FDI_LINEA	AUTOINC NOT NULL	dtc_linea	
+FDI_DOCUMENTO	VARCHAR(30) NOT NULL	dtc_documento	
+FDI_AUTOINCREMENT	AUTOINC NOT NULL	dtc_autoincrement	
+FDI_CLIENTEPROVEEDOR	VARCHAR(40)	dtc_clienteproveedor	
+FDI_TIPODOCUMENTOORIGEN	SMALLINT	dtc_tipodocumentoorigen	
+FDI_STATUSDOCUMENTOORIGEN	SMALLINT	dtc_statusdocumentoorigen	
+FDI_DOCUMENTOORIGEN	VARCHAR(20)	dtc_documentoorigen	
+FDI_LINEAORIGEN	AUTOINC	dtc_lineaorigen	
+FDI_CLASIFICACION	AUTOINC	dtc_clasificacion	
+FDI_STATUS	AUTOINC	dtc_status	
+FDI_VISIBLE	BOOLEAN	dtc_visible	
+FDI_COSTO	FLOAT	dtc_costo	
+FDI_CANTIDAD	FLOAT	dtc_cantidad	
+FDI_CANTIDADPENDIENTE	FLOAT	dtc_cantidadpendiente	
+FDI_LOTE	VARCHAR(100)	dtc_lote	
+FDI_LOTERANDOM	AUTOINC	dtc_loterandom	
+FDI_NEWLOTE	BOOLEAN	dtc_newlote	
+FDI_DEPOSITOSOURCE	AUTOINC	dtc_depositosource	
+FDI_DEPOSITOTARGET	AUTOINC	dtc_depositotarget	
+FDI_OPERACION_AUTOINCREMENT	AUTOINC	dtc_operacion_autoincrement	
+FDI_DECIMALES	BOOLEAN	dtc_decimales	
+FDI_DECIMALESPEN	BOOLEAN	dtc_decimalespen	
+FDI_SERIALNUMBER	AUTOINC	dtc_serialnumber	
+FDI_USASERIALES	BOOLEAN	dtc_usaseriales	
+FDI_USADEPOSITOS	BOOLEAN	dtc_usadepositos	
+FDI_COSTOOPERACION	FLOAT	dtc_costooperacion	
+FDI_MEMODETALLE	LONGVARCHAR	dtc_memodetalle	
+FDI_MONEDA	AUTOINC	dtc_moneda	
+FDI_FACTORCAMBIO	FLOAT	dtc_factorcambio	
+FDI_DETALLECOSTOSIMPORTACIO	"N""    LONGVARBINARY"	dtc_detallecostosimportacio	
+FDI_DETALLEPLANILLAIMPORTAC	"ION""  LONGVARBINARY"	dtc_detalleplanillaimportac	
+FDI_EXISTEDETALLEIMPORTACIO	"N""    BOOLEAN"	dtc_existedetalleimportacio	
+FDI_EXISTEDETALLEDECOSTOS	BOOLEAN	dtc_existedetalledecostos	
+FDI_ALICUOTAFLETEOTROS	FLOAT	dtc_alicuotafleteotros	
+FDI_IMPUESTO1	FLOAT	dtc_impuesto1	
+FDI_PORCENTIMPUESTO1	BOOLEAN	dtc_porcentimpuesto1	
+FDI_MONTOIMPUESTO1	FLOAT	dtc_montoimpuesto1	
+FDI_IMPUESTO2	FLOAT	dtc_impuesto2	
+FDI_PORCENTIMPUESTO2	BOOLEAN	dtc_porcentimpuesto2	
+FDI_MONTOIMPUESTO2	FLOAT	dtc_montoimpuesto2	
+FDI_ORIGENPRICE	AUTOINC	dtc_origenprice	
+FDI_PORCENTDESCPARCIAL	FLOAT	dtc_porcentdescparcial	
+FDI_DESCUENTOPARCIAL	FLOAT	dtc_descuentoparcial	
+FDI_PRECIOSINDESCUENTO	FLOAT	dtc_preciosindescuento	
+FDI_PRECIOCONDESCUENTO	FLOAT	dtc_preciocondescuento	
+FDI_PRECIODEVENTA	FLOAT	dtc_preciodeventa	
+FDI_ROUNDDESCTPARCIAL	AUTOINC	dtc_rounddesctparcial	
+FDI_COMISIONFIJA	FLOAT	dtc_comisionfija	
+FDI_COMISIONFIJAP	BOOLEAN	dtc_comisionfijap	
+FDI_UNDDESCARGA	FLOAT	dtc_unddescarga	
+FDI_UNDCAPACIDAD	FLOAT	dtc_undcapacidad	
+FDI_UNDDETALLADA	BOOLEAN	dtc_unddetallada	
+FDI_INDEXPRICES	AUTOINC	dtc_indexprices	
+FDI_PARTESUSANSERIALES	BOOLEAN	dtc_partesusanseriales	
+FDI_COSTODEVENTAS	FLOAT	dtc_costodeventas	
+FDI_DESCRIPCIONOFERTA	VARCHAR(100)	dtc_descripcionoferta	
+FDI_VENDEDORASIGNADO	VARCHAR(50)	dtc_vendedorasignado	
+FDI_MONTOCOMISION	FLOAT	dtc_montocomision	
+FDI_PRECIOBASECOMISION	FLOAT	dtc_preciobasecomision	
+FDI_COMISIONBLOQUEADA	BOOLEAN	dtc_comisionbloqueada	
+FDI_COMISIONYAPAGADA	BOOLEAN	dtc_comisionyapagada	
+FDI_DOCUMENTOLIBERACION	VARCHAR(20)	dtc_documentoliberacion	
+FDI_TIPODECOMISION	AUTOINC	dtc_tipodecomision	
+FDI_PRICEFORCOMISION	AUTOINC	dtc_priceforcomision	
+FDI_FECHAOPERACION	DATE	dtc_fechaoperacion	
+FDI_USER	AUTOINC	dtc_user	
+FDI_PORCENTDESCUENTO1	FLOAT	dtc_porcentdescuento1	
+FDI_PORCENTDESCUENTO2	FLOAT	dtc_porcentdescuento2	
+FDI_COSTOSUPDATE	BOOLEAN	dtc_costosupdate	
+BASE_AUTOINCREMENT	AUTOINC	base_autoincrement	
+FDI_TOTALPESO	FLOAT	dtc_totalpeso	
+FDI_CTOCOSTO	AUTOINC	dtc_ctocosto	
+FDI_AUTORIZADO	VARCHAR(10)	dtc_autorizado	
+FDI_MARKPERIODO	BOOLEAN	dtc_markperiodo	
+FDI_CTOCOSTOSTR	VARCHAR(30)	dtc_ctocostostr	
+FDI_COSTOACTUALNACIONAL	FLOAT	dtc_costoactualnacional	
+FDI_COSTOACTUALEXT	FLOAT	dtc_costoactualext	
+FDI_PREFIXINVENTARIO	VARCHAR(10)	dtc_prefixinventario	
+FDI_COSTOAJUSTADO	FLOAT	dtc_costoajustado	
+FDI_FECHALIBRO	DATE	dtc_fechalibro	

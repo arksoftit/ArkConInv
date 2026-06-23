@@ -1,0 +1,29 @@
+PROYECTO PARA GESTIÓN Y CONSOLIDACIÓN INVENTARIO
+Estoy desarrollando un proyecto el cual consiste en una aplicación que permita la gestión de inventarios, pero con una variedad en la cual ésta debe tomar la información de una base de datos DBISAM  hará una importación a una nueva base de datos en SQLite o FireBird  y que debe estar embebida dentro de la mini aplicación, el objetivo principal de ésta será tomar las tablas de inventario, categorías o familias, transacciones de inventario, depósitos, leerlos desde la dos base de datos DBIsam, realizar un insert en las tablas creadas en SQLite o FireBird, una vez recopilada la información en la base de datos de la aplicación, ésta deberá a solicitud de los usuarios realizar cálculos de las existencias para cada periodo solicitado, es decir:  partiendo del inventario inicial del periodo solicitado, sumar las Compras y cargos de inventario y notas de entregas de proveedores  como entradas de mercancías de ése periodo, restar las Ventas,  descargos  de inventario y notas de entregas para los clientes como salidas de Inventario del mismo periodo, y así obtener el saldo final de periodo el cual será el saldo inicial del siguiente, ahora bien en vista de que muchos clientes no controlan correctamente esos movimientos la aplicación debe poder, si no hay registro de saldos iniciales poder hacer cálculos de manera inversa para obtener el saldo inicial del periodo correspondiente.
+Ésto es a groso modo el planteamiento o requerimiento que tengo de varios clientes, para lo cual he pensado en desarrollar este proyecto con la siguiente Arquitectura Técnica:
+    1) Lenguaje/Entorno: Python 3.x de 32 bits (obligatorio por el driver ODBC).
+Librerías clave: tkinter/ttk (UI), pyodbc (conexión BD), winreg (lectura de rutas DSN desde registro), Pillow (logo), threading (operaciones no bloqueantes), json, shutil, datetime.
+Compatibilidad Windows 64 bits: Lee las rutas del DSN desde WOW6432Node en el registro para garantizar que aplicaciones de 32 bits encuentren la carpeta de datos correcta.
+    2) Como fallback, ejecuta SELECT DB_DIRECTORY().
+    3) Empaquetado: Compilable a .exe con PyInstaller usando --add-data "assets;assets" y manejo de rutas con sys._MEIPASS / sys.executable.
+    4) Gestión de Conexiones ODBC:
+        1) Configuración vía DSN, usuario y contraseña.
+        2) Guardado automático de hasta 10 conexiones recientes en conexiones.json.
+        3) Combobox desplegable para cargar credenciales previamente guardadas.
+    5) La base de datos contendrá las tablas requeridas y cada tabla tendrá una estructura equivalente a su homologa original en DBIsam, dicha estructura sera suministrada al inicio de la implementación en documento separado.
+    6) La interfaz debe contener un menú superior de opciones y sus sub menús, entre las cuales se destacan: 
+        1) Archivos Maestros: Almacenes, Categorías, Inventario. 
+        2) Transacciones: Calculo de Existencias
+        3) Reportes: Movimiento de Unidades Art 177 ISLR
+        4) Configuración: Unidad Operativa, Usuarios, Conexiones ODBC
+    7) Cada Unidad Operativa debe tener un ID único y su propia conexión ODBC a su motor DBISAM, al hacer los incert de cada una dicho ID debe formar parte de la información obtenida para así poder agrupar los resultados a conveniencia de los usuarios
+Es conveniente destacar que he pensado en utilizar SQLite o FireBirdDB, espero evaluaciones de acuerdo a las funcionalidades requeridas
+
+
+
+
+
+
+
+
+

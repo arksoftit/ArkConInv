@@ -1,0 +1,10 @@
+Source Inventory Table Structure SDepositos		Destination Inventory Table Structure ark_Depositos	
+Column name	Data type	Column name	Data type
+FDP_CODIGO	AUTOINC NOT NULL PRIMARY KEY,	dep_codigo	INTEGER,
+FDP_DESCRIPCION	VARCHAR(40) NOT NULL,	dep_descripcion	TEXT,
+FDP_STATUS	BOOLEAN,	dep_status	TEXT,
+FDP_DESCRIPCIONDETALLADA	LONGVARCHAR,	dep_descripciondetallada	TEXT,
+FDP_RESPONSABLE	VARCHAR(80),	dep_responsable	TEXT,
+BASE_AUTOINCREMENT	AUTOINC,	base_autoincrement	INTEGER,
+FDP_CODE	VARCHAR(30),	dep_code	TEXT,
+FDP_SERIE	VARCHAR(20)	dep_serie	TEXT,

@@ -1,0 +1,54 @@
+Source Inventory Table Structure Scategoria		Destination Inventory Table Structure ark_Categoria	
+Source  Column name	Source  Data type	Destination Column name	Destination Data type
+FD_CODIGO	VARCHAR(30) NOT NULL PRIMARY KEY,	cat_codigo	
+FD_DESCRIPCION	VARCHAR(40) NOT NULL,	cat_descripcion	
+FD_DESCRIPCIONDETALLADA	LONGVARCHAR,	cat_descripciondetallada	
+FD_STATUS	BOOLEAN,	cat_status	
+FD_PORCENTAJEUTILIDAD1	DECIMAL,	cat_porcentajeutilidad1	
+FD_PORCENTAJEUTILIDAD2	DECIMAL,	cat_porcentajeutilidad2	
+FD_PORCENTAJEUTILIDAD3	DECIMAL,	cat_porcentajeutilidad3	
+FD_PORCENTAJEUTILIDAD4	DECIMAL,	cat_porcentajeutilidad4	
+FD_PORCENTAJEUTILIDAD5	DECIMAL,	cat_porcentajeutilidad5	
+FD_PORCENTAJEUTILIDAD6	DECIMAL,	cat_porcentajeutilidad6	
+FD_COMVTAPRODUCTOS	BOOLEAN,	cat_comvtaproductos	
+FD_COMCOBROPRODUCTOS	BOOLEAN,	cat_comcobroproductos	
+FD_CLASIFICACION	SMALLINT,	cat_clasificacion	
+FD_MANEJOINVENTARIO	SMALLINT,	cat_manejoinventario	
+FD_SERIALES	BOOLEAN,	cat_seriales	
+FD_VENCIMIENTO	BOOLEAN,	cat_vencimiento	
+FD_OFERTAS	BOOLEAN,	cat_ofertas	
+FD_TALLAS_EJEX	AUTOINC,	cat_tallas_ejex	
+FD_TALLAS_EJEY	AUTOINC,	cat_tallas_ejey	
+FD_NROPRODUCTOS	AUTOINC,	cat_nroproductos	
+FD_DEPOSITOS	BOOLEAN,	cat_depositos	
+FD_PORCENTAJEDESCUENTO1	DECIMAL,	cat_porcentajedescuento1	
+FD_PORCENTAJEDESCUENTO2	DECIMAL,	cat_porcentajedescuento2	
+FD_PORCENTAJEDESCUENTO3	DECIMAL,	cat_porcentajedescuento3	
+FD_PORCENTAJEDESCUENTO4	DECIMAL,	cat_porcentajedescuento4	
+FD_PORCENTAJEDESCUENTO5	DECIMAL,	cat_porcentajedescuento5	
+FD_PORCENTAJEDESCUENTO6	DECIMAL,	cat_porcentajedescuento6	
+FD_TALLAS_DESCRX	VARCHAR(40),	cat_tallas_descrx	
+FD_TALLAS_DESCRY	VARCHAR(40),	cat_tallas_descry	
+FD_INDEXPORCENT	AUTOINC,	cat_indexporcent	
+FD_COMISIONVTA1	DECIMAL,	cat_comisionvta1	
+FD_COMISIONVTA2	DECIMAL,	cat_comisionvta2	
+FD_COMISIONVTA3	DECIMAL,	cat_comisionvta3	
+FD_COMISIONVTA4	DECIMAL,	cat_comisionvta4	
+FD_COMISIONVTA5	DECIMAL,	cat_comisionvta5	
+FD_COMISIONVTA6	DECIMAL,	cat_comisionvta6	
+FD_COMISIONCOB1	DECIMAL,	cat_comisioncob1	
+FD_COMISIONCOB2	DECIMAL,	cat_comisioncob2	
+FD_COMISIONCOB3	DECIMAL,	cat_comisioncob3	
+FD_COMISIONCOB4	DECIMAL,	cat_comisioncob4	
+FD_COMISIONCOB5	DECIMAL,	cat_comisioncob5	
+FD_COMISIONCOB6	DECIMAL,	cat_comisioncob6	
+FD_COMISIONVTAMIN	DECIMAL,	cat_comisionvtamin	
+FD_COMISIONCOBMIN	DECIMAL,	cat_comisioncobmin	
+FD_TOLERANCIA	LONGVARBINARY,	cat_tolerancia	
+FD_DETALLE_EJEX	LONGVARBINARY,	cat_detalle_ejex	
+FD_DETALLE_EJEY	LONGVARBINARY,	cat_detalle_ejey	
+FD_PREFIJO	VARCHAR(50),	cat_prefijo	
+BASE_AUTOINCREMENT	AUTOINC,	base_autoincrement	
+FD_PSICOTROPICO	BOOLEAN,	cat_psicotropico	
+FD_ARANCEL	VARCHAR(30),	cat_arancel	
+FD_IMPRESORA	VARCHAR(250)	cat_impresora	

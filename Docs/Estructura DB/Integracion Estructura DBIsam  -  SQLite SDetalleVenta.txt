@@ -1,0 +1,88 @@
+Source Inventory Table Structure SDetalleVenta		Destination Inventory Table Structure ark_detalletranvtas	
+Column name	Data type	Column name	Data type
+FDI_TIPOOPERACION	AUTOINC NOT NULL	dtv_tipooperacion	
+FDI_CODIGO	VARCHAR(40) NOT NULL	dtv_codigo	
+FDI_LINEA	AUTOINC NOT NULL	dtv_linea	
+FDI_DOCUMENTO	VARCHAR(30) NOT NULL	dtv_documento	
+FDI_AUTOINCREMENT	AUTOINC NOT NULL	dtv_autoincrement	
+FDI_CLIENTEPROVEEDOR	VARCHAR(40)	dtv_clienteproveedor	
+FDI_DOCUMENTOORIGEN	VARCHAR(20)	dtv_documentoorigen	
+FDI_LINEAORIGEN	AUTOINC	dtv_lineaorigen	
+FDI_CLASIFICACION	AUTOINC	dtv_clasificacion	
+FDI_STATUS	AUTOINC	dtv_status	
+FDI_VISIBLE	BOOLEAN	dtv_visible	
+FDI_COSTO	FLOAT	dtv_costo	
+FDI_CANTIDAD	FLOAT	dtv_cantidad	
+FDI_CANTIDADPENDIENTE	FLOAT	dtv_cantidadpendiente	
+FDI_LOTE	VARCHAR(100)	dtv_lote	
+FDI_LOTERANDOM	AUTOINC	dtv_loterandom	
+FDI_NEWLOTE	BOOLEAN	dtv_newlote	
+FDI_DEPOSITOSOURCE	AUTOINC	dtv_depositosource	
+FDI_DEPOSITOTARGET	AUTOINC	dtv_depositotarget	
+FDI_OPERACION_AUTOINCREMENT	AUTOINC	dtv_operacion_autoincrement	
+FDI_DECIMALES	BOOLEAN	dtv_decimales	
+FDI_DECIMALESPEN	BOOLEAN	dtv_decimalespen	
+FDI_SERIALNUMBER	AUTOINC	dtv_serialnumber	
+FDI_USASERIALES	BOOLEAN	dtv_usaseriales	
+FDI_USADEPOSITOS	BOOLEAN	dtv_usadepositos	
+FDI_COSTOOPERACION	FLOAT	dtv_costooperacion	
+FDI_MEMODETALLE	LONGVARCHAR	dtv_memodetalle	
+FDI_MONEDA	AUTOINC	dtv_moneda	
+FDI_FACTORCAMBIO	FLOAT	dtv_factorcambio	
+FDI_DETALLECOSTOSIMPORTACIO	"N""    LONGVARBINARY"	dtv_detallecostosimportacio	
+FDI_DETALLEPLANILLAIMPORTAC	"ION""  LONGVARBINARY"	dtv_detalleplanillaimportac	
+FDI_EXISTEDETALLEIMPORTACIO	"N""    BOOLEAN"	dtv_existedetalleimportacio	
+FDI_EXISTEDETALLEDECOSTOS	BOOLEAN	dtv_existedetalledecostos	
+FDI_ALICUOTAFLETEOTROS	FLOAT	dtv_alicuotafleteotros	
+FDI_IMPUESTO1	FLOAT	dtv_impuesto1	
+FDI_PORCENTIMPUESTO1	BOOLEAN	dtv_porcentimpuesto1	
+FDI_MONTOIMPUESTO1	FLOAT	dtv_montoimpuesto1	
+FDI_IMPUESTO2	FLOAT	dtv_impuesto2	
+FDI_PORCENTIMPUESTO2	BOOLEAN	dtv_porcentimpuesto2	
+FDI_MONTOIMPUESTO2	FLOAT	dtv_montoimpuesto2	
+FDI_ORIGENPRICE	AUTOINC	dtv_origenprice	
+FDI_PORCENTDESCPARCIAL	FLOAT	dtv_porcentdescparcial	
+FDI_DESCUENTOPARCIAL	FLOAT	dtv_descuentoparcial	
+FDI_PRECIOSINDESCUENTO	FLOAT	dtv_preciosindescuento	
+FDI_PRECIOCONDESCUENTO	FLOAT	dtv_preciocondescuento	
+FDI_PRECIODEVENTA	FLOAT	dtv_preciodeventa	
+FDI_ROUNDDESCTPARCIAL	AUTOINC	dtv_rounddesctparcial	
+FDI_COMISIONFIJA	FLOAT	dtv_comisionfija	
+FDI_COMISIONFIJAP	BOOLEAN	dtv_comisionfijap	
+FDI_UNDDESCARGA	FLOAT	dtv_unddescarga	
+FDI_UNDCAPACIDAD	FLOAT	dtv_undcapacidad	
+FDI_UNDDETALLADA	BOOLEAN	dtv_unddetallada	
+FDI_INDEXPRICES	AUTOINC	dtv_indexprices	
+FDI_PARTESUSANSERIALES	BOOLEAN	dtv_partesusanseriales	
+FDI_COSTODEVENTAS	FLOAT	dtv_costodeventas	
+FDI_DESCRIPCIONOFERTA	VARCHAR(100)	dtv_descripcionoferta	
+FDI_VENDEDORASIGNADO	VARCHAR(50)	dtv_vendedorasignado	
+FDI_MONTOCOMISION	FLOAT	dtv_montocomision	
+FDI_PRECIOBASECOMISION	FLOAT	dtv_preciobasecomision	
+FDI_COMISIONBLOQUEADA	BOOLEAN	dtv_comisionbloqueada	
+FDI_COMISIONYAPAGADA	BOOLEAN	dtv_comisionyapagada	
+FDI_DOCUMENTOLIBERACION	VARCHAR(20)	dtv_documentoliberacion	
+FDI_TIPODECOMISION	AUTOINC	dtv_tipodecomision	
+FDI_PRICEFORCOMISION	AUTOINC	dtv_priceforcomision	
+FDI_FECHAOPERACION	DATE	dtv_fechaoperacion	
+FDI_USER	AUTOINC	dtv_user	
+FDI_PORCENTDESCUENTO1	FLOAT	dtv_porcentdescuento1	
+FDI_PORCENTDESCUENTO2	FLOAT	dtv_porcentdescuento2	
+FDI_COSTOSUPDATE	BOOLEAN	dtv_costosupdate	
+BASE_AUTOINCREMENT	AUTOINC	base_autoincrement	
+FDI_TOTALPESO	FLOAT	dtv_totalpeso	
+FDI_CTOCOSTO	AUTOINC	dtv_ctocosto	
+FDI_AUTORIZADO	VARCHAR(10)	dtv_autorizado	
+FDI_MARKPERIODO	BOOLEAN	dtv_markperiodo	
+FDI_CTOCOSTOSTR	VARCHAR(30)	dtv_ctocostostr	
+FDI_COSTOACTUALNACIONAL	FLOAT	dtv_costoactualnacional	
+FDI_COSTOACTUALEXT	FLOAT	dtv_costoactualext	
+FDI_PREFIXINVENTARIO	VARCHAR(10)	dtv_prefixinventario	
+FDI_COSTOAJUSTADO	FLOAT	dtv_costoajustado	
+FDI_FECHALIBRO	DATE	dtv_fechalibro	
+FDI_MONTOLIQUIDADO	FLOAT	dtv_montoliquidado	
+FDI_TIPODOCUMENTOORIGEN	SMALLINT	dtv_tipodocumentoorigen	
+FDI_STATUSDOCUMENTOORIGEN	SMALLINT	dtv_statusdocumentoorigen	
+FDI_DCTOIVA	FLOAT	dtv_dctoiva	
+FDI_MONTOIMPUESTO1DCTO	FLOAT	dtv_montoimpuesto1dcto	
+FDI_PRECIODEVENTADCTO	FLOAT	dtv_preciodeventadcto	

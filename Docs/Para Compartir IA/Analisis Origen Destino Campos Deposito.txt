@@ -1,0 +1,18 @@
+dep_IDauto	Origen desde  ===>>>	Anto Increment
+dep_codigo	Origen desde  ===>>>	FDP_CODIGO
+dep_descripcion	Origen desde  ===>>>	FDP_DESCRIPCION
+dep_status	Origen desde  ===>>>	FDP_STATUS
+dep_descripciondetallada	Origen desde  ===>>>	FDP_DESCRIPCIONDETALLADA
+dep_responsable	Origen desde  ===>>>	FDP_RESPONSABLE
+base_autoincrement	Origen desde  ===>>>	BASE_AUTOINCREMENT
+dep_code	Origen desde  ===>>>	FDP_CODE
+dep_serie	Origen desde  ===>>>	FDP_SERIE
+dep_uo_origen	Origen desde  ===>>>	"Debe Venir de la selección de ttk.Label(frame, text=""Seleccione la Unidad Operativa de Origen:"").grid(row=0, column=0, sticky=tk.W, pady=10)"
+dep_SystemDate	Origen desde  ===>>>	system_info.get_date_audit()
+dep_SystemTime	Origen desde  ===>>>	system_info.get_time_audit()
+dep_NameMachine	Origen desde  ===>>>	system_info.get_machine_name()
+dep_UserCreator	Origen desde  ===>>>	system_info.get_current_user()
+dep_LastUpdateDate	Origen desde  ===>>>	system_info.get_date_audit()
+dep_LastUpdateTime	Origen desde  ===>>>	system_info.get_time_audit()
+dep_LastMachine	Origen desde  ===>>>	system_info.get_machine_name()
+dep_UserLastUpdate	Origen desde  ===>>>	system_info.get_current_user()
