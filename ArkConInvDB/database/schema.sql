@@ -262,6 +262,7 @@ CREATE TABLE IF NOT EXISTS ark_depositos (
 -- 7-Transacciones (Cabecera - Homóloga de SOperacionInv)
 CREATE TABLE IF NOT EXISTS ark_transacciones (
     trn_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    trn_idunico TEXT UNIQUE,
     trn_uo_id INTEGER NOT NULL,
     trn_uo_Codigo TEXT NOT NULL,
     trn_autoincrement INTEGER,
@@ -427,6 +428,7 @@ CREATE TABLE IF NOT EXISTS ark_transacciones (
 -- 8-Detalle Transacciones de Ventas (Homóloga de SDetalleVenta)
 CREATE TABLE IF NOT EXISTS ark_detalletranvtas (
     dtv_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    dtv_idunico TEXT UNIQUE,
     dtv_uo_id INTEGER NOT NULL,
     dtv_uo_Codigo TEXT NOT NULL,
     dtv_tipooperacion INTEGER NOT NULL,
@@ -530,6 +532,7 @@ CREATE TABLE IF NOT EXISTS ark_detalletranvtas (
 -- 9-Detalle Transacciones de Compras (Homóloga de SDetalleCompra)
 CREATE TABLE IF NOT EXISTS ark_detalletrancomp (
     dtc_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    dtc_idunico TEXT UNIQUE,
     dtc_uo_id INTEGER NOT NULL,
     dtc_uo_Codigo TEXT NOT NULL,
     dtc_tipooperacion INTEGER NOT NULL,
@@ -629,6 +632,7 @@ CREATE TABLE IF NOT EXISTS ark_detalletrancomp (
 -- 10-Detalle Transacciones de Inventario (Homóloga de SDetalleInv)
 CREATE TABLE IF NOT EXISTS ark_detalletraninv (
     dti_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    dti_idunico TEXT UNIQUE,
     dti_uo_id INTEGER NOT NULL,
     dti_uo_Codigo TEXT NOT NULL,
     dti_tipooperacion INTEGER NOT NULL,

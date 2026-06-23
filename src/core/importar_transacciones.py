@@ -9,6 +9,42 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from db.embedded_db import get_db_connection
 from core.system_info import get_current_user, get_machine_name
 
+def generar_idunico(fecha, uo_id, tipo_operacion, documento, linea=None):
+    """
+    Genera un ID único para cada registro basado en sus campos clave.
+    
+    Args:
+        fecha: Fecha de la operación (datetime, date o string en formato YYYY-MM-DD)
+        uo_id: ID de la unidad operativa
+        tipo_operacion: Código del tipo de operación
+        documento: Número de documento
+        linea: Número de línea (opcional, para detalles)
+    
+    Returns:
+        str: ID único concatenado
+    """
+    # Convertir fecha a string ISO (YYYYMMDD)
+    if isinstance(fecha, (datetime, date)):
+        fecha_str = fecha.strftime("%Y%m%d")
+    elif isinstance(fecha, str):
+        fecha_str = fecha.replace('-', '').replace('/', '')[:8]
+    else:
+        fecha_str = str(fecha).replace('-', '').replace('/', '')[:8]
+    
+    # Normalizar campos
+    uo_str = str(uo_id).zfill(2)
+    tipo_str = str(tipo_operacion).zfill(2)
+    doc_str = str(documento).zfill(7)
+    
+    # Construir ID base
+    id_parts = [fecha_str, uo_str, tipo_str, doc_str]
+    
+    # Si hay línea, incluirla
+    if linea is not None:
+        id_parts.append(str(linea).zfill(3))
+    
+    return ''.join(id_parts)
+
 # --------------------IMPORT SOPERATIONINV--------------------
 CAMPOS_SOPERACIONINV = [
     'FTI_AUTOINCREMENT', 'FTI_DOCUMENTO', 'FTI_TIPO', 'FTI_STATUS', 'FTI_VISIBLE',
@@ -57,7 +93,7 @@ CAMPOS_SOPERACIONINV = [
 CAMPOS_VERSION_H = ['FTI_IMPRENTACORRELATIVO', 'FTI_IMPRENTACONTROLORIGEN']
 
 COLUMNAS_DESTINO = [
-    'trn_uo_id', 'trn_uo_Codigo', 'trn_autoincrement', 'trn_documento', 'trn_tipo',
+    'trn_Idauto', 'trn_idunico',   'trn_uo_id',  'trn_uo_Codigo', 'trn_autoincrement', 'trn_documento', 'trn_tipo',
     'trn_status', 'trn_visible', 'trn_fechaemision', 'trn_depositosource',
     'trn_depositodestino', 'trn_totalitems', 'trn_totalitemsinicial', 'trn_moneda',
     'trn_factorcambio', 'trn_totalcosto', 'trn_totalcostoreal', 'trn_clasificacion',
@@ -136,7 +172,7 @@ CAMPOS_SDETALLEVENTA = [
 ]
 
 COLUMNAS_DESTINO_DTV = [
-    'dtv_Idauto', 'dtv_uo_id', 'dtv_uo_Codigo', 'dtv_tipooperacion', 'dtv_codigo',
+    'dtv_Idauto', 'dtv_idunico', 'dtv_uo_id', 'dtv_uo_Codigo', 'dtv_tipooperacion', 'dtv_codigo',
     'dtv_linea', 'dtv_documento', 'dtv_autoincrement', 'dtv_clienteproveedor',
     'dtv_documentoorigen', 'dtv_lineaorigen', 'dtv_clasificacion', 'dtv_status',
     'dtv_visible', 'dtv_costo', 'dtv_cantidad', 'dtv_cantidadpendiente', 'dtv_lote',
@@ -198,7 +234,7 @@ CAMPOS_SDETALLECOM  = [
 ]
 
 COLUMNAS_DESTINO_DTC = [
-    'dtc_uo_id', 'dtc_uo_Codigo',
+    'dtc_Idauto', 'dtc_idunico', 'dtc_uo_id', 'dtc_uo_Codigo',
     'dtc_tipooperacion', 'dtc_codigo', 'dtc_linea', 'dtc_documento',
     'dtc_autoincrement', 'dtc_clienteproveedor', 'dtc_tipodocumentoorigen',
     'dtc_statusdocumentoorigen', 'dtc_documentoorigen', 'dtc_lineaorigen',
@@ -261,7 +297,7 @@ CAMPOS_SDETALLEINV = [
 ]
 
 COLUMNAS_DESTINO_DTI = [
-    'dti_uo_id', 'dti_uo_Codigo',
+    'dti_Idauto', 'dti_idunico', 'dti_uo_id', 'dti_uo_Codigo',
     'dti_tipooperacion', 'dti_codigo', 'dti_linea', 'dti_documento',
     'dti_autoincrement', 'dti_clienteproveedor', 'dti_tipodocumentoorigen',
     'dti_statusdocumentoorigen', 'dti_documentoorigen', 'dti_lineaorigen',
@@ -295,6 +331,7 @@ COLUMNAS_DESTINO_DTI = [
 
 
 def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, status_valor, tablas, dsn, usuario, password, callback_progreso=None):
+
     try:
         conn_str = f"DSN={dsn};UID={usuario};PWD={password};"
         dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
@@ -302,7 +339,6 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
 
         resultados = []
         
-        # Procesar SOperacionInv si está en la lista
         if "SOperacionInv" in tablas:
             cursor_dbisam.execute("SELECT * FROM SOperacionInv")
             num_campos = len([desc[0] for desc in cursor_dbisam.description])
@@ -320,6 +356,12 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
             if status_valor is not None:
                 query_dbisam += f" AND FTI_STATUS = {status_valor}"
 
+            # --- FILTROS ADICIONALES ---
+            # Excluir STATUS (2=Espera, 4=Tránsito, 5=Anulada)
+            query_dbisam += f" AND FTI_STATUS NOT IN (2,5)"
+            # Excluir TIPOS (5=Orden Compra, 9=Presupuesto, 10=Pedido)
+            query_dbisam += f" AND FTI_TIPO NOT IN (5, 9, 10)"
+
             cursor_dbisam.execute(query_dbisam)
             rows = cursor_dbisam.fetchall()
             total = len(rows)
@@ -327,19 +369,24 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
             sqlite_conn = get_db_connection()
             sqlite_cursor = sqlite_conn.cursor()
 
-            placeholders = ', '.join(['?'] * len(COLUMNAS_DESTINO))
-            query_sqlite = f"INSERT OR IGNORE INTO ark_transacciones ({', '.join(COLUMNAS_DESTINO)}) VALUES ({placeholders})"
+            columnas_insert = [col for col in COLUMNAS_DESTINO if col != 'trn_Idauto']
+            placeholders = ', '.join(['?'] * len(columnas_insert))
+            # INSERT normal (sin OR IGNORE)
+            query_sqlite = f"INSERT INTO ark_transacciones ({', '.join(columnas_insert)}) VALUES ({placeholders})"
 
             user_creator = get_current_user()
             machine_name = get_machine_name()
             sys_date = date.today().isoformat()
             sys_time = datetime.now().strftime("%H:%M:%S")
-            
             audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
 
             for i, row in enumerate(rows):
-                data = [uo_id, uo_codigo]
-                
+                fecha_emision = row[5]
+                tipo = row[2]
+                documento = row[1]
+                idunico = generar_idunico(fecha_emision, uo_id, tipo, documento, None)
+                data = [idunico, uo_id, uo_codigo]
+
                 for value in row:
                     if isinstance(value, (bytes, bytearray)):
                         data.append(value.decode('utf-8', errors='replace'))
@@ -353,13 +400,13 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
                         data.append(value.strftime("%H:%M:%S"))
                     else:
                         data.append(value)
-                
+
                 if version == "A":
                     data.extend(["Ver. A", "Ver. A"])
-                
+
                 data.extend(audit_values)
                 sqlite_cursor.execute(query_sqlite, data)
-                
+
                 if (i + 1) % 50 == 0 or i == total - 1:
                     porcentaje = int(((i + 1) / total) * 100)
                     if callback_progreso:
@@ -367,10 +414,9 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
 
             sqlite_conn.commit()
             sqlite_conn.close()
-            
             resultados.append(f"Transacciones: {total} registros (Versión {version})")
 
-        # Procesar SDetalleVtas si está en la lista
+            # ---- SDetalleVenta ----
         if "SDetalleVenta" in tablas:
             resultado_detalle = importar_sdetalleventa(
                 uo_id, uo_codigo, uo_nombre,
@@ -378,16 +424,17 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
                 dsn, usuario, password, callback_progreso
             )
             resultados.append(resultado_detalle)
-            
-        # Procesar SDetalleCompra si está en la lista
+
+        # ---- SDetalleCompra ----
         if "SDetalleCompra" in tablas:
-            resultado_com = importar_SDetalleCompra(
+            resultado_compra = importar_sdetallecompra(
                 uo_id, uo_codigo, uo_nombre,
                 fecha_desde, fecha_hasta, deposito_id,
                 dsn, usuario, password, callback_progreso
             )
-            resultados.append(resultado_com)
-            
+            resultados.append(resultado_compra)
+
+        # ---- SDetalleInv ----
         if "SDetalleInv" in tablas:
             resultado_inv = importar_sdetalleinv(
                 uo_id, uo_codigo, uo_nombre,
@@ -395,17 +442,18 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
                 dsn, usuario, password, callback_progreso
             )
             resultados.append(resultado_inv)
-
+        
         dbisam_conn.close()
-
         return f"Importación completada.\n" + "\n".join(resultados)
-    
 
     except Exception as e:
+        # Relanzar la excepción para que la UI la capture y muestre
         raise e
 
-
+# Version 2 del metodo que correge error de inserción propuesta por DeepSeek - 22-06-2026:06:58
 def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, dsn, usuario, password, callback_progreso=None):
+
+
     try:
         conn_str = f"DSN={dsn};UID={usuario};PWD={password};"
         dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
@@ -414,8 +462,8 @@ def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
         query_dbisam = f"""
             SELECT {', '.join(CAMPOS_SDETALLEVENTA)}
             FROM SDetalleVenta d
-            INNER JOIN SOperacionInv c ON d.FDI_OPERACION_AUTOINCREMENT = c.FTI_AUTOINCREMENT
-            WHERE c.FTI_FECHAEMISION >= '{fecha_desde}' AND c.FTI_FECHAEMISION <= '{fecha_hasta}'
+            WHERE FDI_FECHAOPERACION BETWEEN '{fecha_desde}' AND '{fecha_hasta}'
+            AND FDI_STATUS NOT IN (2,5) AND FDI_TIPOOPERACION NOT IN (5,9,10);
         """
         
         if deposito_id != 0:
@@ -424,30 +472,40 @@ def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
         cursor_dbisam.execute(query_dbisam)
         rows = cursor_dbisam.fetchall()
         total = len(rows)
+        print(f"[DEBUG] Filas obtenidas en SDetalleVenta: {total}")
         dbisam_conn.close()
+
+        if total == 0:
+            return "Detalle de Ventas: No se encontraron registros para el período y filtros seleccionados."
 
         sqlite_conn = get_db_connection()
         sqlite_cursor = sqlite_conn.cursor()
-        
+
+        # Excluir dtv_Idauto del INSERT (es autoincremental)
         columnas_insert = [col for col in COLUMNAS_DESTINO_DTV if col != 'dtv_Idauto']
         placeholders = ', '.join(['?'] * len(columnas_insert))
-        query_sqlite = f"INSERT OR IGNORE INTO ark_detalletranvtas ({', '.join(columnas_insert)}) VALUES ({placeholders})"
+        query_sqlite = f"INSERT INTO ark_detalletranvtas ({', '.join(columnas_insert)}) VALUES ({placeholders})"
 
         user_creator = get_current_user()
         machine_name = get_machine_name()
         sys_date = date.today().isoformat()
         sys_time = datetime.now().strftime("%H:%M:%S")
-        
         audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
 
         for i, row in enumerate(rows):
-            # dtv_Idauto es AUTOINCREMENT, no se inserta
-            # dtv_uo_id y dtv_uo_Codigo se agregan manualmente
-            data = [uo_id, uo_codigo]
+            # Generar ID único
+            fecha_operacion = row[67]  # FDI_FECHAOPERACION
+            tipo_operacion = row[0]    # FDI_TIPOOPERACION
+            documento = row[3]         # FDI_DOCUMENTO
+            linea = row[2]             # FDI_LINEA
+            
+            idunico = generar_idunico(fecha_operacion, uo_id, tipo_operacion, documento, linea)
+            
+            # Data en orden: idunico, uo_id, uo_codigo, ... resto de campos
+            data = [idunico, uo_id, uo_codigo]
             
             for value in row:
                 if isinstance(value, (bytes, bytearray)):
-                    # Campos BLOB: FDI_DETALLECOSTOSIMPORTACION, FDI_DETALLEPLANILLAIMPORTACION
                     data.append(value.decode('utf-8', errors='replace'))
                 elif type(value).__name__ == 'Decimal':
                     data.append(float(value) if value is not None else None)
@@ -475,140 +533,3 @@ def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
 
     except Exception as e:
         raise e
-
-def importar_SDetalleCompra(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, dsn, usuario, password, callback_progreso=None):
-    try:
-        conn_str = f"DSN={dsn};UID={usuario};PWD={password};"
-        dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
-        cursor_dbisam = dbisam_conn.cursor()
-
-        # Construir consulta con JOIN a SOperacionInv
-        query_dbisam = f"""
-            SELECT {', '.join(CAMPOS_SDETALLECOM)}
-            FROM SDetalleCompra d
-            INNER JOIN SOperacionInv c ON d.FDI_OPERACION_AUTOINCREMENT = c.FTI_AUTOINCREMENT
-            WHERE c.FTI_FECHAEMISION >= '{fecha_desde}' AND c.FTI_FECHAEMISION <= '{fecha_hasta}'
-        """
-        
-        if deposito_id != 0:
-            query_dbisam += f" AND (d.FDI_DEPOSITOSOURCE = {deposito_id} OR d.FDI_DEPOSITOTARGET = {deposito_id})"
-
-        cursor_dbisam.execute(query_dbisam)
-        rows = cursor_dbisam.fetchall()
-        total = len(rows)
-        dbisam_conn.close()
-
-        sqlite_conn = get_db_connection()
-        sqlite_cursor = sqlite_conn.cursor()
-
-        # Excluir dtc_Idauto del INSERT
-        columnas_insert = [col for col in COLUMNAS_DESTINO_DTC if col != 'dtc_Idauto']
-        placeholders = ', '.join(['?'] * len(columnas_insert))
-        query_sqlite = f"INSERT OR IGNORE INTO ark_detalletrancomp ({', '.join(columnas_insert)}) VALUES ({placeholders})"
-
-        user_creator = get_current_user()
-        machine_name = get_machine_name()
-        sys_date = date.today().isoformat()
-        sys_time = datetime.now().strftime("%H:%M:%S")
-        audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
-
-        for i, row in enumerate(rows):
-            data = [uo_id, uo_codigo]  # dtc_uo_id y dtc_uo_Codigo
-
-            for value in row:
-                if isinstance(value, (bytes, bytearray)):
-                    data.append(value.decode('utf-8', errors='replace'))
-                elif type(value).__name__ == 'Decimal':
-                    data.append(float(value) if value is not None else None)
-                elif isinstance(value, datetime):
-                    data.append(value.isoformat())
-                elif isinstance(value, date):
-                    data.append(value.isoformat())
-                elif isinstance(value, time):
-                    data.append(value.strftime("%H:%M:%S"))
-                else:
-                    data.append(value)
-
-            data.extend(audit_values)
-            sqlite_cursor.execute(query_sqlite, data)
-
-            if (i + 1) % 50 == 0 or i == total - 1:
-                porcentaje = int(((i + 1) / total) * 100)
-                if callback_progreso:
-                    callback_progreso(porcentaje, f"Importando detalle de compras {i + 1} de {total}...")
-
-        sqlite_conn.commit()
-        sqlite_conn.close()
-
-        return f"Detalle de Compras: {total} registros importados"
-
-    except Exception as e:
-        raise e
-    
-def importar_sdetalleinv(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, dsn, usuario, password, callback_progreso=None):
-    try:
-        conn_str = f"DSN={dsn};UID={usuario};PWD={password};"
-        dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
-        cursor_dbisam = dbisam_conn.cursor()
-
-        query_dbisam = f"""
-            SELECT {', '.join(CAMPOS_SDETALLEINV)}
-            FROM SDetalleInv
-            WHERE FDI_FECHAOPERACION >= '{fecha_desde}' AND FDI_FECHAOPERACION <= '{fecha_hasta}'
-        """
-        
-        if deposito_id != 0:
-            query_dbisam += f" AND (FDI_DEPOSITOSOURCE = {deposito_id} OR FDI_DEPOSITOTARGET = {deposito_id})"
-
-        cursor_dbisam.execute(query_dbisam)
-        rows = cursor_dbisam.fetchall()
-        total = len(rows)
-        dbisam_conn.close()
-
-        sqlite_conn = get_db_connection()
-        sqlite_cursor = sqlite_conn.cursor()
-
-        # Excluir dti_Idauto del INSERT
-        columnas_insert = [col for col in COLUMNAS_DESTINO_DTI if col != 'dti_Idauto']
-        placeholders = ', '.join(['?'] * len(columnas_insert))
-        query_sqlite = f"INSERT OR IGNORE INTO ark_detalletraninv ({', '.join(columnas_insert)}) VALUES ({placeholders})"
-
-        user_creator = get_current_user()
-        machine_name = get_machine_name()
-        sys_date = date.today().isoformat()
-        sys_time = datetime.now().strftime("%H:%M:%S")
-        audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
-
-        for i, row in enumerate(rows):
-            data = [uo_id, uo_codigo]  # dti_uo_id, dti_uo_Codigo
-
-            for value in row:
-                if isinstance(value, (bytes, bytearray)):
-                    data.append(value.decode('utf-8', errors='replace'))
-                elif type(value).__name__ == 'Decimal':
-                    data.append(float(value) if value is not None else None)
-                elif isinstance(value, datetime):
-                    data.append(value.isoformat())
-                elif isinstance(value, date):
-                    data.append(value.isoformat())
-                elif isinstance(value, time):
-                    data.append(value.strftime("%H:%M:%S"))
-                else:
-                    data.append(value)
-
-            data.extend(audit_values)
-            sqlite_cursor.execute(query_sqlite, data)
-
-            if (i + 1) % 50 == 0 or i == total - 1:
-                porcentaje = int(((i + 1) / total) * 100)
-                if callback_progreso:
-                    callback_progreso(porcentaje, f"Importando detalle de inventario {i + 1} de {total}...")
-
-        sqlite_conn.commit()
-        sqlite_conn.close()
-
-        return f"Detalle de Inventario: {total} registros importados"
-
-    except Exception as e:
-        raise e
-    
