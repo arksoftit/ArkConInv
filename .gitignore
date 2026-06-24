@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .vscode/
 config/conexiones.json
+src/tests/
+Docs/

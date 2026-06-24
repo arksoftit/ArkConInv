@@ -9,41 +9,40 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from db.embedded_db import get_db_connection
 from core.system_info import get_current_user, get_machine_name
 
-def generar_idunico(fecha, uo_id, tipo_operacion, documento, linea=None):
+def generar_idunico(fecha, uo_codigo, tipo_operacion, documento, linea=None):
     """
     Genera un ID único para cada registro basado en sus campos clave.
     
     Args:
         fecha: Fecha de la operación (datetime, date o string en formato YYYY-MM-DD)
-        uo_id: ID de la unidad operativa
+        uo_codigo: Código de la unidad operativa (ej. "010101")
         tipo_operacion: Código del tipo de operación
-        documento: Número de documento
+        documento: Número de documento (puede ser string o número)
         linea: Número de línea (opcional, para detalles)
     
     Returns:
-        str: ID único concatenado
+        str: ID único concatenado con los valores originales
     """
-    # Convertir fecha a string ISO (YYYYMMDD)
-    if isinstance(fecha, (datetime, date)):
+def generar_idunico(fecha, uo_codigo, tipo_operacion, documento, linea=None):
+    if fecha is None:
+        fecha_str = "19000101"
+    elif isinstance(fecha, (datetime, date)):
         fecha_str = fecha.strftime("%Y%m%d")
     elif isinstance(fecha, str):
         fecha_str = fecha.replace('-', '').replace('/', '')[:8]
     else:
-        fecha_str = str(fecha).replace('-', '').replace('/', '')[:8]
+        try:
+            fecha_str = str(fecha).replace('-', '').replace('/', '')[:8]
+        except:
+            fecha_str = "19000101"
     
-    # Normalizar campos
-    uo_str = str(uo_id).zfill(2)
+    uo_str = str(uo_codigo).zfill(6)
     tipo_str = str(tipo_operacion).zfill(2)
     doc_str = str(documento).zfill(7)
     
-    # Construir ID base
-    id_parts = [fecha_str, uo_str, tipo_str, doc_str]
-    
-    # Si hay línea, incluirla
     if linea is not None:
-        id_parts.append(str(linea).zfill(3))
-    
-    return ''.join(id_parts)
+        return ''.join([fecha_str, uo_str, tipo_str, doc_str, str(linea).zfill(3)])
+    return ''.join([fecha_str, uo_str, tipo_str, doc_str])
 
 # --------------------IMPORT SOPERATIONINV--------------------
 CAMPOS_SOPERACIONINV = [
@@ -348,7 +347,7 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
             if version == "H":
                 campos_origen.extend(CAMPOS_VERSION_H)
 
-            query_dbisam = f"SELECT {', '.join(campos_origen)} FROM SOperacionInv WHERE FTI_FECHAEMISION >= '{fecha_desde}' AND FTI_FECHAEMISION <= '{fecha_hasta}'"
+            query_dbisam = f"SELECT {', '.join(campos_origen)} FROM SOperacionInv WHERE FTI_FECHAEMISION BETWEEN '{fecha_desde}' AND '{fecha_hasta}'"
             
             if deposito_id != 0:
                 query_dbisam += f" AND (FTI_DEPOSITOSOURCE = {deposito_id} OR FTI_DEPOSITODESTINO = {deposito_id})"
@@ -358,9 +357,9 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
 
             # --- FILTROS ADICIONALES ---
             # Excluir STATUS (2=Espera, 4=Tránsito, 5=Anulada)
-            query_dbisam += f" AND FTI_STATUS NOT IN (2,5)"
+            query_dbisam += f" AND FTI_STATUS NOT IN (2,3,5)"
             # Excluir TIPOS (5=Orden Compra, 9=Presupuesto, 10=Pedido)
-            query_dbisam += f" AND FTI_TIPO NOT IN (5, 9, 10)"
+            query_dbisam += f" AND FTI_TIPO NOT IN  (5,9,10,14,23)"
 
             cursor_dbisam.execute(query_dbisam)
             rows = cursor_dbisam.fetchall()
@@ -384,7 +383,7 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
                 fecha_emision = row[5]
                 tipo = row[2]
                 documento = row[1]
-                idunico = generar_idunico(fecha_emision, uo_id, tipo, documento, None)
+                idunico = generar_idunico(fecha_emision, uo_codigo, tipo, documento, None)
                 data = [idunico, uo_id, uo_codigo]
 
                 for value in row:
@@ -426,22 +425,22 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
             resultados.append(resultado_detalle)
 
         # ---- SDetalleCompra ----
-        if "SDetalleCompra" in tablas:
-            resultado_compra = importar_sdetallecompra(
-                uo_id, uo_codigo, uo_nombre,
-                fecha_desde, fecha_hasta, deposito_id,
-                dsn, usuario, password, callback_progreso
-            )
-            resultados.append(resultado_compra)
+        # if "SDetalleCompra" in tablas:
+        #    resultado_compra = importar_sdetallecompra(
+        #        uo_id, uo_codigo, uo_nombre,
+        #        fecha_desde, fecha_hasta, deposito_id,
+        #        dsn, usuario, password, callback_progreso
+        #    )
+        #    resultados.append(resultado_compra)
 
         # ---- SDetalleInv ----
-        if "SDetalleInv" in tablas:
-            resultado_inv = importar_sdetalleinv(
-                uo_id, uo_codigo, uo_nombre,
-                fecha_desde, fecha_hasta, deposito_id,
-                dsn, usuario, password, callback_progreso
-            )
-            resultados.append(resultado_inv)
+        # if "SDetalleInv" in tablas:
+        #    resultado_inv = importar_sdetalleinv(
+        #        uo_id, uo_codigo, uo_nombre,
+        #        fecha_desde, fecha_hasta, deposito_id,
+        #        dsn, usuario, password, callback_progreso
+        #    )
+        #    resultados.append(resultado_inv)
         
         dbisam_conn.close()
         return f"Importación completada.\n" + "\n".join(resultados)
@@ -462,8 +461,9 @@ def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
         query_dbisam = f"""
             SELECT {', '.join(CAMPOS_SDETALLEVENTA)}
             FROM SDetalleVenta d
-            WHERE FDI_FECHAOPERACION BETWEEN '{fecha_desde}' AND '{fecha_hasta}'
-            AND FDI_STATUS NOT IN (2,5) AND FDI_TIPOOPERACION NOT IN (5,9,10);
+            INNER JOIN SOperacionInv c ON d.FDI_OPERACION_AUTOINCREMENT = c.FTI_AUTOINCREMENT
+            WHERE c.FTI_FECHAEMISION BETWEEN '{fecha_desde}' AND '{fecha_hasta}'
+            AND FTI_STATUS NOT IN (2,3,5) AND FTI_TIPO NOT IN (5,9,10,14,23);
         """
         
         if deposito_id != 0:
@@ -494,12 +494,12 @@ def importar_sdetalleventa(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
 
         for i, row in enumerate(rows):
             # Generar ID único
-            fecha_operacion = row[67]  # FDI_FECHAOPERACION
+            fecha_operacion = row[64]  # FDI_FECHAOPERACION
             tipo_operacion = row[0]    # FDI_TIPOOPERACION
             documento = row[3]         # FDI_DOCUMENTO
             linea = row[2]             # FDI_LINEA
             
-            idunico = generar_idunico(fecha_operacion, uo_id, tipo_operacion, documento, linea)
+            idunico = generar_idunico(fecha_operacion, uo_codigo, tipo_operacion, documento, linea)
             
             # Data en orden: idunico, uo_id, uo_codigo, ... resto de campos
             data = [idunico, uo_id, uo_codigo]
