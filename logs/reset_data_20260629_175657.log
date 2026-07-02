@@ -1,0 +1,16 @@
+======================================================================
+REGISTRO DE LIMPIEZA DE DATOS DE PRUEBA
+======================================================================
+Fecha y hora: 2026-06-29 17:56:57
+Usuario Windows: juanep
+Raíz del proyecto: H:\Desarrollos\MyPython\Tkinter\ArkConInv
+----------------------------------------------------------------------
+TABLAS LIMPIADAS:
+  • ark_detalletranvtas: 50 registros eliminados
+  • ark_detalletrancomp: 0 registros eliminados
+  • ark_detalletraninv: 0 registros eliminados
+  • ark_transacciones: 882 registros eliminados
+----------------------------------------------------------------------
+TOTAL DE REGISTROS ELIMINADOS: 932
+======================================================================
+FIN DEL REGISTRO

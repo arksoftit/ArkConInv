@@ -22,6 +22,7 @@ from ui.dialog_import_transacciones import DialogImportTransacciones
 from ui.dialog_reporte_depositos import DialogReporteDepositos
 from ui.dialog_reporte_categorias import DialogReporteCategorias
 from ui.dialog_reporte_inventario import DialogReporteInventario
+from ui.dialog_reporte_movimiento_inv import DialogMovimientoInventario
 
 from PIL import Image, ImageTk
 from core.path_utils import get_icon_path, get_logo_path
@@ -89,6 +90,7 @@ class ArkConInvApp(tk.Tk):
         menu_reportes.add_command(label="General de Depósitos", command=self._abrir_reporte_depositos)
         menu_reportes.add_command(label="General de Categorias", command=self._abrir_reporte_categorias)
         menu_reportes.add_command(label="General de Inventario", command=self._abrir_reporte_inventario)
+        menu_reportes.add_command(label="Movimiento de Inventario", command=self._abrir_reporte_movimiento_inv)
         menu_reportes.add_command(label="Movimiento Art. 177 ISLR", command=self._placeholder)
 
         menu_config = tk.Menu(menubar, tearoff=0)
@@ -223,6 +225,9 @@ class ArkConInvApp(tk.Tk):
     
     def _abrir_reporte_inventario(self):
         DialogReporteInventario(self)
+    
+    def _abrir_reporte_movimiento_inv(self):
+        DialogMovimientoInventario(self)  # Asegúrate de tener esta clase implementada
 
 
 if __name__ == "__main__":

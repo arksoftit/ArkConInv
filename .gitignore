@@ -5,3 +5,13 @@ __pycache__/
 config/conexiones.json
 src/tests/
 Docs/
+Docs/Archivos2TXT/
+
+# --- AGREGADOS PARA PROTEGER LA DATA LOCAL ---
+# Ignorar bases de datos locales SQLite de prueba
+ArkConInvDB/database/arkconinv.db
+*.db
+*.sqlite3
+
+# Ignorar carpetas locales de logs de eventos
+logs/

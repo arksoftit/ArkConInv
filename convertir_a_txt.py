@@ -3,7 +3,7 @@ import shutil
 
 # --- CONFIGURA AQUÍ ---
 # Directorio donde están tus archivos .py (usa '.' para el actual)
-origen = r'H:\Desarrollos\MyPython\Tkinter\ArkConInv\src'  
+origen = r'H:\Desarrollos\MyPython\Tkinter\ArkConInv\src\core'  
 # Directorio destino (cámbialo si quieres)
 destino = r'H:\Desarrollos\MyPython\Tkinter\ArkConInv\Docs\Archivos2TXT'
 # ----------------------

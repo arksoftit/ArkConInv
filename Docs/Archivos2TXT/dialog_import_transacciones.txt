@@ -59,8 +59,7 @@ class DialogImportTransacciones(tk.Toplevel):
         self.cmb_deposito.grid(row=2, column=1, columnspan=2, pady=5, padx=10)
 
         ttk.Label(frame, text="Status:", font=("Segoe UI", 10, "bold")).grid(row=3, column=0, sticky=tk.W, pady=10)
-        self.cmb_status = ttk.Combobox(frame, state="readonly", width=55, values=[
-            "Todos", "Procesada (1)", "Espera (2)", "Eliminadas (3)", "Tránsito (4)", "Anulada (5)"
+        self.cmb_status = ttk.Combobox(frame, state="readonly", width=55, values=["Todos", "Procesada (1)", "Tránsito (4)"
         ])
         self.cmb_status.grid(row=3, column=1, columnspan=2, pady=5, padx=10)
         self.cmb_status.set("Todos")
@@ -206,7 +205,7 @@ class DialogImportTransacciones(tk.Toplevel):
         deposito_display = self.cmb_deposito.get()
         deposito_id = next((k for k, v in self.deposito_data.items() if v == deposito_display), 0)
 
-        status_map = {"Todos": None, "Procesada (1)": 1, "Espera (2)": 2, "Eliminadas (3)": 3, "Tránsito (4)": 4, "Anulada (5)": 5}
+        status_map = {"Todos": None, "Procesada (1)": 1, "Tránsito (4)": 4, }
         status_valor = status_map.get(self.cmb_status.get())
 
         self.btn_importar.config(state=tk.DISABLED)
@@ -236,8 +235,18 @@ class DialogImportTransacciones(tk.Toplevel):
             )
             
             self.after(0, self._finalizar_importacion, True, resultado)
+        # except Exception as e:
+        #    self.after(0, self._finalizar_importacion, False, str(e))
         except Exception as e:
-            self.after(0, self._finalizar_importacion, False, str(e))
+            error_msg = str(e)
+            if "UNIQUE constraint failed" in error_msg:
+                error_msg = (
+                    "Se encontraron registros duplicados.\n"
+                    "La operación será detenida.\n"
+                    "Revise que el período no haya sido importado previamente.\n\n"
+                    f"Detalle: {e}"
+                )
+            self.after(0, self._finalizar_importacion, False, error_msg)
 
     def _finalizar_importacion(self, exito, mensaje):
         self.btn_importar.config(state=tk.NORMAL)
