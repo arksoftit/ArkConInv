@@ -48,14 +48,12 @@ class DialogImportTransacciones(tk.Toplevel):
         self.entry_fecha_desde = ttk.Entry(fecha_frame, width=12)
         self.entry_fecha_desde.pack(side=tk.LEFT, padx=(0, 10))
         self.entry_fecha_desde.bind("<KeyRelease>", self._aplicar_mascara_fecha)
-        self.entry_fecha_desde.bind("<Return>", lambda event: self.entry_fecha_hasta.focus_set())
         
         ttk.Label(fecha_frame, text="Hasta:").pack(side=tk.LEFT, padx=(0, 5))
         self.entry_fecha_hasta = ttk.Entry(fecha_frame, width=12)
         self.entry_fecha_hasta.pack(side=tk.LEFT, padx=(0, 10))
         self.entry_fecha_hasta.bind("<KeyRelease>", self._aplicar_mascara_fecha)
-        self.entry_fecha_hasta.bind("<Return>", lambda event: self.cmb_deposito.focus_set())
-        
+
         ttk.Label(frame, text="Depósito:", font=("Segoe UI", 10, "bold")).grid(row=2, column=0, sticky=tk.W, pady=10)
         self.cmb_deposito = ttk.Combobox(frame, state="readonly", width=55)
         self.cmb_deposito.grid(row=2, column=1, columnspan=2, pady=5, padx=10)
@@ -262,5 +260,4 @@ class DialogImportTransacciones(tk.Toplevel):
         self.progress['value'] = porcentaje
         if mensaje:
             self.lbl_estado_conexion.config(text=mensaje, foreground="blue")
-            self.update_idletasks()
     
