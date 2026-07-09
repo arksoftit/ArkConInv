@@ -48,12 +48,14 @@ class DialogImportTransacciones(tk.Toplevel):
         self.entry_fecha_desde = ttk.Entry(fecha_frame, width=12)
         self.entry_fecha_desde.pack(side=tk.LEFT, padx=(0, 10))
         self.entry_fecha_desde.bind("<KeyRelease>", self._aplicar_mascara_fecha)
+        self.entry_fecha_desde.bind("<Return>", lambda event: self.entry_fecha_hasta.focus_set())
         
         ttk.Label(fecha_frame, text="Hasta:").pack(side=tk.LEFT, padx=(0, 5))
         self.entry_fecha_hasta = ttk.Entry(fecha_frame, width=12)
         self.entry_fecha_hasta.pack(side=tk.LEFT, padx=(0, 10))
         self.entry_fecha_hasta.bind("<KeyRelease>", self._aplicar_mascara_fecha)
-
+        self.entry_fecha_hasta.bind("<Return>", lambda event: self.cmb_deposito.focus_set())
+        
         ttk.Label(frame, text="Depósito:", font=("Segoe UI", 10, "bold")).grid(row=2, column=0, sticky=tk.W, pady=10)
         self.cmb_deposito = ttk.Combobox(frame, state="readonly", width=55)
         self.cmb_deposito.grid(row=2, column=1, columnspan=2, pady=5, padx=10)
@@ -71,6 +73,7 @@ class DialogImportTransacciones(tk.Toplevel):
         self.var_sdetalleventa = tk.BooleanVar(value=True)
         self.var_sdetallecomp = tk.BooleanVar(value=True)
         self.var_sdetalleinv = tk.BooleanVar(value=True)
+        self.var_sinvdep = tk.BooleanVar(value=True)
 
         chk_frame = ttk.Frame(frame)
         chk_frame.grid(row=5, column=1, columnspan=2, sticky=tk.W, padx=10)
@@ -78,6 +81,7 @@ class DialogImportTransacciones(tk.Toplevel):
         ttk.Checkbutton(chk_frame, text="SDetalleVenta (Detalle Ventas)", variable=self.var_sdetalleventa).pack(anchor=tk.W, pady=2)
         ttk.Checkbutton(chk_frame, text="SDetalleCompra (Detalle Compras)", variable=self.var_sdetallecomp).pack(anchor=tk.W, pady=2)
         ttk.Checkbutton(chk_frame, text="SDetalleInv (Detalle Inventario)", variable=self.var_sdetalleinv).pack(anchor=tk.W, pady=2)
+        ttk.Checkbutton(chk_frame, text="Existencia Actual", variable=self.var_sinvdep).pack(anchor=tk.W, pady=2)
 
         self.lbl_estado_conexion = ttk.Label(frame, text="", font=("Segoe UI", 9, "bold"))
         self.lbl_estado_conexion.grid(row=6, column=0, columnspan=3, pady=10)
@@ -260,4 +264,5 @@ class DialogImportTransacciones(tk.Toplevel):
         self.progress['value'] = porcentaje
         if mensaje:
             self.lbl_estado_conexion.config(text=mensaje, foreground="blue")
+            self.update_idletasks()
     

@@ -737,12 +737,186 @@ CREATE TABLE IF NOT EXISTS ark_tipos_operacion (
     topo_afecta_inventario INTEGER NOT NULL  -- 1=Si, 0=No
 );
 
--- Tabla de Status de Operaciones
+-- 12- Tabla de Status de Operaciones
 CREATE TABLE IF NOT EXISTS ark_status_operacion (
     stpo_id INTEGER PRIMARY KEY,
     stpo_descripcion TEXT NOT NULL,
     stpo_es_activa INTEGER NOT NULL  -- 1=Si (se importa), 0=No (se ignora)
 );
+
+-- 13- Tabla de ark_periodos
+CREATE TABLE IF NOT EXISTS ark_periodos (
+    pdo_Idauto INTEGER PRIMARY KEY,    
+    pdo_fecha_ini TEXT NOT NULL,
+    pdo_fecha_fin TEXT NOT NULL,
+    pdo_anio INTEGER NOT NULL,
+    pdo_uo_id INTEGER NOT NULL,
+    pdo_uo_Codigo TEXT NOT NULL,
+    pdo_status INTEGER NOT NULL,
+    pdo_SystemDate TEXT DEFAULT (date('now')),
+    pdo_SystemTime TEXT DEFAULT (time('now')),
+    pdo_NameMachine TEXT,
+    pdo_UserCreator TEXT,
+    pdo_LastUpdateDate TEXT,
+    pdo_LastUpdateTime TEXT,
+    pdo_LastMachine TEXT,
+    pdo_UserLastUpdate TEXT,
+    FOREIGN KEY (pdo_uo_id) REFERENCES ark_unds_operativas (uo_id)
+);
+
+-- 14- Tabla de ark_existencia_calculadas
+CREATE TABLE IF NOT EXISTS ark_existencia_calculadas (
+    exc_idauto INTEGER PRIMARY KEY,
+    exc_uo_Codigo TEXT NOT NULL,
+    exc_dep_codigo TEXT NOT NULL,
+    exc_item_codigo TEXT NOT NULL,
+    exc_inicial REAL,
+    exc_transferencias_mas REAL,
+    exc_cargos REAL,
+    exc_ajustes_mas REAL,
+    exc_compras REAL,
+    exc_nota_entrega_proveedor REAL,
+    exc_dev_ventas REAL,
+    exc_descargos REAL,
+    exc_dev_compras REAL,
+    exc_ventas REAL,
+    exc_nota_entrega_clientes REAL,
+    exc_transferencias_menos REAL,
+    exc_ajustes_menos REAL,
+    exc_final REAL,
+    exc_final_mayor REAL,
+    exc_final_menor REAL,
+    exc_inicial_estimado REAL,
+    exc_ajuste_requerido REAL,
+    exc_SystemDate TEXT DEFAULT (date('now')),
+    exc_SystemTime TEXT DEFAULT (time('now')),
+    exc_NameMachine TEXT,
+    exc_UserCreator TEXT,
+    exc_LastUpdateDate TEXT,
+    exc_LastUpdateTime TEXT,
+    exc_LastMachine TEXT,
+    exc_UserLastUpdate TEXT,
+    FOREIGN KEY (exc_item_codigo) REFERENCES ark_inventario (inv_codigo)
+);
+
+    -- 15- Tabla de ark_existencia_periodo
+CREATE TABLE IF NOT EXISTS ark_existencia_periodo (
+    exp_idauto INTEGER PRIMARY KEY,
+    exp_uo_Codigo TEXT NOT NULL,
+    exp_dep_codigo TEXT NOT NULL,
+    exp_item_codigo TEXT NOT NULL,
+    exp_inicial REAL,
+    exp_op_entradas REAL,
+    exp_op_salidas REAL,
+    exp_cant_entradas REAL,
+    exp_cant_salidas REAL,
+    exp_final REAL,
+    exp_fecha_ini TEXT,
+    exp_fecha_fin TEXT,
+    exp_SystemDate TEXT DEFAULT (date('now')),
+    exp_SystemTime TEXT DEFAULT (time('now')),
+    exp_NameMachine TEXT,
+    exp_UserCreator TEXT,
+    exp_LastUpdateDate TEXT,
+    exp_LastUpdateTime TEXT,
+    exp_LastMachine TEXT,
+    exp_UserLastUpdate TEXT,
+    FOREIGN KEY (exp_item_codigo) REFERENCES ark_inventario (inv_codigo)
+);
+
+    -- 16- Tabla de ark_existencia_historico
+CREATE TABLE IF NOT EXISTS ark_existencia_historico (
+    exh_idauto INTEGER PRIMARY KEY,
+    exh_uo_Codigo TEXT NOT NULL,
+    exh_dep_codigo TEXT NOT NULL,
+    exh_item_codigo TEXT NOT NULL,
+    exh_inicial REAL,
+    exh_op_entradas REAL,
+    exh_op_salidas REAL,
+    exh_cant_entradas REAL,
+    exh_cant_salidas REAL,
+    exh_final REAL,
+    exh_fecha_ini TEXT,
+    exh_fecha_fin TEXT,
+    exh_pdo_Idauto INTEGER,
+    exh_SystemDate TEXT DEFAULT (date('now')),
+    exh_SystemTime TEXT DEFAULT (time('now')),
+    exh_NameMachine TEXT,
+    exh_UserCreator TEXT,
+    exh_LastUpdateDate TEXT,
+    exh_LastUpdateTime TEXT,
+    exh_LastMachine TEXT,
+    exh_UserLastUpdate TEXT,
+    FOREIGN KEY (exh_item_codigo) REFERENCES ark_inventario (inv_codigo),
+    FOREIGN KEY (exh_pdo_Idauto) REFERENCES ark_periodos (pdo_Idauto)  
+);
+
+-- 17- Tabla de ark_existencia_actual
+CREATE TABLE IF NOT EXISTS ark_existencia_actual(
+    exa_idauto INTEGER PRIMARY KEY,
+    exa_uo_id INTEGER,
+    exa_uo_Codigo TEXT NOT NULL,
+    exa_tipo	INTEGER NOT NULL,
+    exa_codigoproducto	TEXT,
+    exa_codigodeposito	INTEGER,
+    exa_lote	TEXT,
+    exa_loteautoincrement	INTEGER,
+    exa_nolinea	INTEGER,
+    exa_status	INTEGER,
+    exa_puesto	TEXT,
+    exa_existencia	REAL,
+    exa_existenciadetallada	REAL,
+    exa_existenciaapartada	REAL,
+    exa_existenciaordencompra	REAL,
+    exa_existenciapedido	REAL,
+    exa_inventarioinicialbs	REAL,
+    exa_inventarioinicialbscierre	REAL,
+    exa_inventarioinicialund	REAL,
+    exa_inventarioinicialcierre	REAL,
+    exa_ctdtransito	REAL,
+    exa_visible	INTEGER,
+    exa_codebarra	TEXT,
+    exa_existenciaajuste	REAL,
+    exa_base_autoincrement	INTEGER,
+    exa_code	TEXT,
+    exa_SystemDate TEXT DEFAULT (date('now')),
+    exa_SystemTime TEXT DEFAULT (time('now')),
+    exa_NameMachine TEXT,
+    exa_UserCreator TEXT,
+    exa_LastUpdateDate TEXT,
+    exa_LastUpdateTime TEXT,
+    exa_LastMachine TEXT,
+    exa_UserLastUpdate TEXT,
+    FOREIGN KEY (exa_codigoproducto) REFERENCES ark_inventario (inv_codigo)
+    FOREIGN KEY (exa_uo_Codigo) REFERENCES ark_unds_operativas(uo_id)
+);
+-- 18- Tabla de ark_monedas
+CREATE TABLE IF NOT EXISTS ark_monedas(
+    mon_idauto INTEGER PRIMARY KEY,
+    mon_codigo INTEGER NOT NULL,
+    mon_descripcion TEXT NOT NULL,
+    mon_simbolo TEXT,
+    mon_tasa REAL,
+    mon_status INTEGER,
+    mon_SystemDate TEXT DEFAULT (date('now')),
+    mon_SystemTime TEXT DEFAULT (time('now')),
+    mon_NameMachine TEXT,
+    mon_UserCreator TEXT,
+    mon_LastUpdateDate TEXT,
+    mon_LastUpdateTime TEXT,
+    mon_LastMachine TEXT,
+    mon_UserLastUpdate TEXT
+);
+
+-- 18- Tabla de ark_factor_hstorico
+CREATE TABLE IF NOT EXISTS ark_factor_hstorico(
+    fac_Idauto	INTEGER PRIMARY KEY,
+    fac_mon_codigo	INTEGER NOT NULL,
+    fac_fecha	TEXT,
+    fac_tasa_dia	TEXT,
+    FOREIGN KEY (fac_mon_codigo) REFERENCES ark_monedas(mon_codigo)
+);
+
 
 -- Insertar datos iniciales
 INSERT OR IGNORE INTO ark_tipos_operacion VALUES
@@ -820,3 +994,45 @@ CREATE INDEX IF NOT EXISTS idx_dti_documento
     ON ark_detalletraninv(dti_documento);
 CREATE INDEX IF NOT EXISTS idx_dti_depositos 
     ON ark_detalletraninv(dti_depositosource, dti_depositotarget);
+
+-- Optimiza la búsqueda de períodos por Unidad Operativa y por Año o Estatus (ej. buscar el período activo)
+CREATE INDEX IF NOT EXISTS idx_pdo_uo_anio_status 
+    ON ark_periodos (pdo_uo_Codigo, pdo_anio, pdo_status);
+
+-- Optimiza los filtros o validaciones basados en rangos de fechas
+CREATE INDEX IF NOT EXISTS idx_pdo_fechas 
+    ON ark_periodos (pdo_fecha_ini, pdo_fecha_fin);
+
+-- Índice compuesto de alta prioridad para búsquedas directas de stock por producto y ubicación
+CREATE INDEX IF NOT EXISTS idx_exc_uo_dep_item 
+    ON ark_existencia_caluladas (exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
+
+-- Índice compuesto para resolver agrupaciones y saldos de stock en un depósito por UO
+CREATE INDEX IF NOT EXISTS idx_exp_uo_dep_item 
+    ON ark_existencia_periodo (exp_uo_Codigo, exp_dep_codigo, exp_item_codigo);
+
+-- Optimiza reportes históricos o consultas basadas en rangos de fechas específicos
+CREATE INDEX IF NOT EXISTS idx_exp_fechas 
+    ON ark_existencia_periodo (exp_fecha_ini, exp_fecha_fin);
+
+-- Agiliza los JOINs directos entre el histórico de existencias y la tabla de períodos
+CREATE INDEX IF NOT EXISTS idx_exh_periodo_id 
+    ON ark_existencia_historico (exh_pdo_Idauto);
+
+-- Optimizar la busqueda y consultas de factores de cambio históricos por moneda y fecha
+CREATE INDEX IF NOT EXISTS idx_fac_moneda_fecha 
+    ON ark_factor_hstorico (fac_mon_codigo, fac_fecha);
+
+-- Optimiza las consultas de auditoría de un producto a lo largo de la historia de la empresa
+CREATE INDEX IF NOT EXISTS idx_exh_uo_dep_item 
+    ON ark_existencia_historico (exh_uo_Codigo, exh_dep_codigo, exh_item_codigo);
+
+-- Evita tener dos registros del mismo producto en el mismo depósito para un mismo período histórico
+CREATE UNIQUE INDEX IF NOT EXISTS uidx_exh_uo_dep_item_periodo 
+    ON ark_existencia_historico (exh_uo_Codigo, exh_dep_codigo, exh_item_codigo, exh_pdo_Idauto);
+
+-- Evita duplicados en la foto de existencias calculadas actuales
+CREATE UNIQUE INDEX IF NOT EXISTS uidx_exc_uo_dep_item 
+    ON ark_existencia_caluladas (exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
+
+

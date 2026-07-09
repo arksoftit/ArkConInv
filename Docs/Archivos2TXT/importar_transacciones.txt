@@ -329,6 +329,22 @@ COLUMNAS_DESTINO_DTI = [
     'dti_LastUpdateDate', 'dti_LastUpdateTime', 'dti_LastMachine', 'dti_UserLastUpdate'
 ]
 
+# -------------------- IMPORT SinvDep --------------------
+CAMPOS_SINVDEP = [
+    'FT_TIPO', 'FT_CODIGOPRODUCTO', 'FT_CODIGODEPOSITO', 'FT_LOTE', 'FT_LOTEAUTOINCREMENT', 'FT_NOLINEA',
+    'FT_STATUS', 'FT_PUESTO', 'FT_EXISTENCIA', 'FT_EXISTENCIADETALLADA', 'FT_EXISTENCIAAPARTADA',
+    'FT_EXISTENCIAENTRANSITO', 'FT_EXISTENCIAENPROCESO', 'FT_EXISTENCIAORDENCOMPRA',
+    'FT_EXISTENCIAPEDIDO', 'FT_INVENTARIOINICIALBS', 'FT_INVENTARIOINICIALBSCIERRE',
+    'FT_INVENTARIOINICIALUND', 'FT_INVENTARIOINICIALCIERRE', 'FT_CTDTRANSITO', 
+    'FT_VISIBLE', 'FT_CODEBARRA', 'FT_EXISTENCIAAJUSTE', 'BASE_AUTOINCREMENT', 'FT_CODE'
+
+]
+COLUMNAS_DESTINO_EXA = [
+    'exa_Idauto', 'exa_idunico', 'exa_uo_id', 'exa_uo_Codigo', 'exa_codigo', 'exa_descripcion', 'exa_status',
+    'exa_visible', 'exa_deposito', 'exa_depositodestino', 'exa_depositosource', 'exa_user', 'exa_fecha', 'exa_hora', 'exa_machinename',
+    'exa_SystemDate', 'exa_SystemTime', 'exa_NameMachine', 'exa_UserCreator', 'exa_LastUpdateDate', 'exa_LastUpdateTime', 'exa_LastMachine', 'exa_UserLastUpdate'
+]       
+
 
 def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, status_valor, tablas, dsn, usuario, password, callback_progreso=None):
 
@@ -443,6 +459,15 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
            )
            resultados.append(resultado_inv)
         
+        # ---- SinvDep ----
+        if "SinvDep" in tablas:
+            resultado_invdep = importar_sinvdep(
+                uo_id, uo_codigo, uo_nombre,
+                fecha_desde, fecha_hasta, deposito_id,
+                dsn, usuario, password, callback_progreso
+            )
+            resultados.append(resultado_invdep)
+
         dbisam_conn.close()
         return f"Importación completada.\n" + "\n".join(resultados)
 
@@ -692,4 +717,66 @@ def importar_sdetalleinv(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, 
     except Exception as e:
         raise e
     
-    
+def importar_sinvdep(uo_id, uo_codigo, deposito_filtro, dsn, user, pwd, callback_progreso=None):
+    try:
+        conn_str = f"DSN={dsn};UID={user};PWD={pwd};"
+        dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
+        cursor_dbisam = dbisam_conn.cursor()
+
+        query_dbisam = f"""
+            SELECT {', '.join(CAMPOS_SINVDEP)}
+            FROM SinvDep
+            WHERE FT_TIPO = 4
+        """
+        
+        if deposito_filtro != 0:
+            query_dbisam += f" AND FT_CODIGODEPOSITO = {deposito_filtro}"
+
+        cursor_dbisam.execute(query_dbisam)
+        rows = cursor_dbisam.fetchall()
+        total = len(rows)
+        dbisam_conn.close()
+
+        if total == 0:
+            return "Importación de Stock Actual: No se encontraron registros para el filtro seleccionado."
+
+        sqlite_conn = get_db_connection()
+        sqlite_cursor = sqlite_conn.cursor()
+
+        columnas_insert = [col for col in COLUMNAS_DESTINO_EXA if col != 'exa_Idauto']
+        placeholders = ', '.join(['?'] * len(columnas_insert))
+        query_sqlite = f"INSERT INTO ark_stockactual ({', '.join(columnas_insert)}) VALUES ({placeholders})"
+
+        user_creator = get_current_user()
+        machine_name = get_machine_name()
+        sys_date = date.today().isoformat()
+        sys_time = datetime.now().strftime("%H:%M:%S")
+        audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
+
+        for i, row in enumerate(rows):
+            data = [None, None, uo_id, uo_codigo]  # exa_Idauto and exa_idunico will be auto-generated
+            
+            for value in row:
+                if isinstance(value, (bytes, bytearray)):
+                    data.append(value.decode('utf-8', errors='replace'))
+                elif type(value).__name__ == 'Decimal':
+                    data.append(float(value) if value is not None else None)
+                elif isinstance(value, datetime):
+                    data.append(value.isoformat())
+                elif isinstance(value, date):
+                    data.append(value.isoformat())
+                elif isinstance(value, time):
+                    data.append(value.strftime("%H:%M:%S"))
+                else:
+                    data.append(value)
+            
+            data.extend(audit_values)
+            sqlite_cursor.execute(query_sqlite, data)
+        
+
+        sqlite_conn.commit()
+        sqlite_conn.close()
+
+        return f"Importación exitosa. Se procesaron {total} registros de stock actual de la Unidad Operativa {uo_codigo}."
+    except Exception as e:
+        raise e

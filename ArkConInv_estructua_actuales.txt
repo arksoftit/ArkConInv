@@ -1,0 +1,13 @@
+venv_arkconinv/
+src/
+requirements.txt
+README.md
+logs/
+drivers/
+Docs/
+debug_importacion.log
+convertir_a_txt.py
+config/
+assets/
+ArkConInvDB/
+ArkConInv_estructua_actuales

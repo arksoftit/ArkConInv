@@ -11,6 +11,10 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.embedded_db import get_db_connection
 
+# =========================================================================
+# FUNCIONES AUXILIARES UNIFICADAS (DRY)
+# =========================================================================
+
 def _obtener_fecha_hora():
     now = datetime.now()
     return now.strftime("%d/%m/%Y"), now.strftime("%H:%M:%S")
@@ -31,15 +35,12 @@ def _crear_estilos_reporte(styles):
     }
 
 def _crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=False):
-    # Calcular ancho útil según orientación
+    # Calcular ancho útil según orientación (Márgenes de 28pt por lado de forma estandarizada)
     if usar_landscape:
-        # Landscape: 11 inches - márgenes (30pt = 0.833 inch × 2)
-        usable_width = 11 - (30 + 30) / 72  # ≈ 9.17 inches
+        usable_width = 11 - (28 + 28) / 72  # ≈ 10.22 inches útiles
     else:
-        # Portrait: 8.5 inches - márgenes
-        usable_width = 8.5 - (30 + 30) / 72  # ≈ 7.67 inches
+        usable_width = 8.5 - (28 + 28) / 72  # ≈ 7.72 inches útiles
     
-    # 70% para empresa, 30% para fecha/hora
     col_widths = [usable_width * 0.7 * inch, usable_width * 0.3 * inch]
     
     header_data = [
@@ -61,26 +62,21 @@ def _crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=False):
     ]))
     return header_table
 
-def _crear_titulo(texto, estilos):
-    return Paragraph(texto, estilos['title'])
-
-def _crear_filtros(lista_filtros, estilos):
-    texto = "Filtros aplicados: " + (", ".join(lista_filtros) if lista_filtros else "Todos los registros")
-    return Paragraph(texto, estilos['filter'])
-
-def _crear_pie_pagina(texto, estilos):
-    return Paragraph(texto, estilos['footer'])
-
 def _generar_pdf(ruta_salida, elements, usar_landscape=False):
     page_size = landscape(letter) if usar_landscape else letter
+    # Unificamos márgenes a 28 en todos los reportes para evitar saltos inesperados
     doc = SimpleDocTemplate(ruta_salida, pagesize=page_size,
-        rightMargin=28, leftMargin=28,
-        topMargin=28, bottomMargin=28)
+                            rightMargin=28, leftMargin=28,
+                            topMargin=28, bottomMargin=28)
     doc.build(elements)
     return ruta_salida
 
-# REPORTE GENERAL DE DEPOSITOS
 
+# =========================================================================
+# REPORTES DEL SISTEMA
+# =========================================================================
+
+# 1. REPORTE GENERAL DE DEPOSITOS
 def generar_reporte_depositos(ruta_salida, uo_id=None, uo_nombre=None, status_filtro="Todos"):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -110,15 +106,16 @@ def generar_reporte_depositos(ruta_salida, uo_id=None, uo_nombre=None, status_fi
     conn.close()
 
     elements = []
-    elements.append(Spacer(1, 14))
     elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=True))
     elements.append(Spacer(1, 14))
-    elements.append(_crear_titulo("GENERAL DE DEPOSITOS", estilos))
-    elements.append(Spacer(1, 14))
-    elements.append(_crear_filtros(filtros_aplicados, estilos))
+    elements.append(Paragraph("GENERAL DE DEPOSITOS", estilos['title']))
+    elements.append(Spacer(1, 5))
+    
+    texto_filtros = "Filtros aplicados: " + (", ".join(filtros_aplicados) if filtros_aplicados else "Todos los registros")
+    elements.append(Paragraph(texto_filtros, estilos['filter']))
     elements.append(Spacer(1, 14))
 
-    col_widths = [1.2*inch, 2.5*inch, 2.0*inch, 1.0*inch]
+    col_widths = [1.5*inch, 3.5*inch, 3.5*inch, 1.72*inch] # Ajustado a los 10.22" útiles horizontales
     table_data = [['Código', 'Descripción', 'Unidad Operativa', 'Status']]
     total_registros = 0
 
@@ -145,26 +142,18 @@ def generar_reporte_depositos(ruta_salida, uo_id=None, uo_nombre=None, status_fi
     ]))
     elements.append(data_table)
     elements.append(Spacer(1, 14))
-    elements.append(_crear_pie_pagina(f"TOTAL REGISTROS: {total_registros}", estilos))
+    elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", estilos['footer']))
 
     return _generar_pdf(ruta_salida, elements, usar_landscape=True)
 
-# REPORTE GENERAL DE CATEGORIAS
 
+# 2. REPORTE GENERAL DE CATEGORIAS
 def generar_reporte_categorias(ruta_salida, status_filtro="Todos", maneja_depositos_filtro="Todos"):
-    doc = SimpleDocTemplate(ruta_salida, pagesize=letter,
-                            rightMargin=30, leftMargin=30,
-                            topMargin=30, bottomMargin=30)
-    elements = []
-    styles = getSampleStyleSheet()
-    
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    cursor.execute("SELECT com_Codigo, com_Descripcion, com_IDfiscal, com_DireccionF FROM ark_company LIMIT 1")
-    empresa = cursor.fetchone()
-    if not empresa:
-        empresa = ("", "Sin Empresa Registrada", "Sin RIF", "Sin Dirección")
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    estilos = _crear_estilos_reporte(getSampleStyleSheet())
         
     query = "SELECT cat_codigo, cat_descripcion, cat_status, cat_depositos FROM ark_categoria WHERE 1=1"
     params = []
@@ -185,47 +174,21 @@ def generar_reporte_categorias(ruta_salida, status_filtro="Todos", maneja_deposi
         filtros_aplicados.append("Maneja Depósitos: No")
         
     query += " ORDER BY cat_codigo"
-    
     cursor.execute(query, params)
     categorias = cursor.fetchall()
     conn.close()
     
-    now = datetime.now()
-    fecha_str = now.strftime("%d/%m/%Y")
-    hora_str = now.strftime("%H:%M:%S")
-    
-    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=9, leading=12)
-    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=14, alignment=TA_CENTER, spaceAfter=12)
-    filter_style = ParagraphStyle('Filter', parent=styles['Normal'], fontSize=9, alignment=TA_LEFT)
-    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=TA_LEFT)
-    
-    header_data = [
-        [f"Empresa: {empresa[0]} - {empresa[1]}", f"Fecha: {fecha_str}"],
-        [f"RIF: {empresa[2]}", f"Hora: {hora_str}"],
-        [f"Dirección Fiscal: {empresa[3]}", ""]
-    ]
-    
-    header_table = Table(header_data, colWidths=[4.5*inch, 2.5*inch])
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('ALIGN', (0,0), (0,-1), 'LEFT'),
-        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
-        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
-        ('FONTSIZE', (0,0), (-1,-1), 9),
-        ('TOPPADDING', (0,0), (-1,-1), 2),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
-    ]))
-    elements.append(header_table)
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=False))
     elements.append(Spacer(1, 15))
-    
-    elements.append(Paragraph("GENERAL DE CATEGORIAS", title_style))
+    elements.append(Paragraph("GENERAL DE CATEGORIAS", estilos['title']))
     elements.append(Spacer(1, 5))
     
     texto_filtros = "Filtros aplicados: " + (", ".join(filtros_aplicados) if filtros_aplicados else "Todos los registros")
-    elements.append(Paragraph(texto_filtros, filter_style))
+    elements.append(Paragraph(texto_filtros, estilos['filter']))
     elements.append(Spacer(1, 10))
     
-    col_widths = [1.0*inch, 3.5*inch, 1.0*inch, 1.2*inch]
+    col_widths = [1.2*inch, 4.0*inch, 1.2*inch, 1.32*inch] # Ajustado a 7.72" útiles verticales
     table_data = [['Código', 'Descripción', 'Status', 'Maneja Depósitos']]
     
     total_registros = 0
@@ -253,30 +216,19 @@ def generar_reporte_categorias(ruta_salida, status_filtro="Todos", maneja_deposi
     ]))
     elements.append(data_table)
     elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", estilos['footer']))
     
-    elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", footer_style))
-    
-    doc.build(elements)
-    # return ruta_salida
-    return _generar_pdf(ruta_salida, elements)
+    return _generar_pdf(ruta_salida, elements, usar_landscape=False)
 
-# REPORTE GENERAL DE INVENTARIO
+
+# 3. REPORTE GENERAL DE INVENTARIO
 def generar_reporte_inventario(ruta_salida, status_filtro="Todos", categoria_filtro="Todas las Categorías"):
-    doc = SimpleDocTemplate(ruta_salida, pagesize=letter,
-                            rightMargin=30, leftMargin=30,
-                            topMargin=30, bottomMargin=30)
-    elements = []
-    styles = getSampleStyleSheet()
-    
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    cursor.execute("SELECT com_Codigo, com_Descripcion, com_IDfiscal, com_DireccionF FROM ark_company LIMIT 1")
-    empresa = cursor.fetchone()
-    if not empresa:
-        empresa = ("", "Sin Empresa Registrada", "Sin RIF", "Sin Dirección")
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    estilos = _crear_estilos_reporte(getSampleStyleSheet())
         
-    # JOIN para obtener el nombre de la categoría
     query = """
         SELECT inv.inv_codigo, inv.inv_descripcion, cat.cat_descripcion, inv.inv_status
         FROM ark_inventario inv
@@ -293,8 +245,6 @@ def generar_reporte_inventario(ruta_salida, status_filtro="Todos", categoria_fil
         query += " AND inv.inv_status = 0"
         filtros_aplicados.append("Status: Inactivo")
         
-    # Extraer el código de la categoría del string concatenado (ej: "00009 - MAQUINAS" -> "00009")
-    cat_codigo = None
     if categoria_filtro != "Todas las Categorías":
         parts = categoria_filtro.split(" - ", 1)
         cat_codigo = parts[0].strip()
@@ -303,47 +253,21 @@ def generar_reporte_inventario(ruta_salida, status_filtro="Todos", categoria_fil
         filtros_aplicados.append(f"Categoría: {categoria_filtro}")
         
     query += " ORDER BY inv.inv_codigo"
-    
     cursor.execute(query, params)
     inventario = cursor.fetchall()
     conn.close()
     
-    now = datetime.now()
-    fecha_str = now.strftime("%d/%m/%Y")
-    hora_str = now.strftime("%H:%M:%S")
-    
-    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=9, leading=12)
-    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=14, alignment=TA_CENTER, spaceAfter=12)
-    filter_style = ParagraphStyle('Filter', parent=styles['Normal'], fontSize=9, alignment=TA_LEFT)
-    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=TA_LEFT)
-    
-    header_data = [
-        [f"Empresa: {empresa[0]} - {empresa[1]}", f"Fecha: {fecha_str}"],
-        [f"RIF: {empresa[2]}", f"Hora: {hora_str}"],
-        [f"Dirección Fiscal: {empresa[3]}", ""]
-    ]
-    
-    header_table = Table(header_data, colWidths=[4.5*inch, 2.5*inch])
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('ALIGN', (0,0), (0,-1), 'LEFT'),
-        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
-        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
-        ('FONTSIZE', (0,0), (-1,-1), 9),
-        ('TOPPADDING', (0,0), (-1,-1), 2),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
-    ]))
-    elements.append(header_table)
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=False))
     elements.append(Spacer(1, 15))
-    
-    elements.append(Paragraph("GENERAL DE INVENTARIO", title_style))
+    elements.append(Paragraph("GENERAL DE INVENTARIO", estilos['title']))
     elements.append(Spacer(1, 5))
     
     texto_filtros = "Filtros aplicados: " + (", ".join(filtros_aplicados) if filtros_aplicados else "Todos los registros")
-    elements.append(Paragraph(texto_filtros, filter_style))
+    elements.append(Paragraph(texto_filtros, estilos['filter']))
     elements.append(Spacer(1, 10))
     
-    col_widths = [1.2*inch, 3.0*inch, 2.0*inch, 1.0*inch]
+    col_widths = [1.3*inch, 3.4*inch, 2.0*inch, 1.02*inch] # Ajustado a 7.72"
     table_data = [['Código', 'Descripción', 'Categoría', 'Status']]
     
     total_registros = 0
@@ -371,40 +295,21 @@ def generar_reporte_inventario(ruta_salida, status_filtro="Todos", categoria_fil
     ]))
     elements.append(data_table)
     elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", estilos['footer']))
     
-    elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", footer_style))
-    
-    doc.build(elements)
-    # return ruta_salida
-    return _generar_pdf(ruta_salida, elements)
+    return _generar_pdf(ruta_salida, elements, usar_landscape=False)
 
-# REPORTE DE MOVIMIENTO DE INVENTARIO
-
+# 4. REPORTE DE MOVIMIENTO DE INVENTARIO (LANDSCAPE)
 def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, fecha_hasta=None, deposito_id="0", tipos=None):
-    """
-    Genera el reporte de movimiento de inventario en PDF.
-    Agrupado por producto (código), mostrando totales por tipo de operación.
-    """
-    doc = SimpleDocTemplate(ruta_salida, pagesize=landscape(letter),
-                            rightMargin=30, leftMargin=30,
-                            topMargin=30, bottomMargin=30)
-    elements = []
-    styles = getSampleStyleSheet()
-    
     conn = get_db_connection()
     cursor = conn.cursor()
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    estilos = _crear_estilos_reporte(getSampleStyleSheet())
     
-    # Datos de la empresa
-    cursor.execute("SELECT com_Codigo, com_Descripcion, com_IDfiscal, com_DireccionF FROM ark_company LIMIT 1")
-    empresa = cursor.fetchone()
-    if not empresa:
-        empresa = ("", "Sin Empresa Registrada", "Sin RIF", "Sin Dirección")
-    
-    # Obtener nombres de tipos de operación desde la BD
     cursor.execute("SELECT topo_id, topo_descripcion FROM ark_tipos_operacion")
     tipo_nombres = {row[0]: row[1] for row in cursor.fetchall()}
     
-    # Obtener nombre de la UO
     uo_nombre = "Todas las UO"
     if uo_id != "0":
         cursor.execute("SELECT uo_Codigo, uo_nombre FROM ark_unds_operativas WHERE uo_id = ?", (uo_id,))
@@ -412,7 +317,6 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         if uo_row:
             uo_nombre = f"{uo_row[0]} - {uo_row[1]}"
     
-    # Obtener nombre del depósito
     deposito_nombre = "Todos los depósitos"
     if deposito_id != "0":
         cursor.execute("SELECT dep_codigo, dep_descripcion FROM ark_depositos WHERE dep_IDauto = ?", (deposito_id,))
@@ -420,15 +324,9 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         if dep_row:
             deposito_nombre = f"{dep_row[0]} - {dep_row[1]}"
     
-    # Tipos de operación permitidos (según filtros)
     tipo_mapping = {
-        'cargos': [2],
-        'descargos': [3],
-        'transferencias': [1],
-        'facturas': [11],
-        'notas_entrega_vtas': [13],
-        'compras': [6],
-        'notas_entrega_comp': [8]
+        'cargos': [2], 'descargos': [3], 'transferencias': [1], 'facturas': [11],
+        'notas_entrega_vtas': [13], 'compras': [6], 'notas_entrega_comp': [8]
     }
     tipos_numeros = []
     for t in (tipos or []):
@@ -436,58 +334,25 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
             tipos_numeros.extend(tipo_mapping[t])
     
     if not tipos_numeros:
-        tipos_numeros = [1, 2, 3, 6, 8, 11, 13]  # Todos los que afectan inventario
-    
+        tipos_numeros = [1, 2, 3, 6, 8, 11, 13]
+ 
     placeholders = ','.join(['?'] * len(tipos_numeros))
     
-    # ============================================================
-    # CONSULTA PRINCIPAL: Agrupada por código de producto
-    # ============================================================
+    # query incluyendo NULL as destino para mantener la unión limpia y compatible
     query = f"""
     WITH movimientos AS (
-        SELECT 
-            dtv_codigo as codigo,
-            dtv_tipooperacion as tipooperacion,
-            dtv_cantidad as cantidad,
-            dtv_uo_Codigo as uo_codigo,
-            dtv_depositosource as deposito
-        FROM ark_detalletranvtas
-        WHERE dtv_tipooperacion IN ({placeholders})
-          AND dtv_fechaoperacion BETWEEN ? AND ?
-        
+        SELECT dtv_codigo as codigo, dtv_tipooperacion as tipooperacion, dtv_cantidad as cantidad, dtv_uo_Codigo as uo_codigo, dtv_depositosource as deposito, NULL as deposito_destino
+        FROM ark_detalletranvtas WHERE dtv_tipooperacion IN ({placeholders}) AND dtv_fechaoperacion BETWEEN ? AND ?
         UNION ALL
-        
-        SELECT 
-            dtc_codigo as codigo,
-            dtc_tipooperacion as tipooperacion,
-            dtc_cantidad as cantidad,
-            dtc_uo_Codigo as uo_codigo,
-            dtc_depositosource as deposito
-        FROM ark_detalletrancomp
-        WHERE dtc_tipooperacion IN ({placeholders})
-          AND dtc_fechaoperacion BETWEEN ? AND ?
-        
+        SELECT dtc_codigo as codigo, dtc_tipooperacion as tipooperacion, dtc_cantidad as cantidad, dtc_uo_Codigo as uo_codigo, dtc_depositosource as deposito, NULL as deposito_destino
+        FROM ark_detalletrancomp WHERE dtc_tipooperacion IN ({placeholders}) AND dtc_fechaoperacion BETWEEN ? AND ?
         UNION ALL
-        
-        SELECT 
-            dti_codigo as codigo,
-            dti_tipooperacion as tipooperacion,
-            dti_cantidad as cantidad,
-            dti_uo_Codigo as uo_codigo,
-            dti_depositosource as deposito
-        FROM ark_detalletraninv
-        WHERE dti_tipooperacion IN ({placeholders})
-          AND dti_fechaoperacion BETWEEN ? AND ?
+        SELECT dti_codigo as codigo, dti_tipooperacion as tipooperacion, dti_cantidad as cantidad, dti_uo_Codigo as uo_codigo, dti_depositosource as deposito, dti_depositotarget as deposito_destino
+        FROM ark_detalletraninv WHERE dti_tipooperacion IN ({placeholders}) AND dti_fechaoperacion BETWEEN ? AND ?
     ),
     agregado AS (
-        SELECT 
-            codigo,
-            tipooperacion,
-            SUM(cantidad) as total_cantidad,
-            uo_codigo,
-            deposito
-        FROM movimientos
-        WHERE 1=1
+        SELECT codigo, tipooperacion, SUM(cantidad) as total_cantidad, uo_codigo, deposito, deposito_destino
+        FROM movimientos WHERE 1=1
     """
     
     params = tipos_numeros + [fecha_desde, fecha_hasta] + tipos_numeros + [fecha_desde, fecha_hasta] + tipos_numeros + [fecha_desde, fecha_hasta]
@@ -497,21 +362,15 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         params.append(uo_id)
     
     if deposito_id != "0":
-        query += " AND deposito = ?"
-        params.append(deposito_id)
-    
+        # Si hay filtro de depósito, se evalúa si afectó como origen o como destino en transferencias
+        query += " AND (deposito = ? OR (tipooperacion = 1 AND deposito_destino = ?))"
+        params.extend([deposito_id, deposito_id])
+   
     query += """
-        GROUP BY codigo, tipooperacion, uo_codigo, deposito
+        GROUP BY codigo, tipooperacion, uo_codigo, deposito, deposito_destino
     )
-    SELECT 
-        a.codigo,
-        i.inv_descripcion,
-        a.tipooperacion,
-        a.total_cantidad,
-        a.uo_codigo,
-        a.deposito
-    FROM agregado a
-    LEFT JOIN ark_inventario i ON a.codigo = i.inv_codigo
+    SELECT a.codigo, i.inv_descripcion, a.tipooperacion, a.total_cantidad, a.deposito, a.deposito_destino
+    FROM agregado a LEFT JOIN ark_inventario i ON a.codigo = i.inv_codigo
     ORDER BY a.codigo, a.tipooperacion
     """
     
@@ -519,118 +378,94 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
     rows = cursor.fetchall()
     conn.close()
     
-    # ============================================================
-    # REORGANIZAR DATOS: Un registro por producto con columnas por tipo
-    # ============================================================
     productos = {}
     for row in rows:
         codigo = row[0]
         descripcion = row[1] or "Sin descripción"
         tipo = row[2]
         cantidad = float(row[3]) if row[3] else 0.0
-        uo = row[4]
-        deposito = row[5]
+        dep_origen = str(row[4]) if row[4] else ""
+        dep_destino = str(row[5]) if row[5] else ""
         
         if codigo not in productos:
             productos[codigo] = {
-                'descripcion': descripcion,
-                'uo': uo,
-                'deposito': deposito,
-                'tipos': {}
+                'descripcion': descripcion, 
+                'tipos': {}, 
+                'trans_detalles': [] # Estructura interna para separar los flujos dobles
             }
-        productos[codigo]['tipos'][tipo] = cantidad
+            
+        if tipo == 1:
+            # Almacenamos el par de depósitos junto con la cantidad para procesarla en el bucle visual
+            productos[codigo]['trans_detalles'].append({
+                'cantidad': cantidad,
+                'origen': dep_origen,
+                'destino': dep_destino
+            })
+        else:
+            productos[codigo]['tipos'][tipo] = cantidad
     
-    # ============================================================
-    # CONSTRUIR TABLA
-    # ============================================================
-    now = datetime.now()
-    fecha_str = now.strftime("%d/%m/%Y")
-    hora_str = now.strftime("%H:%M:%S")
-    
-    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=9, leading=12)
-    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=14, alignment=TA_CENTER, spaceAfter=12)
-    filter_style = ParagraphStyle('Filter', parent=styles['Normal'], fontSize=9, alignment=TA_LEFT)
-    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=TA_LEFT)
-    
-    # Encabezado
-    header_data = [
-        [f"Empresa: {empresa[0]} - {empresa[1]}", f"Fecha: {fecha_str}"],
-        [f"RIF: {empresa[2]}", f"Hora: {hora_str}"],
-        [f"Dirección Fiscal: {empresa[3]}", ""]
-    ]
-    
-    header_table = Table(header_data, colWidths=[4.5*inch, 2.5*inch])
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'TOP'),
-        ('ALIGN', (0,0), (0,-1), 'LEFT'),
-        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
-        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
-        ('FONTSIZE', (0,0), (-1,-1), 9),
-        ('TOPPADDING', (0,0), (-1,-1), 2),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
-    ]))
-    elements.append(header_table)
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=True))
     elements.append(Spacer(1, 15))
-    
-    # Título
-    elements.append(Paragraph("MOVIMIENTO DE INVENTARIO", title_style))
+    elements.append(Paragraph("MOVIMIENTO DE INVENTARIO", estilos['title']))
     elements.append(Spacer(1, 5))
     
-    # Filtros
-    filtros_texto = []
-    filtros_texto.append(f"UO: {uo_nombre}")
-    filtros_texto.append(f"Período: {fecha_desde} al {fecha_hasta}")
-    filtros_texto.append(f"Depósito: {deposito_nombre}")
+    filtros_texto = [f"UO: {uo_nombre}", f"Período: {fecha_desde} al {fecha_hasta}", f"Depósito: {deposito_nombre}"]
     if tipos:
         nombres = [t.replace('_', ' ').title() for t in tipos]
         filtros_texto.append(f"Tipos: {', '.join(nombres)}")
     
-    elements.append(Paragraph(f"Filtros aplicados: {', '.join(filtros_texto)}", filter_style))
+    elements.append(Paragraph(f"Filtros applied: {', '.join(filtros_texto)}", estilos['filter']))
     elements.append(Spacer(1, 10))
     
-    # ============================================================
-    # CABECERAS DE LA TABLA
-    # ============================================================
-    col_widths = [1.0*inch, 2.5*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch, 0.8*inch]
-    table_data = [['Código', 'Descripción', 'Cargos', 'Descargos', 'Transferencias', 'Facturas', 'N/E Vta', 'Compras', 'N/E Comp', 'Total']]
+    col_widths = [0.75*inch, 2.20*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.83*inch]
+    table_data = [['Código', 'Descripción', 'Cargos', 'Descargos', 'Trans.(+)', 'Trans. (-)', 'Facturas', 'N/E Vta', 'Compras', 'N/E Comp', 'Total']]
     
-    total_cargos = 0.0
-    total_descargos = 0.0
-    total_transferencias = 0.0
-    total_facturas = 0.0
-    total_ne_vta = 0.0
-    total_compras = 0.0
-    total_ne_comp = 0.0
-    total_general = 0.0
+    total_cargos = total_descargos = total_trans_pos = total_trans_neg = total_facturas = total_ne_vta = total_compras = total_ne_comp = total_general = 0.0
     total_registros = 0
     
     for codigo, data in sorted(productos.items()):
-        tipos = data['tipos']
-        cargos = tipos.get(2, 0.0)
-        descargos = tipos.get(3, 0.0)
-        transferencias = tipos.get(1, 0.0)
-        facturas = tipos.get(11, 0.0)
-        ne_vta = tipos.get(13, 0.0)
-        compras = tipos.get(6, 0.0)
-        ne_comp = tipos.get(8, 0.0)
-        total = cargos + descargos + transferencias + facturas + ne_vta + compras + ne_comp
+        t_data = data['tipos']
+        
+        cargos = abs(t_data.get(2, 0.0))
+        compras = abs(t_data.get(6, 0.0))
+        ne_comp = abs(t_data.get(8, 0.0))
+        descargos = -abs(t_data.get(3, 0.0)) if t_data.get(3, 0.0) != 0 else 0.0
+        facturas = -abs(t_data.get(11, 0.0)) if t_data.get(11, 0.0) != 0 else 0.0
+        ne_vta = -abs(t_data.get(13, 0.0)) if t_data.get(13, 0.0) != 0 else 0.0
+        
+        # Calcular Transferencias Positivas y Negativas basado en el rol de los depósitos
+        trans_pos = 0.0
+        trans_neg = 0.0
+        
+        for trans in data['trans_detalles']:
+            cant = trans['cantidad']
+            orig = trans['origen']
+            dest = trans['destino']
+            
+            if deposito_id != "0":
+                # Si se filtra por depósito específico:
+                if orig == deposito_id:
+                    trans_neg -= cant  # Funciona como Origen: RESTA
+                if dest == deposito_id:
+                    trans_pos += cant  # Funciona como Destino: SUMA
+            else:
+                # Si se listan Todos los Depósitos, se muestran ambas caras simultáneamente
+                trans_pos += cant
+                trans_neg -= cant
+
+        total = cargos + descargos + trans_pos + trans_neg + facturas + ne_vta + compras + ne_comp
         
         table_data.append([
-            str(codigo)[:15],
-            str(data['descripcion'])[:30],
-            f"{cargos:,.2f}",
-            f"{descargos:,.2f}",
-            f"{transferencias:,.2f}",
-            f"{facturas:,.2f}",
-            f"{ne_vta:,.2f}",
-            f"{compras:,.2f}",
-            f"{ne_comp:,.2f}",
-            f"{total:,.2f}"
+            str(codigo)[:10], str(data['descripcion']),
+            f"{cargos:,.2f}", f"{descargos:,.2f}", f"{trans_pos:,.2f}", f"{trans_neg:,.2f}",
+            f"{facturas:,.2f}", f"{ne_vta:,.2f}", f"{compras:,.2f}", f"{ne_comp:,.2f}", f"{total:,.2f}"
         ])
         
         total_cargos += cargos
         total_descargos += descargos
-        total_transferencias += transferencias
+        total_trans_pos += trans_pos
+        total_trans_neg += trans_neg
         total_facturas += facturas
         total_ne_vta += ne_vta
         total_compras += compras
@@ -638,12 +473,22 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         total_general += total
         total_registros += 1
     
-    # Fila de totales
-    table_data.append(['', 'TOTALES:', f"{total_cargos:,.2f}", f"{total_descargos:,.2f}", f"{total_transferencias:,.2f}", f"{total_facturas:,.2f}", f"{total_ne_vta:,.2f}", f"{total_compras:,.2f}", f"{total_ne_comp:,.2f}", f"{total_general:,.2f}"])
+    table_data.append(['', 'TOTALES:', f"{total_cargos:,.2f}", f"{total_descargos:,.2f}", f"{total_trans_pos:,.2f}", f"{total_trans_neg:,.2f}", f"{total_facturas:,.2f}", f"{total_ne_vta:,.2f}", f"{total_compras:,.2f}", f"{total_ne_comp:,.2f}", f"{total_general:,.2f}"])
     
     data_table = Table(table_data, colWidths=col_widths)
     data_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
+        # Fondo Azul base para las columnas de texto y el total final
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#4472C4')),   # Código y Descripción
+        ('BACKGROUND', (10, 0), (10, 0), colors.HexColor('#4472C4')), # Total General
+        
+        # ASIGNACIÓN PRECISA DE COLORES PARA LAS CABECERAS
+        ('BACKGROUND', (2, 0), (2, 0), colors.HexColor('#008000')),   # Verde para Cargos
+        ('BACKGROUND', (3, 0), (3, 0), colors.HexColor('#FFA500')),   # Naranja para Descargos
+        ('BACKGROUND', (4, 0), (4, 0), colors.HexColor('#008000')),   # Verde para Trans.(+)
+        ('BACKGROUND', (5, 0), (5, 0), colors.HexColor('#FFA500')),   # Naranja para Trans. (-)
+        ('BACKGROUND', (6, 0), (7, 0), colors.HexColor('#FFA500')),   # Naranja para Facturas y N/E Vta
+        ('BACKGROUND', (8, 0), (9, 0), colors.HexColor('#008000')),   # Verde para Compras y N/E Comp
+        
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -652,12 +497,12 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         ('BACKGROUND', (0, 1), (-1, -2), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
         ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -2), 7),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4),
         ('ALIGN', (0, 1), (-1, -2), 'LEFT'),
         ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),
         ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
         ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
-        # Fila de totales
         ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')),
         ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
@@ -668,10 +513,162 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
     
     elements.append(data_table)
     elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", estilos['footer']))
     
-    # Pie de página
-    elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", footer_style))
+    return _generar_pdf(ruta_salida, elements, usar_landscape=True)
+
+# 5. REPORTE DE RESUMEN PRELIMINAR DE INVENTARIO (LANDSCAPE)
+
+def generar_pdf_resumen_preliminar(ruta_salida, uo_id="0", fecha_desde=None, fecha_hasta=None, deposito_id="0", tipos=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    estilos = _crear_estilos_reporte(getSampleStyleSheet())
     
-    doc.build(elements)
-    # return ruta_salida
+    uo_nombre = "Todas las UO"
+    if uo_id != "0":
+        cursor.execute("SELECT uo_Codigo, uo_nombre FROM ark_unds_operativas WHERE uo_id = ?", (uo_id,))
+        uo_row = cursor.fetchone()
+        if uo_row:
+            uo_nombre = f"{uo_row[0]} - {uo_row[1]}"
+            
+    deposito_nombre = "Todos los depósitos"
+    if deposito_id != "0":
+        cursor.execute("SELECT dep_codigo, dep_descripcion FROM ark_depositos WHERE dep_IDauto = ?", (deposito_id,))
+        dep_row = cursor.fetchone()
+        if dep_row:
+            deposito_nombre = f"{dep_row[0]} - {dep_row[1]}"
+
+    query = """
+        SELECT 
+            e.exc_item_codigo,
+            COALESCE(i.inv_descripcion, 'Sin descripción') as inv_descripcion,
+            SUM(COALESCE(e.exc_cargos, 0.0)) as total_cargos,
+            SUM(COALESCE(e.exc_descargos, 0.0)) as total_descargos,
+            SUM(COALESCE(e.exc_transferencias_mas, 0.0)) as total_transferencias_mas,
+            SUM(COALESCE(e.exc_transferencias_menos, 0.0)) as total_transferencias_menos,
+            SUM(COALESCE(e.exc_ventas, 0.0)) as total_ventas,
+            SUM(COALESCE(e.exc_compras, 0.0)) as total_compras,
+            COALESCE(e.exc_final, 0.0) as exc_final
+        FROM ark_existencia_caluladas e
+        LEFT JOIN ark_inventario i ON e.exc_item_codigo = i.inv_codigo
+        WHERE 1=1
+    """
+    params = []
+
+    if uo_id != "0":
+        query += " AND e.exc_uo_Codigo = (SELECT uo_Codigo FROM ark_unds_operativas WHERE uo_id = ?)"
+        params.append(uo_id)
+
+    if deposito_id != "0":
+        query += " AND e.exc_dep_codigo = (SELECT dep_codigo FROM ark_depositos WHERE dep_IDauto = ?)"
+        params.append(deposito_id)
+
+    
+    query +="""
+    GROUP BY e.exc_item_codigo, inv_descripcion -- Agrupamos por código y descripción del inventario
+    ORDER BY e.exc_item_codigo
+    """
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=True))
+    elements.append(Spacer(1, 15))
+    elements.append(Paragraph("RESUMEN PRELIMINAR DE TRANSACCIONES", estilos['title']))
+    elements.append(Spacer(1, 5))
+    
+    filtros_texto = [f"UO: {uo_nombre}", f"Período: {fecha_desde} al {fecha_hasta}", f"Depósito: {deposito_nombre}"]
+    elements.append(Paragraph(f"Filtros applied: {', '.join(filtros_texto)}", estilos['filter']))
+    elements.append(Spacer(1, 10))
+    
+    col_widths = [0.75*inch, 2.20*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.83*inch]
+    table_data = [['Código', 'Descripción', 'Cargos', 'Descargos', 'Trans.(+)', 'Trans. (-)', 'Facturas', 'N/E Vta', 'Compras', 'N/E Comp', 'Total']]
+    
+    total_cargos = total_descargos = total_trans_pos = total_trans_neg = total_facturas = total_ne_vta = total_compras = total_ne_comp = total_general = 0.0
+    total_registros = 0
+    
+    for row in rows:
+        codigo = row[0]
+        descripcion = row[1]
+        
+        # Los campos [2], [3], etc., ahora contienen el TOTAL SUMADO por SQL.
+        cargos = abs(row[2]) 
+        descargos = -abs(row[3]) if row[3] != 0 else 0.0
+        trans_pos = abs(row[4])
+        trans_neg = -abs(row[5]) if row[5] != 0 else 0.0
+        facturas = -abs(row[6]) if row[6] != 0 else 0.0
+        ne_vta = 0.0 # Estos valores parecen ser fijos (cero) en tu código original, lo mantengo así.
+        compras = abs(row[7])
+        ne_comp = 0.0
+        total = row[8]
+        
+        table_data.append([
+            str(codigo)[:10], 
+            str(descripcion),
+            f"{cargos:,.2f}", 
+            f"{descargos:,.2f}", 
+            f"{trans_pos:,.2f}", 
+            f"{trans_neg:,.2f}",
+            f"{facturas:,.2f}", 
+            f"{ne_vta:,.2f}", 
+            f"{compras:,.2f}", 
+            f"{ne_comp:,.2f}", 
+            f"{total:,.2f}"
+        ])
+        
+        total_cargos += cargos
+        total_descargos += descargos
+        total_trans_pos += trans_pos
+        total_trans_neg += trans_neg
+        total_facturas += facturas
+        total_ne_vta += ne_vta
+        total_compras += compras
+        total_ne_comp += ne_comp
+        total_general += total
+        total_registros += 1
+    
+    table_data.append(['', 'TOTALES:', f"{total_cargos:,.2f}", f"{total_descargos:,.2f}", f"{total_trans_pos:,.2f}", f"{total_trans_neg:,.2f}", f"{total_facturas:,.2f}", f"{total_ne_vta:,.2f}", f"{total_compras:,.2f}", f"{total_ne_comp:,.2f}", f"{total_general:,.2f}"])
+    
+    data_table = Table(table_data, colWidths=col_widths)
+    data_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#4472C4')),
+        ('BACKGROUND', (10, 0), (10, 0), colors.HexColor('#4472C4')),
+        
+        ('BACKGROUND', (2, 0), (2, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (3, 0), (3, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (4, 0), (4, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (5, 0), (5, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (6, 0), (7, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (8, 0), (9, 0), colors.HexColor('#008000')),
+        
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4), 
+        ('ALIGN', (0, 1), (-1, -2), 'LEFT'),
+        ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+        ('ALIGN', (1, -1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey),
+    ]))
+    
+    elements.append(data_table)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", estilos['footer']))
+    
     return _generar_pdf(ruta_salida, elements, usar_landscape=True)

@@ -329,6 +329,25 @@ COLUMNAS_DESTINO_DTI = [
     'dti_LastUpdateDate', 'dti_LastUpdateTime', 'dti_LastMachine', 'dti_UserLastUpdate'
 ]
 
+# -------------------- IMPORT SinvDep --------------------
+CAMPOS_SINVDEP = [
+    'FT_TIPO','FT_CODIGOPRODUCTO','FT_CODIGODEPOSITO','FT_LOTE','FT_LOTEAUTOINCREMENT',
+    'FT_NOLINEA','FT_STATUS','FT_PUESTO','FT_EXISTENCIA','FT_EXISTENCIADETALLADA',
+    'FT_EXISTENCIAAPARTADA','FT_EXISTENCIAORDENCOMPRA','FT_EXISTENCIAPEDIDO','FT_INVENTARIOINICIALBS',
+    'FT_INVENTARIOINICIALBSCIERRE','FT_INVENTARIOINICIALUND','FT_INVENTARIOINICIALCIERRE',
+    'FT_CTDTRANSITO','FT_VISIBLE','FT_CODEBARRA','FT_EXISTENCIAAJUSTE','BASE_AUTOINCREMENT','FT_CODE',
+
+]
+COLUMNAS_DESTINO_EXA = [
+    'exa_idauto','exa_uo_id','exa_uo_Codigo','exa_tipo','exa_codigoproducto','exa_codigodeposito',
+    'exa_lote','exa_loteautoincrement','exa_nolinea','exa_status','exa_puesto','exa_existencia',
+    'exa_existenciadetallada','exa_existenciaapartada','exa_existenciaordencompra','exa_existenciapedido',
+    'exa_inventarioinicialbs','exa_inventarioinicialbscierre','exa_inventarioinicialund','exa_inventarioinicialcierre',
+    'exa_ctdtransito','exa_visible','exa_codebarra','exa_existenciaajuste', 'exa_base_autoincrement', 
+    'exa_code', 'exa_SystemDate', 'exa_SystemTime', 'exa_NameMachine', 'exa_UserCreator', 
+    'exa_LastUpdateDate', 'exa_LastUpdateTime', 'exa_LastMachine', 'exa_UserLastUpdate'
+]       
+
 
 def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, deposito_id, status_valor, tablas, dsn, usuario, password, callback_progreso=None):
 
@@ -443,6 +462,15 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
            )
            resultados.append(resultado_inv)
         
+        # ---- SinvDep ----
+        if "SinvDep" in tablas:
+            resultado_invdep = importar_sinvdep(
+                uo_id, uo_codigo, deposito_id,
+                dsn, usuario, password, callback_progreso
+            )
+            print(f"[DEBUG] Llamada a importar_sinvdep con {len(locals())} argumentos")
+            resultados.append(resultado_invdep)
+
         dbisam_conn.close()
         return f"Importación completada.\n" + "\n".join(resultados)
 
@@ -692,4 +720,81 @@ def importar_sdetalleinv(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, 
     except Exception as e:
         raise e
     
-    
+def importar_sinvdep(uo_id, uo_codigo, deposito_filtro, dsn, user, pwd, callback_progreso=None):
+    sqlite_conn = None
+    sqlite_cursor = None  # <-- Inicializa explícitamente
+    try:
+        conn_str = f"DSN={dsn};UID={user};PWD={pwd};"
+        dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
+        cursor_dbisam = dbisam_conn.cursor()
+
+        query_dbisam = f"""
+            SELECT {', '.join(CAMPOS_SINVDEP)}
+            FROM SinvDep
+            WHERE FT_TIPO = 4
+        """
+        if deposito_filtro != 0:
+            query_dbisam += f" AND FT_CODIGODEPOSITO = {deposito_filtro}"
+
+        cursor_dbisam.execute(query_dbisam)
+        rows = cursor_dbisam.fetchall()
+        total = len(rows)
+        dbisam_conn.close()
+
+        if total == 0:
+            return "Importación de existencia Actual: No se encontraron registros para el filtro seleccionado."
+
+        # --- Conexión SQLite ---
+        sqlite_conn = get_db_connection()
+        if sqlite_conn is None:
+            raise RuntimeError("No se pudo establecer conexión con la base de datos SQLite.")
+        sqlite_cursor = sqlite_conn.cursor()  # <-- Ahora sí se asigna
+
+        # Limpiar antes de insertar
+        sqlite_cursor.execute("DELETE FROM ark_existencia_actual WHERE exa_uo_Codigo = ?", (uo_codigo,))
+
+        columnas_insert = [col for col in COLUMNAS_DESTINO_EXA if col != 'exa_idauto']
+        placeholders = ', '.join(['?'] * len(columnas_insert))
+        query_sqlite = f"INSERT INTO ark_existencia_actual ({', '.join(columnas_insert)}) VALUES ({placeholders})"
+
+        user_creator = get_current_user()
+        machine_name = get_machine_name()
+        sys_date = date.today().isoformat()
+        sys_time = datetime.now().strftime("%H:%M:%S")
+        audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
+
+        for i, row in enumerate(rows):
+            data = [uo_id, uo_codigo]
+            for value in row:
+                # ... procesamiento de tipos ...
+                if isinstance(value, (bytes, bytearray)):
+                    data.append(value.decode('utf-8', errors='replace'))
+                elif type(value).__name__ == 'Decimal':
+                    data.append(float(value) if value is not None else None)
+                elif isinstance(value, datetime):
+                    data.append(value.isoformat())
+                elif isinstance(value, date):
+                    data.append(value.isoformat())
+                elif isinstance(value, time):
+                    data.append(value.strftime("%H:%M:%S"))
+                else:
+                    data.append(value)
+            data.extend(audit_values)
+            sqlite_cursor.execute(query_sqlite, data)
+
+        sqlite_conn.commit()
+        return f"Importación exitosa. Se procesaron {total} registros de existencia actual de la Unidad Operativa {uo_codigo}."
+
+    except Exception as e:
+        # Solo cierra si existen
+        if sqlite_cursor is not None:
+            try:
+                sqlite_cursor.close()
+            except:
+                pass
+        if sqlite_conn is not None:
+            try:
+                sqlite_conn.close()
+            except:
+                pass
+        raise e  # Relanza para que la UI lo capture

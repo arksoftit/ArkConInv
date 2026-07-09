@@ -1,7 +1,7 @@
 # ArkConInv - Consolidación de Inventario
 # Desarrollado por Juan E. Páez M. (JUEPAE)
 # Fecha: Junio 2026
-# Version: 0.1.01Beta
+# Version: 0.1.01.08Beta
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
@@ -15,14 +15,20 @@ from ui.dialog_users import DialogUsers
 from ui.dialog_depositos import DialogDeposito
 from ui.dialog_categoria import DialogCategoria
 from ui.dialog_inventario import DialogInventario
+from ui.dialog_monedas import DialogMonedas
+from ui.dialog_factores_historicos import DialogFactoresHistoricos
 from ui.dialog_importar_categorias import DialogImportarCategorias
 from ui.dialog_importar_depositos import DialogImportarDepositos
 from ui.dialog_importar_inventario import DialogImportarInventario
+# from ui.dialog_import_existencia import DialogImportExistencia
 from ui.dialog_import_transacciones import DialogImportTransacciones
 from ui.dialog_reporte_depositos import DialogReporteDepositos
 from ui.dialog_reporte_categorias import DialogReporteCategorias
 from ui.dialog_reporte_inventario import DialogReporteInventario
 from ui.dialog_reporte_movimiento_inv import DialogMovimientoInventario
+from ui.dialog_resumen_preliminar import DialogResumenPreliminar
+from ui.dialog_preliminar import DialogPreliminar
+
 
 from PIL import Image, ImageTk
 from core.path_utils import get_icon_path, get_logo_path
@@ -66,10 +72,13 @@ class ArkConInvApp(tk.Tk):
         menu_maestros.add_command(label="Depósitos", command=self._abrir_depositos)
         menu_maestros.add_command(label="Categorías", command=self._abrir_categorias)
         menu_maestros.add_command(label="Inventario", command=self._abrir_inventario)
+        menu_maestros.add_command(label="Monedas y Factores Históricos", command=self._abrir_monedas)
+        
 
         menu_transacciones = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Transacciones", menu=menu_transacciones)
-        menu_transacciones.add_command(label="Preliminar", command=self._placeholder)
+        # menu_transacciones.add_command(label="Preliminar", command=self._placeholder)
+        menu_transacciones.add_command(label="Preliminar", command=self._abrir_preliminar)
         menu_transacciones.add_command(label="Iniciales", command=self._placeholder)
         menu_transacciones.add_command(label="Cálculo de Existencias", command=self._placeholder)
         menu_transacciones.add_command(label="Ajustes de Existencias", command=self._placeholder)
@@ -83,15 +92,30 @@ class ArkConInvApp(tk.Tk):
         menu_importaciones.add_command(label="Importar Depósitos", command=self._abrir_importar_depositos)
         menu_importaciones.add_command(label="Importar Categorías", command=self._abrir_importar_categorias)
         menu_importaciones.add_command(label="Importar Inventario", command=self._abrir_importar_inventario)
+        # menu_importaciones.add_command(label="Importar Existencia Actual", command=self._abrir_importar_existencia_actual)
         menu_importaciones.add_command(label="Importar Transacciones", command=self._abrir_importar_transacciones)
 
+        # --- MENÚ REPORTES ---
         menu_reportes = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Reportes", menu=menu_reportes)
+        
+        # Reportes Generales Directos
         menu_reportes.add_command(label="General de Depósitos", command=self._abrir_reporte_depositos)
         menu_reportes.add_command(label="General de Categorias", command=self._abrir_reporte_categorias)
         menu_reportes.add_command(label="General de Inventario", command=self._abrir_reporte_inventario)
-        menu_reportes.add_command(label="Movimiento de Inventario", command=self._abrir_reporte_movimiento_inv)
-        menu_reportes.add_command(label="Movimiento Art. 177 ISLR", command=self._placeholder)
+        
+        # Separador visual antes del Submenú
+        menu_reportes.add_separator()
+        
+        # CREACIÓN DEL SUBMENÚ: Gestión de Inventario
+        submenu_gestion = tk.Menu(menu_reportes, tearoff=0)
+        menu_reportes.add_cascade(label="Gestión de Inventario", menu=submenu_gestion)
+        
+        # Opciones dentro del Submenú "Gestión de Inventario"
+        submenu_gestion.add_command(label="Movimiento de Inventario", command=self._abrir_reporte_movimiento_inv)
+        submenu_gestion.add_command(label="Resumen Preliminar de Transacciones", command=self._abrir_resumen_preliminar)        
+        submenu_gestion.add_command(label="Movimiento Art. 177 ISLR", command=self._placeholder)
+        
 
         menu_config = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Configuración", menu=menu_config)
@@ -173,7 +197,7 @@ class ArkConInvApp(tk.Tk):
 
     def mostrar_acerca(self):
         info_acerca = (
-            "ArkConInv v0.1.01Beta\n\n"
+            "ArkConInv v0.1.01.08Beta\n\n"
             "Desarrollado por Juan E. Páez M.\n"
             "JUEPAE\n"
             "Fecha: Junio 2026\n\n"
@@ -193,14 +217,20 @@ class ArkConInvApp(tk.Tk):
     def _abrir_dialogo_conexiones(self):
         DialogConexiones(self)
     
+    def _abrir_depositos(self):
+        DialogDeposito(self)
+    
     def _abrir_categorias(self):
         DialogCategoria(self)
 
     def _abrir_inventario(self):
         DialogInventario(self)
         
-    def _abrir_depositos(self):
-        DialogDeposito(self)
+    def _abrir_monedas(self):
+        DialogMonedas(self)
+        
+    def _abrir_factores_historicos(self):
+        DialogFactoresHistoricos(self)
 
     def _abrir_importar_categorias(self):
         DialogImportarCategorias(self)
@@ -213,6 +243,12 @@ class ArkConInvApp(tk.Tk):
     
     def _abrir_importar_transacciones(self):
         DialogImportTransacciones(self)
+    
+    # def _abrir_importar_existencia_actual(self):
+    #    DialogImportExistencia(self)
+        
+    def _abrir_preliminar(self):
+        DialogPreliminar(self)
 
     def _placeholder(self):
         messagebox.showinfo("Información", "Funcionalidad en desarrollo.")
@@ -227,7 +263,13 @@ class ArkConInvApp(tk.Tk):
         DialogReporteInventario(self)
     
     def _abrir_reporte_movimiento_inv(self):
-        DialogMovimientoInventario(self)  # Asegúrate de tener esta clase implementada
+        DialogMovimientoInventario(self)
+        
+    def _abrir_resumen_preliminar(self):
+        DialogResumenPreliminar(self)
+        
+    
+    
 
 
 if __name__ == "__main__":

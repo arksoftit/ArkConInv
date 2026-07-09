@@ -11,10 +11,10 @@ from db.embedded_db import get_db_connection
 
 CONFIG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'config', 'conexiones.json'))
 
-class DialogImportTransacciones(tk.Toplevel):
+class DialogImportExistencia(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.title("Importar Transacciones")
+        self.title("Importar Existencias")
         self.geometry("600x550")
         self.resizable(False, False)
         self.transient(parent)
@@ -40,21 +40,21 @@ class DialogImportTransacciones(tk.Toplevel):
         self.cmb_uo.grid(row=0, column=1, columnspan=2, pady=5, padx=10)
         self.cmb_uo.bind("<<ComboboxSelected>>", self._on_uo_change)
 
-        ttk.Label(frame, text="Rango de Fechas:", font=("Segoe UI", 10, "bold")).grid(row=1, column=0, sticky=tk.W, pady=10)
-        fecha_frame = ttk.Frame(frame)
-        fecha_frame.grid(row=1, column=1, columnspan=2, pady=5, padx=10, sticky=tk.W)
+        #ttk.Label(frame, text="Rango de Fechas:", font=("Segoe UI", 10, "bold")).grid(row=1, column=0, sticky=tk.W, pady=10)
+        #fecha_frame = ttk.Frame(frame)
+        #fecha_frame.grid(row=1, column=1, columnspan=2, pady=5, padx=10, sticky=tk.W)
         
-        ttk.Label(fecha_frame, text="Desde:").pack(side=tk.LEFT, padx=(0, 5))
-        self.entry_fecha_desde = ttk.Entry(fecha_frame, width=12)
-        self.entry_fecha_desde.pack(side=tk.LEFT, padx=(0, 10))
-        self.entry_fecha_desde.bind("<KeyRelease>", self._aplicar_mascara_fecha)
-        self.entry_fecha_desde.bind("<Return>", lambda event: self.entry_fecha_hasta.focus_set())
+        #ttk.Label(fecha_frame, text="Desde:").pack(side=tk.LEFT, padx=(0, 5))
+        #self.entry_fecha_desde = ttk.Entry(fecha_frame, width=12)
+        #self.entry_fecha_desde.pack(side=tk.LEFT, padx=(0, 10))
+        #self.entry_fecha_desde.bind("<KeyRelease>", self._aplicar_mascara_fecha)
+        #self.entry_fecha_desde.bind("<Return>", lambda event: self.entry_fecha_hasta.focus_set())
         
-        ttk.Label(fecha_frame, text="Hasta:").pack(side=tk.LEFT, padx=(0, 5))
-        self.entry_fecha_hasta = ttk.Entry(fecha_frame, width=12)
-        self.entry_fecha_hasta.pack(side=tk.LEFT, padx=(0, 10))
-        self.entry_fecha_hasta.bind("<KeyRelease>", self._aplicar_mascara_fecha)
-        self.entry_fecha_hasta.bind("<Return>", lambda event: self.cmb_deposito.focus_set())
+        #ttk.Label(fecha_frame, text="Hasta:").pack(side=tk.LEFT, padx=(0, 5))
+        #self.entry_fecha_hasta = ttk.Entry(fecha_frame, width=12)
+        #self.entry_fecha_hasta.pack(side=tk.LEFT, padx=(0, 10))
+        #self.entry_fecha_hasta.bind("<KeyRelease>", self._aplicar_mascara_fecha)
+        #self.entry_fecha_hasta.bind("<Return>", lambda event: self.cmb_deposito.focus_set())
         
         ttk.Label(frame, text="Depósito:", font=("Segoe UI", 10, "bold")).grid(row=2, column=0, sticky=tk.W, pady=10)
         self.cmb_deposito = ttk.Combobox(frame, state="readonly", width=55)
@@ -69,19 +69,17 @@ class DialogImportTransacciones(tk.Toplevel):
         ttk.Separator(frame, orient=tk.HORIZONTAL).grid(row=4, column=0, columnspan=3, sticky=tk.EW, pady=15)
 
         ttk.Label(frame, text="Tablas a importar:", font=("Segoe UI", 10, "bold")).grid(row=5, column=0, sticky=tk.NW, pady=5)
-        self.var_soperacioninv = tk.BooleanVar(value=False)
-        self.var_sdetalleventa = tk.BooleanVar(value=False)
-        self.var_sdetallecomp = tk.BooleanVar(value=False)
-        self.var_sdetalleinv = tk.BooleanVar(value=False)
-        self.var_sinvdep = tk.BooleanVar(value=False)
+        self.var_sinvdep = tk.BooleanVar(value=True)
+        #self.var_sdetalleventa = tk.BooleanVar(value=True)
+        #self.var_sdetallecomp = tk.BooleanVar(value=True)
+        #self.var_sdetalleinv = tk.BooleanVar(value=True)
 
         chk_frame = ttk.Frame(frame)
         chk_frame.grid(row=5, column=1, columnspan=2, sticky=tk.W, padx=10)
-        ttk.Checkbutton(chk_frame, text="SOperacionInv (Cabecera)", variable=self.var_soperacioninv).pack(anchor=tk.W, pady=2)
-        ttk.Checkbutton(chk_frame, text="SDetalleVenta (Detalle Ventas)", variable=self.var_sdetalleventa).pack(anchor=tk.W, pady=2)
-        ttk.Checkbutton(chk_frame, text="SDetalleCompra (Detalle Compras)", variable=self.var_sdetallecomp).pack(anchor=tk.W, pady=2)
-        ttk.Checkbutton(chk_frame, text="SDetalleInv (Detalle Inventario)", variable=self.var_sdetalleinv).pack(anchor=tk.W, pady=2)
         ttk.Checkbutton(chk_frame, text="Existencia Actual", variable=self.var_sinvdep).pack(anchor=tk.W, pady=2)
+        # ttk.Checkbutton(chk_frame, text="SDetalleVenta (Detalle Ventas)", variable=self.var_sdetalleventa).pack(anchor=tk.W, pady=2)
+        # ttk.Checkbutton(chk_frame, text="SDetalleCompra (Detalle Compras)", variable=self.var_sdetallecomp).pack(anchor=tk.W, pady=2)
+        # ttk.Checkbutton(chk_frame, text="SDetalleInv (Detalle Inventario)", variable=self.var_sdetalleinv).pack(anchor=tk.W, pady=2)
 
         self.lbl_estado_conexion = ttk.Label(frame, text="", font=("Segoe UI", 9, "bold"))
         self.lbl_estado_conexion.grid(row=6, column=0, columnspan=3, pady=10)
@@ -194,11 +192,10 @@ class DialogImportTransacciones(tk.Toplevel):
             return
 
         tablas = []
-        if self.var_soperacioninv.get(): tablas.append("SOperacionInv")
-        if self.var_sdetalleventa.get(): tablas.append("SDetalleVenta")
-        if self.var_sdetallecomp.get(): tablas.append("SDetalleCompra")
-        if self.var_sdetalleinv.get(): tablas.append("SDetalleInv")
-        if self.var_sinvdep.get(): tablas.append("SinvDep")
+        if self.var_sinvdep.get(): tablas.append("SInvDep")
+        # if self.var_sdetalleventa.get(): tablas.append("SDetalleVenta")
+        # if self.var_sdetallecomp.get(): tablas.append("SDetalleCompra")
+        # if self.var_sdetalleinv.get(): tablas.append("SDetalleInv")
 
         if not tablas:
             messagebox.showwarning("Advertencia", "Debe seleccionar al menos una tabla para importar")

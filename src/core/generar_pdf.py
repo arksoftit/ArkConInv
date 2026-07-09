@@ -418,7 +418,7 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
     elements.append(Paragraph(f"Filtros applied: {', '.join(filtros_texto)}", estilos['filter']))
     elements.append(Spacer(1, 10))
     
-    col_widths = [1.0*inch, 2.07*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.83*inch]
+    col_widths = [0.75*inch, 2.20*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.83*inch]
     table_data = [['Código', 'Descripción', 'Cargos', 'Descargos', 'Trans.(+)', 'Trans. (-)', 'Facturas', 'N/E Vta', 'Compras', 'N/E Comp', 'Total']]
     
     total_cargos = total_descargos = total_trans_pos = total_trans_neg = total_facturas = total_ne_vta = total_compras = total_ne_comp = total_general = 0.0
@@ -457,7 +457,7 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         total = cargos + descargos + trans_pos + trans_neg + facturas + ne_vta + compras + ne_comp
         
         table_data.append([
-            str(codigo)[:15], str(data['descripcion'])[:25],
+            str(codigo)[:10], str(data['descripcion']),
             f"{cargos:,.2f}", f"{descargos:,.2f}", f"{trans_pos:,.2f}", f"{trans_neg:,.2f}",
             f"{facturas:,.2f}", f"{ne_vta:,.2f}", f"{compras:,.2f}", f"{ne_comp:,.2f}", f"{total:,.2f}"
         ])
@@ -497,7 +497,8 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         ('BACKGROUND', (0, 1), (-1, -2), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
         ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -2), 7),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4),
         ('ALIGN', (0, 1), (-1, -2), 'LEFT'),
         ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),
         ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
@@ -506,6 +507,162 @@ def generar_pdf_movimiento_inventario(ruta_salida, uo_id="0", fecha_desde=None, 
         ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ('ALIGN', (1, -1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey),
+    ]))
+    
+    elements.append(data_table)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", estilos['footer']))
+    
+    return _generar_pdf(ruta_salida, elements, usar_landscape=True)
+
+# 5. REPORTE DE RESUMEN PRELIMINAR DE INVENTARIO (LANDSCAPE)
+
+def generar_pdf_resumen_preliminar(ruta_salida, uo_id="0", fecha_desde=None, fecha_hasta=None, deposito_id="0", tipos=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    estilos = _crear_estilos_reporte(getSampleStyleSheet())
+    
+    uo_nombre = "Todas las UO"
+    if uo_id != "0":
+        cursor.execute("SELECT uo_Codigo, uo_nombre FROM ark_unds_operativas WHERE uo_id = ?", (uo_id,))
+        uo_row = cursor.fetchone()
+        if uo_row:
+            uo_nombre = f"{uo_row[0]} - {uo_row[1]}"
+            
+    deposito_nombre = "Todos los depósitos"
+    if deposito_id != "0":
+        cursor.execute("SELECT dep_codigo, dep_descripcion FROM ark_depositos WHERE dep_IDauto = ?", (deposito_id,))
+        dep_row = cursor.fetchone()
+        if dep_row:
+            deposito_nombre = f"{dep_row[0]} - {dep_row[1]}"
+
+    query = """
+        SELECT 
+            e.exc_item_codigo,
+            COALESCE(i.inv_descripcion, 'Sin descripción') as inv_descripcion,
+            SUM(COALESCE(e.exc_cargos, 0.0)) as total_cargos,
+            SUM(COALESCE(e.exc_descargos, 0.0)) as total_descargos,
+            SUM(COALESCE(e.exc_transferencias_mas, 0.0)) as total_transferencias_mas,
+            SUM(COALESCE(e.exc_transferencias_menos, 0.0)) as total_transferencias_menos,
+            SUM(COALESCE(e.exc_ventas, 0.0)) as total_ventas,
+            SUM(COALESCE(e.exc_compras, 0.0)) as total_compras,
+            COALESCE(e.exc_final, 0.0) as exc_final
+        FROM ark_existencia_calculadas e
+        LEFT JOIN ark_inventario i ON e.exc_item_codigo = i.inv_codigo
+        WHERE 1=1
+    """
+    params = []
+
+    if uo_id != "0":
+        query += " AND e.exc_uo_Codigo = (SELECT uo_Codigo FROM ark_unds_operativas WHERE uo_id = ?)"
+        params.append(uo_id)
+
+    if deposito_id != "0":
+        query += " AND e.exc_dep_codigo = (SELECT dep_codigo FROM ark_depositos WHERE dep_IDauto = ?)"
+        params.append(deposito_id)
+
+    
+    query +="""
+    GROUP BY e.exc_item_codigo, inv_descripcion -- Agrupamos por código y descripción del inventario
+    ORDER BY e.exc_item_codigo
+    """
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=True))
+    elements.append(Spacer(1, 15))
+    elements.append(Paragraph("RESUMEN PRELIMINAR DE TRANSACCIONES", estilos['title']))
+    elements.append(Spacer(1, 5))
+    
+    filtros_texto = [f"UO: {uo_nombre}", f"Período: {fecha_desde} al {fecha_hasta}", f"Depósito: {deposito_nombre}"]
+    elements.append(Paragraph(f"Filtros applied: {', '.join(filtros_texto)}", estilos['filter']))
+    elements.append(Spacer(1, 10))
+    
+    col_widths = [0.75*inch, 2.20*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.75*inch, 0.83*inch]
+    table_data = [['Código', 'Descripción', 'Cargos', 'Descargos', 'Trans.(+)', 'Trans. (-)', 'Facturas', 'N/E Vta', 'Compras', 'N/E Comp', 'Total']]
+    
+    total_cargos = total_descargos = total_trans_pos = total_trans_neg = total_facturas = total_ne_vta = total_compras = total_ne_comp = total_general = 0.0
+    total_registros = 0
+    
+    for row in rows:
+        codigo = row[0]
+        descripcion = row[1]
+        
+        # Los campos [2], [3], etc., ahora contienen el TOTAL SUMADO por SQL.
+        cargos = abs(row[2]) 
+        descargos = -abs(row[3]) if row[3] != 0 else 0.0
+        trans_pos = abs(row[4])
+        trans_neg = -abs(row[5]) if row[5] != 0 else 0.0
+        facturas = -abs(row[6]) if row[6] != 0 else 0.0
+        ne_vta = 0.0 # Estos valores parecen ser fijos (cero) en tu código original, lo mantengo así.
+        compras = abs(row[7])
+        ne_comp = 0.0
+        total = row[8]
+        
+        table_data.append([
+            str(codigo)[:10], 
+            str(descripcion),
+            f"{cargos:,.2f}", 
+            f"{descargos:,.2f}", 
+            f"{trans_pos:,.2f}", 
+            f"{trans_neg:,.2f}",
+            f"{facturas:,.2f}", 
+            f"{ne_vta:,.2f}", 
+            f"{compras:,.2f}", 
+            f"{ne_comp:,.2f}", 
+            f"{total:,.2f}"
+        ])
+        
+        total_cargos += cargos
+        total_descargos += descargos
+        total_trans_pos += trans_pos
+        total_trans_neg += trans_neg
+        total_facturas += facturas
+        total_ne_vta += ne_vta
+        total_compras += compras
+        total_ne_comp += ne_comp
+        total_general += total
+        total_registros += 1
+    
+    table_data.append(['', 'TOTALES:', f"{total_cargos:,.2f}", f"{total_descargos:,.2f}", f"{total_trans_pos:,.2f}", f"{total_trans_neg:,.2f}", f"{total_facturas:,.2f}", f"{total_ne_vta:,.2f}", f"{total_compras:,.2f}", f"{total_ne_comp:,.2f}", f"{total_general:,.2f}"])
+    
+    data_table = Table(table_data, colWidths=col_widths)
+    data_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#4472C4')),
+        ('BACKGROUND', (10, 0), (10, 0), colors.HexColor('#4472C4')),
+        
+        ('BACKGROUND', (2, 0), (2, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (3, 0), (3, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (4, 0), (4, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (5, 0), (5, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (6, 0), (7, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (8, 0), (9, 0), colors.HexColor('#008000')),
+        
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4), 
+        ('ALIGN', (0, 1), (-1, -2), 'LEFT'),
+        ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
         ('ALIGN', (1, -1), (-1, -1), 'RIGHT'),
         ('GRID', (0, -1), (-1, -1), 0.5, colors.grey),
     ]))
