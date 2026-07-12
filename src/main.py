@@ -1,7 +1,7 @@
 # ArkConInv - Consolidación de Inventario
 # Desarrollado por Juan E. Páez M. (JUEPAE)
 # Fecha: Junio 2026
-# Version: 0.1.01.08Beta
+# Version: 0.1.01.10Beta
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
@@ -26,8 +26,10 @@ from ui.dialog_reporte_depositos import DialogReporteDepositos
 from ui.dialog_reporte_categorias import DialogReporteCategorias
 from ui.dialog_reporte_inventario import DialogReporteInventario
 from ui.dialog_reporte_movimiento_inv import DialogMovimientoInventario
+from ui.dialog_reporte_existencia_actual import DialogReporteExistenciaActual
 from ui.dialog_resumen_preliminar import DialogResumenPreliminar
 from ui.dialog_preliminar import DialogPreliminar
+from ui.dialog_calculo_existencia import DialogCalculoExistencia
 
 
 from PIL import Image, ImageTk
@@ -80,7 +82,7 @@ class ArkConInvApp(tk.Tk):
         # menu_transacciones.add_command(label="Preliminar", command=self._placeholder)
         menu_transacciones.add_command(label="Preliminar", command=self._abrir_preliminar)
         menu_transacciones.add_command(label="Iniciales", command=self._placeholder)
-        menu_transacciones.add_command(label="Cálculo de Existencias", command=self._placeholder)
+        menu_transacciones.add_command(label="Cálculo de Existencias", command=self._abrir_calculo_existencia)
         menu_transacciones.add_command(label="Ajustes de Existencias", command=self._placeholder)
         menu_transacciones.add_command(label="Recalculo de un Periodo", command=self._placeholder)
         menu_transacciones.add_command(label="Cierre de un Periodo", command=self._placeholder)
@@ -113,7 +115,8 @@ class ArkConInvApp(tk.Tk):
         
         # Opciones dentro del Submenú "Gestión de Inventario"
         submenu_gestion.add_command(label="Movimiento de Inventario", command=self._abrir_reporte_movimiento_inv)
-        submenu_gestion.add_command(label="Resumen Preliminar de Transacciones", command=self._abrir_resumen_preliminar)        
+        submenu_gestion.add_command(label="Resumen Preliminar de Transacciones", command=self._abrir_resumen_preliminar)
+        submenu_gestion.add_command(label="Reporte de Existencias Actual", command=self._abrir_reporte_existencias_actual)
         submenu_gestion.add_command(label="Movimiento Art. 177 ISLR", command=self._placeholder)
         
 
@@ -197,7 +200,7 @@ class ArkConInvApp(tk.Tk):
 
     def mostrar_acerca(self):
         info_acerca = (
-            "ArkConInv v0.1.01.08Beta\n\n"
+            "ArkConInv v0.1.01.10Beta\n\n"
             "Desarrollado por Juan E. Páez M.\n"
             "JUEPAE\n"
             "Fecha: Junio 2026\n\n"
@@ -268,6 +271,11 @@ class ArkConInvApp(tk.Tk):
     def _abrir_resumen_preliminar(self):
         DialogResumenPreliminar(self)
         
+    def _abrir_reporte_existencias_actual(self):
+        DialogReporteExistenciaActual(self)
+        
+    def _abrir_calculo_existencia(self):
+        DialogCalculoExistencia(self)
     
     
 

@@ -771,6 +771,9 @@ CREATE TABLE IF NOT EXISTS ark_existencia_calculadas (
     exc_dep_codigo TEXT NOT NULL,
     exc_item_codigo TEXT NOT NULL,
     exc_inicial REAL,
+    exc_costos_local REAL,
+    exc_costos_referencial REAL,
+    exc_factor_referencial REAL,
     exc_transferencias_mas REAL,
     exc_cargos REAL,
     exc_ajustes_mas REAL,
@@ -805,6 +808,9 @@ CREATE TABLE IF NOT EXISTS ark_existencia_periodo (
     exp_uo_Codigo TEXT NOT NULL,
     exp_dep_codigo TEXT NOT NULL,
     exp_item_codigo TEXT NOT NULL,
+    exp_costos_local REAL,
+    exp_costos_referencial REAL,
+    exp_factor_referencial REAL,
     exp_inicial REAL,
     exp_op_entradas REAL,
     exp_op_salidas REAL,
@@ -831,6 +837,9 @@ CREATE TABLE IF NOT EXISTS ark_existencia_historico (
     exh_dep_codigo TEXT NOT NULL,
     exh_item_codigo TEXT NOT NULL,
     exh_inicial REAL,
+    exh_costos_local REAL,
+    exh_costos_referencial REAL,
+    exh_factor_referencial REAL,
     exh_op_entradas REAL,
     exh_op_salidas REAL,
     exh_cant_entradas REAL,
@@ -858,7 +867,7 @@ CREATE TABLE IF NOT EXISTS ark_existencia_actual(
     exa_uo_Codigo TEXT NOT NULL,
     exa_tipo	INTEGER NOT NULL,
     exa_codigoproducto	TEXT,
-    exa_codigodeposito	INTEGER,
+    exa_codigodeposito	TEXT,
     exa_lote	TEXT,
     exa_loteautoincrement	INTEGER,
     exa_nolinea	INTEGER,
@@ -1005,7 +1014,7 @@ CREATE INDEX IF NOT EXISTS idx_pdo_fechas
 
 -- Índice compuesto de alta prioridad para búsquedas directas de stock por producto y ubicación
 CREATE INDEX IF NOT EXISTS idx_exc_uo_dep_item 
-    ON ark_existencia_caluladas (exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
+    ON ark_existencia_calculadas (exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
 
 -- Índice compuesto para resolver agrupaciones y saldos de stock en un depósito por UO
 CREATE INDEX IF NOT EXISTS idx_exp_uo_dep_item 
@@ -1033,6 +1042,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uidx_exh_uo_dep_item_periodo
 
 -- Evita duplicados en la foto de existencias calculadas actuales
 CREATE UNIQUE INDEX IF NOT EXISTS uidx_exc_uo_dep_item 
-    ON ark_existencia_caluladas (exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
+    ON ark_existencia_calculadas (exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
 
 

@@ -1,5 +1,6 @@
 # ArkConInv - Diálogo de Procesamiento Preliminar de Existencias
 # Desarrollado por Juan E. Páez M. (JUEPAE) - Julio 2026
+# version (100720261.2043beta)
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
@@ -162,16 +163,16 @@ class DialogPreliminar(tk.Toplevel):
             # REPLICACIÓN DE LA LÓGICA DE DETALLES UNIFICADOS (Idéntica al Reporte)
             query = f"""
             WITH movimientos AS (
-                SELECT dtv_codigo as codigo, dtv_tipooperacion as tipooperacion, dtv_cantidad as cantidad, dtv_uo_Codigo as uo_codigo, dtv_depositosource as deposito, NULL as deposito_destino
+                SELECT dtv_codigo as codigo, dtv_tipooperacion as tipooperacion, dtv_costo as costo, dtv_cantidad as cantidad, dtv_uo_Codigo as uo_codigo, dtv_depositosource as deposito, NULL as deposito_destino, dtv_moneda as moneda, dtv_factorcambio as factorcambio
                 FROM ark_detalletranvtas WHERE dtv_tipooperacion IN ({placeholders}) AND dtv_fechaoperacion BETWEEN ? AND ?
                 UNION ALL
-                SELECT dtc_codigo as codigo, dtc_tipooperacion as tipooperacion, dtc_cantidad as cantidad, dtc_uo_Codigo as uo_codigo, dtc_depositosource as deposito, NULL as deposito_destino
+                SELECT dtc_codigo as codigo, dtc_tipooperacion as tipooperacion, dtc_costo as costo, dtc_cantidad as cantidad, dtc_uo_Codigo as uo_codigo, dtc_depositosource as deposito, NULL as deposito_destino, dtc_moneda as moneda, dtc_factorcambio as factorcambio
                 FROM ark_detalletrancomp WHERE dtc_tipooperacion IN ({placeholders}) AND dtc_fechaoperacion BETWEEN ? AND ?
                 UNION ALL
-                SELECT dti_codigo as codigo, dti_tipooperacion as tipooperacion, dti_cantidad as cantidad, dti_uo_Codigo as uo_codigo, dti_depositosource as deposito, dti_depositotarget as deposito_destino
+                SELECT dti_codigo as codigo, dti_tipooperacion as tipooperacion, dti_cantidad as cantidad, dti_costo as costo, dti_uo_Codigo as uo_codigo, dti_depositosource as deposito, dti_depositotarget as deposito_destino, dti_moneda as moneda, dti_factorcambio as factorcambio
                 FROM ark_detalletraninv WHERE dti_tipooperacion IN ({placeholders}) AND dti_fechaoperacion BETWEEN ? AND ?
             )
-            SELECT codigo, tipooperacion, cantidad, uo_codigo, deposito, deposito_destino
+            SELECT codigo, tipooperacion, costo, cantidad, uo_codigo, deposito, deposito_destino, moneda, factorcambio
             FROM movimientos WHERE 1=1
             """
             
@@ -195,7 +196,8 @@ class DialogPreliminar(tk.Toplevel):
             balance_existencias = {}
 
             for row in rows:
-                item_cod, tipo, cant, uo, dep_origen, dep_destino = row
+                # item_cod, tipo, cant, uo, dep_origen, dep_destino = rowx
+                item_cod, tipo, costo, cant, uo, dep_origen, dep_destino, moneda, factorcambio = row
                 cant = float(cant) if cant else 0.0
 
                 # Aplicar filtros dinámicos de la UI si se seleccionó una UO específica
@@ -232,11 +234,26 @@ class DialogPreliminar(tk.Toplevel):
                     clave = (uo, dep_afectado, item_cod)
                     if clave not in balance_existencias:
                         balance_existencias[clave] = {
-                            'cargos': 0.0, 'descargos': 0.0, 'trans_mas': 0.0, 'trans_menos': 0.0,
-                            'compras': 0.0, 'notas_entrega_prov': 0.0, 'dev_ventas': 0.0, 'dev_compras': 0.0,
-                            'ventas': 0.0, 'notas_entrega_cli': 0.0, 'ajustes_mas': 0.0, 'ajustes_menos': 0.0
+                        'cargos': 0.0, 'descargos': 0.0, 'trans_mas': 0.0, 'trans_menos': 0.0,
+                        'compras': 0.0, 'notas_entrega_prov': 0.0, 'dev_ventas': 0.0, 'dev_compras': 0.0,
+                        'ventas': 0.0, 'notas_entrega_cli': 0.0, 'ajustes_mas': 0.0, 'ajustes_menos': 0.0,
+                        'total_cantidad': 0.0, 'costo_local_acumulado': 0.0, 'factor_ref_acumulado': 0.0, 
+                        'costo_ref_acumulado': 0.0 
                         }
                     balance_existencias[clave][columna] += q_val
+                    
+                    # Convertir costo, moneda, factorcambio locales si no se hicieron antes
+                    costo = float(costo) if costo else 0.0
+                    moneda = int(moneda) if moneda else 1 # Asumir moneda local por defecto
+                    factorcambio = float(factorcambio) if factorcambio else 1.0 # Factor neutro por defecto
+                    # Calcular costo referencial para este movimiento
+                    costo_ref = costo * factorcambio if moneda == 2 else costo
+                    # Acumular cantidad total para cálculo de promedios ponderados
+                    balance_existencias[clave]['total_cantidad'] += abs(q_val) # Usamos valor absoluto para ponderación
+                    # Acumular costos y factores ponderados (por cantidad)
+                    balance_existencias[clave]['costo_local_acumulado'] += abs(q_val) * costo
+                    balance_existencias[clave]['factor_ref_acumulado'] += abs(q_val) * factorcambio
+                    balance_existencias[clave]['costo_ref_acumulado'] += abs(q_val) * costo_ref
 
             # Volcado masivo a la tabla física ark_existencia_calculadas
             usuario = get_current_user()
@@ -248,6 +265,11 @@ class DialogPreliminar(tk.Toplevel):
             procesados = 0
 
             for (uo, dep, item), datos in balance_existencias.items():
+                # Calcular promedios ponderados de costos y factores
+                total_cant = datos['total_cantidad']
+                costo_local_prom = (datos['costo_local_acumulado'] / total_cant) if total_cant > 0 else 0.0
+                factor_ref_prom = (datos['factor_ref_acumulado'] / total_cant) if total_cant > 0 else 0.0
+                costo_ref_prom = (datos['costo_ref_acumulado'] / total_cant) if total_cant > 0 else 0.0
                 inicial = 0.0
                 saldo_final = (inicial + datos['cargos'] + datos['trans_mas'] + datos['compras'] + 
                                datos['notas_entrega_prov'] + datos['dev_ventas'] + datos['ajustes_mas'] - 
@@ -256,18 +278,18 @@ class DialogPreliminar(tk.Toplevel):
 
                 cursor.execute("""
                     INSERT OR REPLACE INTO ark_existencia_calculadas (
-                        exc_uo_Codigo, exc_dep_codigo, exc_item_codigo, exc_inicial,
+                        exc_uo_Codigo, exc_dep_codigo, exc_item_codigo, exc_inicial, exc_costos_local, exc_costos_referencial, exc_factor_referencial,
                         exc_transferencias_mas, exc_cargos, exc_ajustes_mas, exc_compras,
                         exc_nota_entrega_proveedor, exc_dev_ventas, exc_descargos, exc_dev_compras,
                         exc_ventas, exc_nota_entrega_clientes, exc_transferencias_menos, exc_ajustes_menos,
                         exc_final, exc_SystemDate, exc_SystemTime, exc_NameMachine, exc_UserCreator
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    uo, dep, item, inicial,
+                    uo, dep, item, inicial, costo_local_prom, costo_ref_prom, factor_ref_prom,
                     datos['trans_mas'], datos['cargos'], datos['ajustes_mas'], datos['compras'],
                     datos['notas_entrega_prov'], datos['dev_ventas'], datos['descargos'], datos['dev_compras'],
                     datos['ventas'], datos['notas_entrega_cli'], datos['trans_menos'], datos['ajustes_menos'],
-                    saldo_final, fecha_hoy, hora_hoy, maquina, usuario
+                    saldo_final, fecha_hoy, hora_hoy, maquina, usuario # <--- saldo_final en la posición correcta
                 ))
 
                 procesados += 1

@@ -672,3 +672,152 @@ def generar_pdf_resumen_preliminar(ruta_salida, uo_id="0", fecha_desde=None, fec
     elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", estilos['footer']))
     
     return _generar_pdf(ruta_salida, elements, usar_landscape=True)
+
+
+# 6. REPORTE DE EXISTENCIA ACTUAL 
+def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos=None):
+    """
+    Genera un reporte PDF de existencias actuales basado en datos de ark_existencia_actual.
+    Permite filtrar por Unidad Operativa y Depósito.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    estilos = _crear_estilos_reporte(getSampleStyleSheet())
+
+    uo_nombre = "Todas las UO"
+    if uo_id != "0":
+        cursor.execute("SELECT uo_Codigo, uo_nombre FROM ark_unds_operativas WHERE uo_id = ?", (uo_id,))
+        uo_row = cursor.fetchone()
+        if uo_row:
+            uo_nombre = f"{uo_row[0]} - {uo_row[1]}"
+
+    deposito_nombre = "Todos los depósitos"
+    if deposito_id != "0":
+        cursor.execute("SELECT dep_codigo, dep_descripcion FROM ark_depositos WHERE dep_IDauto = ?", (deposito_id,))
+        dep_row = cursor.fetchone()
+        if dep_row:
+            deposito_nombre = f"{dep_row[0]} - {dep_row[1]}"
+
+    # Consulta SQL corregida: tabla correcta, sin coma extra, sin columna inexistente
+    query = """
+        SELECT
+            e.exa_codigoproducto,
+            COALESCE(i.inv_descripcion, 'Sin descripción') as inv_descripcion,
+            e.exa_uo_Codigo as uo_codigo,
+            e.exa_codigodeposito as deposito_codigo, -- Este campo es INTEGER en la tabla
+            e.exa_existencia as existencia_actual,
+            e.exa_existenciadetallada as existencia_detallada
+        FROM ark_existencia_actual e
+        LEFT JOIN ark_inventario i ON e.exa_codigoproducto = i.inv_codigo
+        WHERE 1=1
+    """
+    params = []
+
+    if uo_id != "0":
+        # Filtrar por uo_codigo obtenido de ark_unds_operativas
+        query += " AND e.exa_uo_Codigo = (SELECT uo_Codigo FROM ark_unds_operativas WHERE uo_id = ?)"
+        params.append(uo_id)
+
+    if deposito_id != "0":
+        # Filtrar por dep_codigo obtenido de ark_depositos
+        query += " AND e.exa_codigodeposito = (SELECT dep_codigo FROM ark_depositos WHERE dep_IDauto = ?)"
+        params.append(deposito_id)
+
+    # Ajuste: Quité el GROUP BY ya que no parece necesario para una foto de existencia actual por producto/depósito
+    # Si se requiere resumen, podría ser útil, pero por defecto se muestran los registros individuales.
+    query += """
+    ORDER BY e.exa_uo_Codigo, e.exa_codigodeposito, e.exa_codigoproducto
+    """
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=False))
+    elements.append(Spacer(1, 15))
+    elements.append(Paragraph("REPORTE DE EXISTENCIA ACTUAL", estilos['title'])) # Corregido el título
+    elements.append(Spacer(1, 5))
+
+    filtros_texto = [f"UO: {uo_nombre}", f"Depósito: {deposito_nombre}"]
+    elements.append(Paragraph(f"Filtros aplicados: {', '.join(filtros_texto)}", estilos['filter'])) # Corregido texto
+    elements.append(Spacer(1, 10))
+
+    col_widths = [0.75*inch, 2.20*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch]
+    table_data = [['Código', 'Descripción', 'UO', 'Depósito', 'Exist. Actual', 'Exist. Det.']] # Encabezados más concisos
+
+    total_Existencia = total_Existencia_detallada = 0.0
+    total_registros = 0
+
+    for row in rows:
+        # Acceso a columnas según el SELECT (índices 0 a 5)
+        codigo = row[0]
+        descripcion = row[1]
+        uo_codigo = row[2]
+        # El campo exa_codigodeposito es INTEGER en la tabla, pero en el reporte se muestra el código legible.
+        # La consulta filtra por el código del depósito, pero aquí mostramos el valor directo del campo.
+        # Si se quisiera mostrar la descripción del depósito en lugar del código numérico,
+        # se debería hacer un JOIN adicional o una subconsulta.
+        deposito_codigo = row[3] # Este es el valor INTEGER
+        existencia_actual = row[4] or 0.0 # Manejar posibles None
+        existencia_detallada = row[5] or 0.0 # Manejar posibles None
+
+        # No hay columna 'total' en la consulta, por lo tanto no se suma a 'total_general'
+        # total = row[6] # Esta línea causaba IndexError
+
+        table_data.append([
+            str(codigo)[:10],
+            str(descripcion),
+            str(uo_codigo),
+            str(deposito_codigo), # Mostrar código numérico del depósito
+            f"{existencia_actual:,.2f}",
+            f"{existencia_detallada:,.2f}"
+        ])
+
+        total_Existencia += existencia_actual
+        total_Existencia_detallada += existencia_detallada
+        total_registros += 1
+
+    # Fila de totales
+    table_data.append([
+        '', 'TOTALES:', '', '', # Dejar vacío o poner etiquetas si se desea
+        f"{total_Existencia:,.2f}",
+        f"{total_Existencia_detallada:,.2f}"
+    ])
+
+    data_table = Table(table_data, colWidths=col_widths)
+    data_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')), # Fondo azul para encabezado
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke), # Texto blanco en encabezado
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'), # Centrado en encabezado
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), # Negrita en encabezado
+        ('FONTSIZE', (0, 0), (-1, 0), 8), # Tamaño de fuente en encabezado
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8), # Espaciado inferior en encabezado
+
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white), # Fondo blanco para filas de datos
+        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black), # Texto negro en filas de datos
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'), # Fuente normal en filas de datos
+        ('FONTSIZE', (0, 1), (-1, -2), 6), # Tamaño de fuente en filas de datos
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4), # Espaciado inferior en filas de datos
+        ('ALIGN', (0, 1), (-1, -2), 'LEFT'), # Alineación izquierda para columnas de texto
+        ('ALIGN', (4, 1), (5, -2), 'RIGHT'), # Alineación derecha para columnas numéricas
+
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey), # Líneas de rejilla en cuerpo
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]), # Alternado de colores en filas
+
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')), # Fondo azul para fila de totales
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke), # Texto blanco en fila de totales
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'), # Negrita en fila de totales
+        ('FONTSIZE', (0, -1), (-1, -1), 8), # Tamaño de fuente en fila de totales
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8), # Espaciado inferior en fila de totales
+        ('ALIGN', (0, -1), (-1, -1), 'RIGHT'), # Alineación derecha en fila de totales (excepto primera columna)
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey), # Líneas de rejilla en fila de totales
+    ]))
+
+    elements.append(data_table)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", estilos['footer']))
+
+    return _generar_pdf(ruta_salida, elements, usar_landscape=False)
