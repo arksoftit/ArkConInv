@@ -10,6 +10,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.embedded_db import get_db_connection
 from core.system_info import get_current_user, get_machine_name
+from core.utils import formato_monto, formato_cantidad
 
 
 class DialogPreliminar(tk.Toplevel):
@@ -267,9 +268,9 @@ class DialogPreliminar(tk.Toplevel):
             for (uo, dep, item), datos in balance_existencias.items():
                 # Calcular promedios ponderados de costos y factores
                 total_cant = datos['total_cantidad']
-                costo_local_prom = (datos['costo_local_acumulado'] / total_cant) if total_cant > 0 else 0.0
-                factor_ref_prom = (datos['factor_ref_acumulado'] / total_cant) if total_cant > 0 else 0.0
-                costo_ref_prom = (datos['costo_ref_acumulado'] / total_cant) if total_cant > 0 else 0.0
+                costo_local_prom = formato_monto(datos['costo_local_acumulado'] / total_cant) if total_cant > 0 else 0.0
+                factor_ref_prom = formato_monto(datos['factor_ref_acumulado'] / total_cant) if total_cant > 0 else 0.0
+                costo_ref_prom = formato_monto(datos['costo_ref_acumulado'] / total_cant) if total_cant > 0 else 0.0
                 inicial = 0.0
                 saldo_final = (inicial + datos['cargos'] + datos['trans_mas'] + datos['compras'] + 
                                datos['notas_entrega_prov'] + datos['dev_ventas'] + datos['ajustes_mas'] - 
@@ -285,11 +286,11 @@ class DialogPreliminar(tk.Toplevel):
                         exc_final, exc_SystemDate, exc_SystemTime, exc_NameMachine, exc_UserCreator
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    uo, dep, item, inicial, costo_local_prom, costo_ref_prom, factor_ref_prom,
-                    datos['trans_mas'], datos['cargos'], datos['ajustes_mas'], datos['compras'],
-                    datos['notas_entrega_prov'], datos['dev_ventas'], datos['descargos'], datos['dev_compras'],
-                    datos['ventas'], datos['notas_entrega_cli'], datos['trans_menos'], datos['ajustes_menos'],
-                    saldo_final, fecha_hoy, hora_hoy, maquina, usuario # <--- saldo_final en la posición correcta
+                    uo, dep, item, formato_cantidad(inicial), formato_monto(costo_local_prom), formato_monto(costo_ref_prom), formato_monto(factor_ref_prom), # Aplicar formato a montos y cantidades
+                    formato_cantidad(datos['trans_mas']), formato_cantidad(datos['cargos']), formato_cantidad(datos['ajustes_mas']), formato_cantidad(datos['compras']),
+                    formato_cantidad(datos['notas_entrega_prov']), formato_cantidad(datos['dev_ventas']), formato_cantidad(datos['descargos']), formato_cantidad(datos['dev_compras']),
+                    formato_cantidad(datos['ventas']), formato_cantidad(datos['notas_entrega_cli']), formato_cantidad(datos['trans_menos']), formato_cantidad(datos['ajustes_menos']),
+                    formato_cantidad(saldo_final), fecha_hoy, hora_hoy, maquina, usuario
                 ))
 
                 procesados += 1

@@ -926,7 +926,6 @@ CREATE TABLE IF NOT EXISTS ark_factor_hstorico(
     FOREIGN KEY (fac_mon_codigo) REFERENCES ark_monedas(mon_codigo)
 );
 
-
 -- Insertar datos iniciales
 INSERT OR IGNORE INTO ark_tipos_operacion VALUES
 (1, 'Traslados', 'INVENTARIO', 1),
