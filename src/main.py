@@ -29,6 +29,7 @@ from ui.dialog_reporte_movimiento_inv import DialogMovimientoInventario
 from ui.dialog_reporte_existencia_actual import DialogReporteExistenciaActual
 from ui.dialog_resumen_preliminar import DialogResumenPreliminar
 from ui.dialog_preliminar import DialogPreliminar
+from ui.dialog_recalculo_costos import DialogRecalculoCostos
 from ui.dialog_calculo_existencia import DialogCalculoExistencia
 
 
@@ -81,7 +82,7 @@ class ArkConInvApp(tk.Tk):
         menubar.add_cascade(label="Transacciones", menu=menu_transacciones)
         # menu_transacciones.add_command(label="Preliminar", command=self._placeholder)
         menu_transacciones.add_command(label="Preliminar", command=self._abrir_preliminar)
-        menu_transacciones.add_command(label="Iniciales", command=self._placeholder)
+        menu_transacciones.add_command(label="Recalculo de costos", command=self._abrir_recalculo_costos)
         menu_transacciones.add_command(label="Cálculo de Existencias", command=self._abrir_calculo_existencia)
         menu_transacciones.add_command(label="Ajustes de Existencias", command=self._placeholder)
         menu_transacciones.add_command(label="Recalculo de un Periodo", command=self._placeholder)
@@ -276,6 +277,9 @@ class ArkConInvApp(tk.Tk):
         
     def _abrir_calculo_existencia(self):
         DialogCalculoExistencia(self)
+    
+    def _abrir_recalculo_costos(self):
+        DialogRecalculoCostos(self)
     
     
 

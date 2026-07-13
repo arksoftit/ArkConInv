@@ -33,8 +33,8 @@ class DialogPreliminar(tk.Toplevel):
         
         info_lbl = ttk.Label(
             frame, 
-            text="Este proceso calculará preliminarmente los saldos de inventario.\n"
-                 "Aplica la regla: Costo de Entradas > Costo Histórico de Ventas.",
+            text="Este proceso calculará los saldos de inventario consultando ark_costos\n"
+                 "para la valorización fiscal de cada artículo.",
             font=("Segoe UI", 9, "italic"), foreground="#2874A6", justify=tk.LEFT
         )
         info_lbl.grid(row=0, column=0, columnspan=3, pady=(0, 15), sticky=tk.W)
@@ -109,6 +109,59 @@ class DialogPreliminar(tk.Toplevel):
         entry.insert(0, formateado)
         entry.icursor(len(formateado))
 
+    def _convertir_moneda(self, costo, moneda_origen, factor):
+        """
+        Aplica la tabla de conversión de monedas.
+        Retorna (costo_local, costo_referencial, factor)
+        """
+        if not costo or costo == 0:
+            return 0.0, 0.0, 1.0
+        
+        factor = float(factor) if factor else 1.0
+        
+        if moneda_origen == 1:  # Origen Local
+            costo_local = costo
+            costo_referencial = costo / factor if factor > 0 else 0.0
+        elif moneda_origen == 2:  # Origen Referencial
+            costo_local = costo * factor
+            costo_referencial = costo
+        else:
+            costo_local = costo
+            costo_referencial = costo
+        
+        return costo_local, costo_referencial, factor
+
+    def _obtener_costo_fiscal(self, cursor, codigo, fecha_desde_sql, fecha_hasta_sql):
+        """
+        Consulta ark_costos y aplica la jerarquía fiscal: dtc > dtv > dti
+        Retorna (costo_local, costo_referencial, factor)
+        """
+        cursor.execute("""
+            SELECT cts_dtc_costo, cts_dtc_moneda, cts_dtc_factorcambio,
+                   cts_dtv_costo, cts_dtv_moneda, cts_dtv_factorcambio,
+                   cts_dti_costo, cts_dti_moneda, cts_dti_factorcambio
+            FROM ark_costos
+            WHERE cts_codigo = ?
+              AND cts_periodo_desde = ?
+              AND cts_periodo_hasta = ?
+        """, (codigo, fecha_desde_sql, fecha_hasta_sql))
+        
+        row = cursor.fetchone()
+        if not row:
+            return 0.0, 0.0, 1.0
+        
+        dtc_costo, dtc_moneda, dtc_factor, dtv_costo, dtv_moneda, dtv_factor, dti_costo, dti_moneda, dti_factor = row
+        
+        # Jerarquía fiscal: Compra > Venta > Inventario
+        if dtc_costo and dtc_costo > 0:
+            return self._convertir_moneda(dtc_costo, dtc_moneda or 1, dtc_factor)
+        elif dtv_costo and dtv_costo > 0:
+            return self._convertir_moneda(dtv_costo, dtv_moneda or 1, dtv_factor)
+        elif dti_costo and dti_costo > 0:
+            return self._convertir_moneda(dti_costo, dti_moneda or 1, dti_factor)
+        
+        return 0.0, 0.0, 1.0
+
     def _procesar_preliminar(self):
         try:
             uo_display = self.cmb_uo.get()
@@ -134,75 +187,56 @@ class DialogPreliminar(tk.Toplevel):
             dep_codigo_filtro = deposito_display.split(" - ")[0] if deposito_id != "0" else None
 
             self.config(cursor="watch")
-            self.progress_lbl.config(text="Analizando movimientos de costo y cantidad...")
+            self.progress_lbl.config(text="Consolidando movimientos de cantidades...")
             self.progress_bar['value'] = 10
             self.update()
 
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            tipos_entrada_costo = [2, 4, 6, 8]
-            tipos_salida = [3, 11, 13]
-            tipos_devolucion_entrada = [12]
-            tipos_traslado = [1] 
-
-            query_costos_entradas = """
-            SELECT dtc_codigo, dtc_depositosource, dtc_uo_Codigo, SUM(dtc_cantidad) as cant, SUM(dtc_cantidad * dtc_costo) as val
-            FROM ark_detalletrancomp 
-            WHERE dtc_tipooperacion IN (?, ?, ?, ?) AND dtc_fechaoperacion BETWEEN ? AND ?
-            GROUP BY dtc_codigo, dtc_depositosource, dtc_uo_Codigo
+            tipos_validos = [1, 2, 3, 4, 6, 7, 8, 11, 12, 13]
+            placeholders = ','.join(['?'] * len(tipos_validos))
             
-            UNION ALL
-            
-            SELECT dti_codigo, dti_depositosource, dti_uo_Codigo, SUM(dti_cantidad) as cant, SUM(dti_cantidad * dti_costo) as val
-            FROM ark_detalletraninv 
-            WHERE dti_tipooperacion IN (?, ?) AND dti_fechaoperacion BETWEEN ? AND ? AND dti_cantidad > 0
-            GROUP BY dti_codigo, dti_depositosource, dti_uo_Codigo
+            # SOLO cantidades - sin costos
+            query = f"""
+            WITH movimientos AS (
+                SELECT dtv_codigo as codigo, dtv_tipooperacion as tipooperacion, dtv_cantidad as cantidad, 
+                       dtv_uo_Codigo as uo_codigo, dtv_depositosource as deposito, NULL as deposito_destino
+                FROM ark_detalletranvtas WHERE dtv_tipooperacion IN ({placeholders}) AND dtv_fechaoperacion BETWEEN ? AND ?
+                UNION ALL
+                SELECT dtc_codigo as codigo, dtc_tipooperacion as tipooperacion, dtc_cantidad as cantidad, 
+                       dtc_uo_Codigo as uo_codigo, dtc_depositosource as deposito, NULL as deposito_destino
+                FROM ark_detalletrancomp WHERE dtc_tipooperacion IN ({placeholders}) AND dtc_fechaoperacion BETWEEN ? AND ?
+                UNION ALL
+                SELECT dti_codigo as codigo, dti_tipooperacion as tipooperacion, dti_cantidad as cantidad, 
+                       dti_uo_Codigo as uo_codigo, dti_depositosource as deposito, dti_depositotarget as deposito_destino
+                FROM ark_detalletraninv WHERE dti_tipooperacion IN ({placeholders}) AND dti_fechaoperacion BETWEEN ? AND ?
+            )
+            SELECT codigo, tipooperacion, cantidad, uo_codigo, deposito, deposito_destino
+            FROM movimientos WHERE 1=1
             """
             
-            cursor.execute(query_costos_entradas, (2, 4, 6, 8, fecha_desde_sql, fecha_hasta_sql, 2, 4, fecha_desde_sql, fecha_hasta_sql))
-            costos_entradas = cursor.fetchall()
+            params = (tipos_validos + [fecha_desde_sql, fecha_hasta_sql] + 
+                      tipos_validos + [fecha_desde_sql, fecha_hasta_sql] + 
+                      tipos_validos + [fecha_desde_sql, fecha_hasta_sql])
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
 
-            query_costos_ventas = """
-            SELECT dtv_codigo, dtv_depositosource, dtv_uo_Codigo, AVG(dtv_costo) as costo_prom
-            FROM ark_detalletranvtas 
-            WHERE dtv_tipooperacion IN (?) AND dtv_fechaoperacion BETWEEN ? AND ? AND dtv_costo > 0
-            GROUP BY dtv_codigo, dtv_depositosource, dtv_uo_Codigo
-            """
-            cursor.execute(query_costos_ventas, (11, fecha_desde_sql, fecha_hasta_sql))
-            costos_historicos_ventas = { (row[0], row[1], row[2]): row[3] for row in cursor.fetchall() }
+            if not rows:
+                self.config(cursor="")
+                self.progress_bar['value'] = 0
+                self.progress_lbl.config(text="")
+                messagebox.showinfo("Información", "No se encontraron movimientos para los filtros seleccionados.")
+                conn.close()
+                return
 
-            mapa_costos_unitarios = {}
-            
-            for row in costos_entradas:
-                codigo, dep, uo, cant, val = row
-                clave = (uo, dep, codigo)
-                if cant and cant > 0:
-                    mapa_costos_unitarios[clave] = abs(val / cant)
-
-            for clave, costo_venta in costos_historicos_ventas.items():
-                if clave not in mapa_costos_unitarios and costo_venta > 0:
-                    mapa_costos_unitarios[clave] = costo_venta
-
-            query_cantidades = """
-            SELECT dtv_codigo, dtv_tipooperacion, dtv_cantidad, dtv_uo_Codigo, dtv_depositosource, dtv_depositotarget
-            FROM ark_detalletranvtas WHERE dtv_fechaoperacion BETWEEN ? AND ?
-            UNION ALL
-            SELECT dtc_codigo, dtc_tipooperacion, dtc_cantidad, dtc_uo_Codigo, dtc_depositosource, dtc_depositotarget
-            FROM ark_detalletrancomp WHERE dtc_fechaoperacion BETWEEN ? AND ?
-            UNION ALL
-            SELECT dti_codigo, dti_tipooperacion, dti_cantidad, dti_uo_Codigo, dti_depositosource, dti_depositotarget
-            FROM ark_detalletraninv WHERE dti_fechaoperacion BETWEEN ? AND ?
-            """
-            cursor.execute(query_cantidades, (fecha_desde_sql, fecha_hasta_sql, fecha_desde_sql, fecha_hasta_sql, fecha_desde_sql, fecha_hasta_sql))
-            rows_movimientos = cursor.fetchall()
-
+            # Consolidación de CANTIDADES por (UO, Depósito, Ítem)
             balance_existencias = {}
-            total_rows = len(rows_movimientos)
+            total_rows = len(rows)
             
-            for i, row in enumerate(rows_movimientos):
-                if i % 100 == 0:
-                    porcentaje = 10 + int((i / total_rows) * 60)
+            for i, row in enumerate(rows):
+                if i % 500 == 0:
+                    porcentaje = 10 + int((i / total_rows) * 50)
                     self.progress_bar['value'] = porcentaje
                     self.progress_lbl.config(text=f"Procesando movimientos: {i}/{total_rows}")
                     self.update()
@@ -210,42 +244,48 @@ class DialogPreliminar(tk.Toplevel):
                 item_cod, tipo, cant, uo, dep_origen, dep_destino = row
                 cant = float(cant) if cant else 0.0
                 
-                if uo_codigo_filtro and uo != uo_codigo_filtro: continue
-                if dep_codigo_filtro and dep_origen != dep_codigo_filtro and dep_destino != dep_codigo_filtro: continue
+                if uo_codigo_filtro and uo != uo_codigo_filtro:
+                    continue
 
                 definitivos = []
-                if tipo == 1:
+                if tipo == 1:  # Traslado
                     if dep_origen and (not dep_codigo_filtro or dep_origen == dep_codigo_filtro):
                         definitivos.append((dep_origen, 'trans_menos', cant))
                     if dep_destino and (not dep_codigo_filtro or dep_destino == dep_codigo_filtro):
                         definitivos.append((dep_destino, 'trans_mas', cant))
                 else:
                     dep_afectado = dep_origen
-                    if not dep_afectado: continue
-                    if dep_codigo_filtro and dep_afectado != dep_codigo_filtro: continue
+                    if not dep_afectado:
+                        continue
+                    if dep_codigo_filtro and dep_afectado != dep_codigo_filtro:
+                        continue
 
-                    if tipo in [2, 8]: definitivos.append((dep_afectado, 'entradas_valorizadas', cant))
-                    elif tipo == 6: definitivos.append((dep_afectado, 'compras', cant))
-                    elif tipo == 12: definitivos.append((dep_afectado, 'dev_ventas', cant))
+                    if tipo == 2: definitivos.append((dep_afectado, 'cargos', cant))
+                    elif tipo == 3: definitivos.append((dep_afectado, 'descargos', cant))
                     elif tipo == 4:
-                        if cant > 0: definitivos.append((dep_afectado, 'ajustes_mas', cant))
-                        else: definitivos.append((dep_afectado, 'ajustes_menos', abs(cant)))
-                    elif tipo in [3, 11, 13]: definitivos.append((dep_afectado, 'salidas', cant))
+                        label = 'ajustes_mas' if cant >= 0 else 'ajustes_menos'
+                        definitivos.append((dep_afectado, label, abs(cant)))
+                    elif tipo == 6: definitivos.append((dep_afectado, 'compras', cant))
                     elif tipo == 7: definitivos.append((dep_afectado, 'dev_compras', cant))
+                    elif tipo == 8: definitivos.append((dep_afectado, 'notas_entrega_prov', cant))
+                    elif tipo == 11: definitivos.append((dep_afectado, 'ventas', cant))
+                    elif tipo == 12: definitivos.append((dep_afectado, 'dev_ventas', cant))
+                    elif tipo == 13: definitivos.append((dep_afectado, 'notas_entrega_cli', cant))
 
                 for dep, col, q_val in definitivos:
                     clave = (uo, dep, item_cod)
                     if clave not in balance_existencias:
                         balance_existencias[clave] = {
-                            'compras': 0, 'cargos': 0, 'notas_entrega_prov': 0, 'dev_ventas': 0,
-                            'ajustes_mas': 0, 'ajustes_menos': 0, 'salidas': 0, 'dev_compras': 0,
-                            'trans_mas': 0, 'trans_menos': 0
+                            'cargos': 0.0, 'descargos': 0.0, 'trans_mas': 0.0, 'trans_menos': 0.0,
+                            'compras': 0.0, 'notas_entrega_prov': 0.0, 'dev_ventas': 0.0, 'dev_compras': 0.0,
+                            'ventas': 0.0, 'notas_entrega_cli': 0.0, 'ajustes_mas': 0.0, 'ajustes_menos': 0.0
                         }
-                    
-                    if col == 'entradas_valorizadas':
-                         balance_existencias[clave]['cargos'] += q_val
-                    else:
-                        balance_existencias[clave][col] += q_val
+                    balance_existencias[clave][col] += q_val
+
+            # Volcado a BD con consulta de costos desde ark_costos
+            self.progress_lbl.config(text="Consultando costos fiscales en ark_costos...")
+            self.progress_bar['value'] = 60
+            self.update()
 
             usuario = get_current_user()
             maquina = get_machine_name()
@@ -256,37 +296,40 @@ class DialogPreliminar(tk.Toplevel):
             procesados = 0
             
             for (uo, dep, item), datos in balance_existencias.items():
+                # Calcular saldo físico
                 entradas = datos['compras'] + datos['cargos'] + datos['notas_entrega_prov'] + datos['dev_ventas'] + datos['ajustes_mas'] + datos['trans_mas']
-                salidas = datos['salidas'] + datos['dev_compras'] + datos['ajustes_menos'] + datos['trans_menos']
-                
+                salidas = datos['ventas'] + datos['descargos'] + datos['notas_entrega_cli'] + datos['dev_compras'] + datos['ajustes_menos'] + datos['trans_menos']
                 saldo_final = entradas - salidas
                 
-                clave_costo = (uo, dep, item)
-                costo_unitario = mapa_costos_unitarios.get(clave_costo, 0.0)
-                
-                valor_saldo = saldo_final * costo_unitario
+                # Obtener costo fiscal desde ark_costos
+                costo_local, costo_referencial, factor = self._obtener_costo_fiscal(
+                    cursor, item, fecha_desde_sql, fecha_hasta_sql
+                )
 
                 cursor.execute("""
                     INSERT OR REPLACE INTO ark_existencia_calculadas (
-                        exc_uo_Codigo, exc_dep_codigo, exc_item_codigo, exc_inicial, exc_costos_local, 
+                        exc_uo_Codigo, exc_dep_codigo, exc_item_codigo, exc_inicial, 
+                        exc_costos_local, exc_costos_referencial, exc_factor_referencial,
                         exc_compras, exc_cargos, exc_nota_entrega_proveedor, exc_dev_ventas, 
                         exc_ajustes_mas, exc_ajustes_menos, exc_transferencias_mas, exc_transferencias_menos,
                         exc_ventas, exc_descargos, exc_nota_entrega_clientes, exc_dev_compras,
                         exc_final, exc_SystemDate, exc_SystemTime, exc_NameMachine, exc_UserCreator
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    uo, dep, item, 0.0, formato_monto(costo_unitario),
+                    uo, dep, item, 0.0,
+                    formato_monto(costo_local), formato_monto(costo_referencial), formato_monto(factor),
                     formato_cantidad(datos['compras']), formato_cantidad(datos['cargos']), 
                     formato_cantidad(datos['notas_entrega_prov']), formato_cantidad(datos['dev_ventas']),
                     formato_cantidad(datos['ajustes_mas']), formato_cantidad(datos['ajustes_menos']),
                     formato_cantidad(datos['trans_mas']), formato_cantidad(datos['trans_menos']),
-                    formato_cantidad(datos['salidas']), 0, 0, formato_cantidad(datos['dev_compras']),
+                    formato_cantidad(datos['ventas']), formato_cantidad(datos['descargos']), 
+                    formato_cantidad(datos['notas_entrega_cli']), formato_cantidad(datos['dev_compras']),
                     formato_cantidad(saldo_final), fecha_hoy, hora_hoy, maquina, usuario
                 ))
                 
                 procesados += 1
                 if procesados % 50 == 0:
-                    porcentaje = 70 + int((procesados / total_registros) * 30)
+                    porcentaje = 60 + int((procesados / total_registros) * 40)
                     self.progress_bar['value'] = porcentaje
                     self.progress_lbl.config(text=f"Guardando resultados: {procesados}/{total_registros}")
                     self.update()
@@ -299,4 +342,6 @@ class DialogPreliminar(tk.Toplevel):
 
         except Exception as e:
             self.config(cursor="")
+            self.progress_bar['value'] = 0
+            self.progress_lbl.config(text="")
             messagebox.showerror("Error Crítico", f"Falló el procesamiento:\n{e}")
