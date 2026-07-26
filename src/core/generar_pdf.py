@@ -672,3 +672,244 @@ def generar_pdf_resumen_preliminar(ruta_salida, uo_id="0", fecha_desde=None, fec
     elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", estilos['footer']))
     
     return _generar_pdf(ruta_salida, elements, usar_landscape=True)
+
+
+# 6. REPORTE DE EXISTENCIA ACTUAL 
+def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos=None, filtro_existencia="todas"):
+    """
+    Genera un reporte PDF de existencias actuales basado en datos de ark_existencia_actual.
+    Permite filtrar por Unidad Operativa, Depósito y tipo de existencia.
+    
+    Parámetros filtro_existencia:
+        - "todas"      : Sin filtro adicional (comportamiento por defecto)
+        - "igual_cero" : Solo registros donde exa_existencia = 0
+        - "menor_cero" : Solo registros donde exa_existencia < 0
+        - "mayor_cero" : Solo registros donde exa_existencia > 0
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    estilos = _crear_estilos_reporte(getSampleStyleSheet())
+
+    uo_nombre = "Todas las UO"
+    if uo_id != "0":
+        cursor.execute("SELECT uo_Codigo, uo_nombre FROM ark_unds_operativas WHERE uo_id = ?", (uo_id,))
+        uo_row = cursor.fetchone()
+        if uo_row:
+            uo_nombre = f"{uo_row[0]} - {uo_row[1]}"
+
+    deposito_nombre = "Todos los depósitos"
+    if deposito_id != "0":
+        cursor.execute("SELECT dep_codigo, dep_descripcion FROM ark_depositos WHERE dep_IDauto = ?", (deposito_id,))
+        dep_row = cursor.fetchone()
+        if dep_row:
+            deposito_nombre = f"{dep_row[0]} - {dep_row[1]}"
+
+    # Consulta SQL corregida: tabla correcta, sin coma extra, sin columna inexistente
+    query = """
+        SELECT
+            e.exa_codigoproducto,
+            COALESCE(i.inv_descripcion, 'Sin descripción') as inv_descripcion,
+            e.exa_uo_Codigo as uo_codigo,
+            e.exa_codigodeposito as deposito_codigo,
+            e.exa_existencia as existencia_actual,
+            e.exa_existenciadetallada as existencia_detallada
+        FROM ark_existencia_actual e
+        LEFT JOIN ark_inventario i ON e.exa_codigoproducto = i.inv_codigo
+        WHERE 1=1
+    """
+    params = []
+
+    if uo_id != "0":
+        # Filtrar por uo_codigo obtenido de ark_unds_operativas
+        query += " AND e.exa_uo_Codigo = (SELECT uo_Codigo FROM ark_unds_operativas WHERE uo_id = ?)"
+        params.append(uo_id)
+
+    if deposito_id != "0":
+        # Filtrar por dep_codigo obtenido de ark_depositos
+        query += " AND e.exa_codigodeposito = (SELECT dep_codigo FROM ark_depositos WHERE dep_IDauto = ?)"
+        params.append(deposito_id)
+
+    # NUEVO: Aplicar filtro de existencia según la opción seleccionada
+    filtro_texto = "Todas las existencias"
+    if filtro_existencia == "igual_cero":
+        query += " AND e.exa_existencia = 0"
+        filtro_texto = "Existencia igual a 0"
+    elif filtro_existencia == "menor_cero":
+        query += " AND e.exa_existencia < 0"
+        filtro_texto = "Existencia menor a 0"
+    elif filtro_existencia == "mayor_cero":
+        query += " AND e.exa_existencia > 0"
+        filtro_texto = "Existencia mayor a 0"
+
+    query += """
+        ORDER BY e.exa_uo_Codigo, e.exa_codigodeposito, e.exa_codigoproducto
+    """
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=False))
+    elements.append(Spacer(1, 15))
+    elements.append(Paragraph("REPORTE DE EXISTENCIA ACTUAL", estilos['title']))
+    elements.append(Spacer(1, 5))
+
+    filtros_texto = [f"UO: {uo_nombre}", f"Depósito: {deposito_nombre}", f"Existencia: {filtro_texto}"]
+    elements.append(Paragraph(f"Filtros aplicados: {', '.join(filtros_texto)}", estilos['filter']))
+    elements.append(Spacer(1, 10))
+
+    col_widths = [0.75*inch, 2.20*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch]
+    table_data = [['Código', 'Descripción', 'UO', 'Depósito', 'Exist. Actual', 'Exist. Det.']]
+    total_Existencia = total_Existencia_detallada = 0.0
+    total_registros = 0
+
+    for row in rows:
+        # Acceso a columnas según el SELECT (índices 0 a 5)
+        codigo = row[0]
+        descripcion = row[1]
+        uo_codigo = row[2]
+        deposito_codigo = row[3]
+        existencia_actual = row[4] or 0.0
+        existencia_detallada = row[5] or 0.0
+
+        table_data.append([
+            str(codigo)[:10],
+            str(descripcion),
+            str(uo_codigo),
+            str(deposito_codigo),
+            f"{existencia_actual:,.2f}",
+            f"{existencia_detallada:,.2f}"
+        ])
+
+        total_Existencia += existencia_actual
+        total_Existencia_detallada += existencia_detallada
+        total_registros += 1
+
+    # Fila de totales
+    table_data.append([
+        '', 'TOTALES:', '', '',
+        f"{total_Existencia:,.2f}",
+        f"{total_Existencia_detallada:,.2f}"
+    ])
+
+    data_table = Table(table_data, colWidths=col_widths)
+    data_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4),
+        ('ALIGN', (0, 1), (-1, -2), 'LEFT'),
+        ('ALIGN', (4, 1), (5, -2), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+        ('ALIGN', (0, -1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey),
+    ]))
+
+    elements.append(data_table)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", estilos['footer']))
+
+    return _generar_pdf(ruta_salida, elements, usar_landscape=False)
+
+# 7. REPORTE PRELIMINAR DE AJUSTES (LANDSCAPE)
+def generar_pdf_preajustes(ruta_salida, datos_filas):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    styles = getSampleStyleSheet()
+    estilos = _crear_estilos_reporte(styles)
+    conn.close()
+    
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=True))
+    elements.append(Spacer(1, 15))
+    elements.append(Paragraph("REPORTE PRELIMINAR DE AJUSTES", estilos['title']))
+    elements.append(Spacer(1, 10))
+    
+    col_widths = [0.8*inch, 3.0*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch]
+    table_data = [['Producto', 'Descripción', 'Inicial Simulado', 'Entradas', 'Salidas', 'Ajuste Estimado', 'Ex. Actual']]
+    
+    total_inicial = total_entradas = total_salidas = total_ajuste = total_ex_actual = 0.0
+    total_registros = 0
+    
+    for fila in datos_filas:
+        producto, descripcion, inicial_sim, entradas, salidas, ajuste_est, ex_actual = fila
+        table_data.append([
+            str(producto)[:10],
+            str(descripcion),
+            f"{float(inicial_sim):,.2f}",
+            f"{float(entradas):,.2f}",
+            f"{float(salidas):,.2f}",
+            f"{float(ajuste_est):,.2f}",
+            f"{float(ex_actual):,.2f}"
+        ])
+        total_inicial += float(inicial_sim)
+        total_entradas += float(entradas)
+        total_salidas += float(salidas)
+        total_ajuste += float(ajuste_est)
+        total_ex_actual += float(ex_actual)
+        total_registros += 1
+    
+    table_data.append([
+        '', 'TOTALES:',
+        f"{total_inicial:,.2f}",
+        f"{total_entradas:,.2f}",
+        f"{total_salidas:,.2f}",
+        f"{total_ajuste:,.2f}",
+        f"{total_ex_actual:,.2f}"
+    ])
+    
+    data_table = Table(table_data, colWidths=col_widths)
+    data_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#4472C4')),
+        ('BACKGROUND', (2, 0), (2, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (3, 0), (3, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (4, 0), (4, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (5, 0), (5, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (6, 0), (6, 0), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4),
+        ('ALIGN', (0, 1), (1, -2), 'LEFT'),
+        ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+        ('ALIGN', (1, -1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey),
+    ]))
+    
+    elements.append(data_table)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", estilos['footer']))
+    
+    return _generar_pdf(ruta_salida, elements, usar_landscape=True)

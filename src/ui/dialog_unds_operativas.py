@@ -7,7 +7,9 @@ import json
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.system_info import get_current_user, get_machine_name
+from datetime import datetime
 from db.embedded_db import get_db_connection
+from ui.dialog_main_browser import DialogMainBrowser
 
 class DialogUndsOperativas(tk.Toplevel):
     def __init__(self, parent):
@@ -150,10 +152,28 @@ class DialogUndsOperativas(tk.Toplevel):
                     ))
                     self.current_id = cursor.lastrowid
                 else:
-                    # Actualizar existente (pendiente para ticket especial)
-                    messagebox.showinfo("Info", "Edición no implementada aún. Use 'Cancelar' para limpiar.")
-                    conn.close()
-                    return # No cerrar la conexión aún si no se guarda
+                    now = datetime.now()
+                    cursor.execute("""
+                        UPDATE ark_unds_operativas SET
+                            uo_Codigo = ?, uo_nombre = ?, uo_descripcion = ?,
+                            uo_empresa_id = ?, uo_dsn_name = ?, uo_db_path = ?, uo_active = ?,
+                            uo_LastUpdateDate = ?, uo_LastUpdateTime = ?, 
+                            uo_LastMachine = ?, uo_UserLastUpdate = ?
+                        WHERE uo_id = ?
+                    """, (
+                        self.ent_codigo.get().strip(),
+                        self.ent_nombre.get().strip(),
+                        self.ent_descripcion.get().strip(),
+                        empresa_id,
+                        dsn_name,
+                        self.ent_db_path.get().strip(),
+                        activa,
+                        now.strftime("%Y-%m-%d"),
+                        now.strftime("%H:%M:%S"),
+                        get_machine_name(),
+                        get_current_user(),
+                        self.current_id
+                    ))
 
                 conn.commit()
                 conn.close()
@@ -165,24 +185,104 @@ class DialogUndsOperativas(tk.Toplevel):
 
     def _editar(self):
         try:
-            messagebox.showinfo("Pendiente", "Funcionalidad de edición será implementada en ticket especial.")
+            config_uo = {
+                'titulo': 'Seleccionar Unidad Operativa para Editar',
+                'tabla': 'ark_unds_operativas',
+                'columnas': [
+                    ('Código', 'uo_Codigo', 100),
+                    ('Nombre', 'uo_nombre', 250),
+                    ('Descripción', 'uo_descripcion', 300),
+                    ('Activa', 'uo_active', 80)
+                ],
+                'campos_busqueda': [
+                    ('Código', 'uo_Codigo'),
+                    ('Nombre', 'uo_nombre')
+                ],
+                'id_field': 'uo_id',
+                'orden_por': 'uo_Codigo ASC'
+            }
+            dialog = DialogMainBrowser(self, config_uo)
+            self.wait_window(dialog)
+            if dialog.resultado:
+                self.current_id = dialog.resultado['id']
+                self._cargar_datos(self.current_id)
         except Exception as e:
             messagebox.showerror("Error en Editar", f"{type(e).__name__}: {e}")
+            
+    def _cargar_datos(self, registro_id):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT uo_Codigo, uo_nombre, uo_descripcion, uo_empresa_id, 
+                       uo_dsn_name, uo_db_path, uo_active
+                FROM ark_unds_operativas WHERE uo_id = ?
+            """, (registro_id,))
+            row = cursor.fetchone()
+            conn.close()
+
+            if not row:
+                messagebox.showwarning("Advertencia", "Registro no encontrado.")
+                self._limpiar_campos()
+                self.current_id = None
+                return
+
+            self.ent_codigo.delete(0, tk.END)
+            self.ent_codigo.insert(0, row[0] or "")
+            
+            self.ent_nombre.delete(0, tk.END)
+            self.ent_nombre.insert(0, row[1] or "")
+            
+            self.ent_descripcion.delete(0, tk.END)
+            self.ent_descripcion.insert(0, row[2] or "")
+            
+            empresa_id = row[3]
+            if empresa_id in self.empresa_ids:
+                idx = self.empresa_ids.index(empresa_id)
+                self.cmb_empresa.current(idx)
+            else:
+                self.cmb_empresa.set('')
+            
+            self.cmb_dsn.set(row[4] or "")
+            
+            self.ent_db_path.delete(0, tk.END)
+            self.ent_db_path.insert(0, row[5] or "")
+            
+            self.cmb_activa.set("Sí" if row[6] == 1 else "No")
+
+        except Exception as e:
+            messagebox.showerror("Error al Cargar", f"{type(e).__name__}: {e}")
 
     def _borrar(self):
         try:
-            if self.current_id is None:
-                messagebox.showwarning("Advertencia", "No hay registro seleccionado para borrar.")
-                return
-            if messagebox.askyesno("Confirmar Borrado", "¿Eliminar esta Unidad Operativa? Esta acción no se puede deshacer."):
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("DELETE FROM ark_unds_operativas WHERE uo_id = ?", (self.current_id,))
-                conn.commit()
-                conn.close()
-                messagebox.showinfo("Éxito", "Unidad Operativa eliminada.")
-                self._limpiar_campos()
-                self.current_id = None
+            config_uo = {
+                'titulo': 'Seleccionar Unidad Operativa para Borrar',
+                'tabla': 'ark_unds_operativas',
+                'columnas': [
+                    ('Código', 'uo_Codigo', 100),
+                    ('Nombre', 'uo_nombre', 250),
+                    ('Descripción', 'uo_descripcion', 300),
+                    ('Activa', 'uo_active', 80)
+                ],
+                'campos_busqueda': [
+                    ('Código', 'uo_Codigo'),
+                    ('Nombre', 'uo_nombre')
+                ],
+                'id_field': 'uo_id',
+                'orden_por': 'uo_Codigo ASC'
+            }
+            dialog = DialogMainBrowser(self, config_uo)
+            self.wait_window(dialog)
+            if dialog.resultado:
+                registro_id = dialog.resultado['id']
+                if messagebox.askyesno("Confirmar Borrado", "¿Eliminar esta Unidad Operativa? Esta acción no se puede deshacer."):
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("DELETE FROM ark_unds_operativas WHERE uo_id = ?", (registro_id,))
+                    conn.commit()
+                    conn.close()
+                    messagebox.showinfo("Éxito", "Unidad Operativa eliminada correctamente.")
+                    self._limpiar_campos()
         except Exception as e:
             messagebox.showerror("Error en Borrar", f"{type(e).__name__}: {e}")
 
@@ -195,6 +295,7 @@ class DialogUndsOperativas(tk.Toplevel):
                 if not messagebox.askyesno("Confirmar Cancelar", "¿Descartar todos los cambios?"):
                     return
             self._limpiar_campos()
+            self.current_id = None
         except Exception as e:
             messagebox.showerror("Error en Cancelar", f"{type(e).__name__}: {e}")
 

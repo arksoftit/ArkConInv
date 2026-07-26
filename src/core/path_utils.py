@@ -28,3 +28,7 @@ def get_icon_path():
 def get_logo_path():
     """Ruta absoluta al logo principal."""
     return get_resource_path(os.path.join('assets', 'images', 'LogoJ_Juepae_06X400.png'))
+
+def get_app_logo_path():
+    """Ruta al logo de ArkConInv (centrado)"""
+    return get_resource_path(os.path.join("assets", "LogoApp_ArkConInv.png"))
