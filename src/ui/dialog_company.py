@@ -266,12 +266,53 @@ class DialogCompany(tk.Toplevel):
                     self.current_id = cursor.lastrowid
                     self._limpiar_campos()
                 else:
-                    messagebox.showinfo("Info", "Se ha presentado un error al guardar la empresa.")
-                    return
-
+                    now = datetime.now()
+                    cursor.execute("""
+                        UPDATE ark_company SET
+                            com_Codigo = ?, com_Descripcion = ?, com_IDfiscal = ?,
+                            com_Status = ?, com_TipoContribuyente = ?,
+                            com_DireccionF = ?, com_DireccionL = ?,
+                            com_Telefono1 = ?, com_Telefono2 = ?,
+                            com_EmailEmpresa = ?,
+                            com_Representante = ?, com_Id_Representante = ?, 
+                            com_TelefonoContacto = ?, com_EmailContacto = ?,
+                            com_Dia_Inicio_Fiscal = ?, com_Mes_Inicio_Fiscal = ?, 
+                            com_Dia_Fin_Fiscal = ?, com_Mes_Fin_Fiscal = ?,
+                            com_InvDeclarado = ?,
+                            com_LastUpdateDate = ?, com_LastUpdateTime = ?, 
+                            com_LastMachine = ?, com_UserLastUpdate = ?
+                        WHERE com_IDauto = ?
+                    """, (
+                        self.ent_codigo.get().strip(),
+                        self.ent_razon.get().strip(),
+                        self.ent_rif.get().strip(),
+                        status,
+                        tipo,
+                        self.ent_dir_fiscal.get().strip(),
+                        self.ent_dir_local.get().strip(),
+                        self.ent_tel_ppal.get().strip(),
+                        self.ent_tel_movil.get().strip(),
+                        self.ent_email_emp.get().strip(),
+                        self.ent_rep_legal.get().strip(),
+                        self.ent_cedula.get().strip(),
+                        self.ent_tel_contacto.get().strip(),
+                        self.ent_email_contacto.get().strip(),
+                        int(self.cmb_diaini.get()) if self.cmb_diaini.get() else None,
+                        self.cmb_mesini.get() if self.cmb_mesini.get() else None,
+                        int(self.cmb_diafin.get()) if self.cmb_diafin.get() else None,
+                        self.cmb_mesfin.get() if self.cmb_mesfin.get() else None,
+                        self.get_inventario(),
+                        now.strftime("%Y-%m-%d"),
+                        now.strftime("%H:%M:%S"),
+                        get_machine_name(),
+                        get_current_user(),
+                        self.current_id
+                    ))
+                
                 conn.commit()
                 conn.close()
                 messagebox.showinfo("Éxito", "Empresa guardada correctamente.")
+                self._limpiar_campos()
     
         except Exception as e:
             messagebox.showerror("Error en Guardar", f"{type(e).__name__}: {e}")
@@ -295,16 +336,94 @@ class DialogCompany(tk.Toplevel):
                 'id_field': 'com_IDauto',
                 'orden_por': 'com_Codigo ASC'
             }
-            
             dialog = DialogMainBrowser(self, config_empresa)
             self.wait_window(dialog)
-            
             if dialog.resultado:
-                messagebox.showinfo("Éxito", f"Registro seleccionado (Visual): {dialog.resultado}")
-                # Aquí irá la lógica de carga (_cargar_registro_en_formulario) en la siguiente fase
-                
+                self.current_id = dialog.resultado['id']
+                self._cargar_datos(self.current_id)
         except Exception as e:
             messagebox.showerror("Error en Editar", f"{type(e).__name__}: {e}")
+            
+    def _cargar_datos(self, registro_id):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT com_Codigo, com_Descripcion, com_IDfiscal, com_Status, 
+                       com_TipoContribuyente, com_DireccionF, com_DireccionL, 
+                       com_Telefono1, com_Telefono2, com_EmailEmpresa, 
+                       com_Representante, com_Id_Representante, com_TelefonoContacto, 
+                       com_EmailContacto, com_Dia_Inicio_Fiscal, com_Mes_Inicio_Fiscal, 
+                       com_Dia_Fin_Fiscal, com_Mes_Fin_Fiscal, com_InvDeclarado
+                FROM ark_company WHERE com_IDauto = ?
+            """, (registro_id,))
+            row = cursor.fetchone()
+            conn.close()
+
+            if not row:
+                messagebox.showwarning("Advertencia", "Registro no encontrado.")
+                self._limpiar_campos()
+                self.current_id = None
+                return
+
+            self.ent_codigo.delete(0, tk.END)
+            self.ent_codigo.insert(0, row[0] or "")
+            
+            self.ent_razon.delete(0, tk.END)
+            self.ent_razon.insert(0, row[1] or "")
+            
+            self.ent_rif.delete(0, tk.END)
+            self.ent_rif.insert(0, row[2] or "")
+            
+            self.cmb_estado.set("Activo" if row[3] == 1 else "Inactivo")
+            
+            tipo_map = {1: "Ordinario", 2: "Especial", 3: "No Contribuyente"}
+            self.cmb_tipo.set(tipo_map.get(row[4], "Ordinario"))
+            
+            self.ent_dir_fiscal.delete(0, tk.END)
+            self.ent_dir_fiscal.insert(0, row[5] or "")
+            
+            self.ent_dir_local.delete(0, tk.END)
+            self.ent_dir_local.insert(0, row[6] or "")
+            
+            self.ent_tel_ppal.delete(0, tk.END)
+            self.ent_tel_ppal.insert(0, row[7] or "")
+            
+            self.ent_tel_movil.delete(0, tk.END)
+            self.ent_tel_movil.insert(0, row[8] or "")
+            
+            self.ent_email_emp.delete(0, tk.END)
+            self.ent_email_emp.insert(0, row[9] or "")
+            
+            self.ent_rep_legal.delete(0, tk.END)
+            self.ent_rep_legal.insert(0, row[10] or "")
+            
+            self.ent_cedula.delete(0, tk.END)
+            self.ent_cedula.insert(0, row[11] or "")
+            
+            self.ent_tel_contacto.delete(0, tk.END)
+            self.ent_tel_contacto.insert(0, row[12] or "")
+            
+            self.ent_email_contacto.delete(0, tk.END)
+            self.ent_email_contacto.insert(0, row[13] or "")
+            
+            if row[14]: self.cmb_diaini.set(f"{int(row[14]):02d}")
+            if row[15]: self.cmb_mesini.set(row[15])
+            if row[16]: self.cmb_diafin.set(f"{int(row[16]):02d}")
+            if row[17]: self.cmb_mesfin.set(row[17])
+            
+            if row[18] is not None:
+                valor = float(row[18])
+                parte_entera = f"{int(valor):,}".replace(",", ".")
+                parte_decimal = f"{int(round((valor - int(valor)) * 100)):02d}"
+                self.ent_inventario.delete(0, tk.END)
+                self.ent_inventario.insert(0, f"{parte_entera},{parte_decimal}")
+            else:
+                self.ent_inventario.delete(0, tk.END)
+                self.ent_inventario.insert(0, "0,00")
+
+        except Exception as e:
+            messagebox.showerror("Error al Cargar", f"{type(e).__name__}: {e}")
 
     def _borrar(self):
         try:
@@ -317,8 +436,7 @@ class DialogCompany(tk.Toplevel):
                 cursor.execute("DELETE FROM ark_company WHERE com_IDauto = ?", (self.current_id,))
                 conn.commit()
                 conn.close()
-                messagebox.showinfo("Éxito", "Empresa eliminada.")
-                
+                messagebox.showinfo("Éxito", "Empresa eliminada correctamente.")
                 self._limpiar_campos()
                 self.current_id = None
         except Exception as e:
@@ -337,7 +455,7 @@ class DialogCompany(tk.Toplevel):
                 if not messagebox.askyesno("Confirmar Cancelar", "¿Descartar todos los cambios?"):
                     return
             self._limpiar_campos()
-            
+            self.current_id = None
         except Exception as e:
             messagebox.showerror("Error en Cancelar", f"{type(e).__name__}: {e}")
 

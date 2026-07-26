@@ -31,9 +31,6 @@ class DialogReporteExistenciaActual(tk.Toplevel):  # Cambié el nombre de la cla
         # Variable para el filtro de existencia (valor por defecto: "todas")
         self.filtro_existencia_var = tk.StringVar(value="todas")
 
-        # No se necesitan tipos de operación para este reporte
-        # self.tipos_operacion = {...}
-
         self._create_widgets()
         self._cargar_datos_iniciales()
 
@@ -134,17 +131,7 @@ class DialogReporteExistenciaActual(tk.Toplevel):  # Cambié el nombre de la cla
             # Obtiene el deposito_id correspondiente al valor mostrado en el combo
             deposito_id = next((k for k, v in self.deposito_data.items() if v == deposito_display), "0")
 
-            # Se eliminan las operaciones relacionadas con tipos de operación
-            # tipos_seleccionados = ...
-
-            # NUEVO: Capturar el filtro de existencia seleccionado
             filtro_existencia = self.filtro_existencia_var.get()
-
-            # Mensaje de advertencia si no se selecciona una UO o depósito específicos
-            # Opcional: Puedes permitirlo o no, dependiendo de la lógica de negocio
-            # if uo_id == "0" and deposito_id == "0":
-            #    messagebox.showwarning("Advertencia", "Seleccionar 'Todas las UO' y 'Todos los depósitos' puede generar un reporte muy grande.")
-            #    # Puedes usar result = messagebox.askyesno(...) para confirmar
 
             ruta_salida = filedialog.asksaveasfilename(
                 title="Guardar Reporte de Existencia Actual",
@@ -154,25 +141,22 @@ class DialogReporteExistenciaActual(tk.Toplevel):  # Cambié el nombre de la cla
             )
 
             if not ruta_salida:
-                return  # El usuario canceló la operación
+                return 
 
-            self.config(cursor="watch")  # Cursor de reloj durante la generación
+            self.config(cursor="watch")  
             self.update()
 
-            # Llama a la función específica para generar el reporte de existencia actual
-            # Se agrega el nuevo parámetro filtro_existencia
             generar_pdf_existencia_actual(
                 ruta_salida=ruta_salida,
                 uo_id=uo_id,
                 deposito_id=deposito_id,
-                filtro_existencia=filtro_existencia,  # NUEVO parámetro
-                # No se pasa fecha_desde, fecha_hasta ni tipos
+                filtro_existencia=filtro_existencia, 
+                
             )
 
             self.config(cursor="")  # Restaura el cursor normal
             messagebox.showinfo("Éxito", f"Reporte generado exitosamente en:\n{ruta_salida}")
-            # Opcional: Abrir el archivo automáticamente
-            os.startfile(ruta_salida)  # Solo funciona en Windows
+            os.startfile(ruta_salida)
 
         except Exception as e:
             self.config(cursor="")  # Asegura restaurar el cursor en caso de error

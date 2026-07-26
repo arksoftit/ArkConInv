@@ -827,3 +827,89 @@ def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos
     elements.append(Paragraph(f"TOTAL REGISTROS: {total_registros}", estilos['footer']))
 
     return _generar_pdf(ruta_salida, elements, usar_landscape=False)
+
+# 7. REPORTE PRELIMINAR DE AJUSTES (LANDSCAPE)
+def generar_pdf_preajustes(ruta_salida, datos_filas):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    empresa = _obtener_datos_empresa(cursor)
+    fecha_str, hora_str = _obtener_fecha_hora()
+    styles = getSampleStyleSheet()
+    estilos = _crear_estilos_reporte(styles)
+    conn.close()
+    
+    elements = []
+    elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=True))
+    elements.append(Spacer(1, 15))
+    elements.append(Paragraph("REPORTE PRELIMINAR DE AJUSTES", estilos['title']))
+    elements.append(Spacer(1, 10))
+    
+    col_widths = [0.8*inch, 3.0*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch, 1.2*inch]
+    table_data = [['Producto', 'Descripción', 'Inicial Simulado', 'Entradas', 'Salidas', 'Ajuste Estimado', 'Ex. Actual']]
+    
+    total_inicial = total_entradas = total_salidas = total_ajuste = total_ex_actual = 0.0
+    total_registros = 0
+    
+    for fila in datos_filas:
+        producto, descripcion, inicial_sim, entradas, salidas, ajuste_est, ex_actual = fila
+        table_data.append([
+            str(producto)[:10],
+            str(descripcion),
+            f"{float(inicial_sim):,.2f}",
+            f"{float(entradas):,.2f}",
+            f"{float(salidas):,.2f}",
+            f"{float(ajuste_est):,.2f}",
+            f"{float(ex_actual):,.2f}"
+        ])
+        total_inicial += float(inicial_sim)
+        total_entradas += float(entradas)
+        total_salidas += float(salidas)
+        total_ajuste += float(ajuste_est)
+        total_ex_actual += float(ex_actual)
+        total_registros += 1
+    
+    table_data.append([
+        '', 'TOTALES:',
+        f"{total_inicial:,.2f}",
+        f"{total_entradas:,.2f}",
+        f"{total_salidas:,.2f}",
+        f"{total_ajuste:,.2f}",
+        f"{total_ex_actual:,.2f}"
+    ])
+    
+    data_table = Table(table_data, colWidths=col_widths)
+    data_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#4472C4')),
+        ('BACKGROUND', (2, 0), (2, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (3, 0), (3, 0), colors.HexColor('#008000')),
+        ('BACKGROUND', (4, 0), (4, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (5, 0), (5, 0), colors.HexColor('#FFA500')),
+        ('BACKGROUND', (6, 0), (6, 0), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4),
+        ('ALIGN', (0, 1), (1, -2), 'LEFT'),
+        ('ALIGN', (2, 1), (-1, -2), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+        ('ALIGN', (1, -1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey),
+    ]))
+    
+    elements.append(data_table)
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"TOTAL PRODUCTOS: {total_registros}", estilos['footer']))
+    
+    return _generar_pdf(ruta_salida, elements, usar_landscape=True)

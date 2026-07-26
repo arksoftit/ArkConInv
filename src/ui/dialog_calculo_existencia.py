@@ -114,15 +114,15 @@ class DialogCalculoExistencia(tk.Toplevel):
         self.btn_filtrar_negativos_actual = ttk.Button(operacion_frame, text="Mostrar Solo Existencia Actual Negativa", command=self._filtrar_existencia_actual_negativa, state=tk.DISABLED)
         self.btn_calcular_ajustes = ttk.Button(operacion_frame, text="Calcular Ajustes Requeridos", command=self._calcular_ajustes_requeridos, state=tk.DISABLED)
         self.btn_guardar = ttk.Button(operacion_frame, text="Guardar en ark_existencia_periodo", command=self._guardar_en_periodo, state=tk.DISABLED)
-        
-        # NUEVO BOTÓN LIMPIAR
         self.btn_limpiar = ttk.Button(operacion_frame, text="Limpiar", command=self._limpiar_treeview, style="Danger.TButton")
+        self.btn_rpreliminar = ttk.Button(operacion_frame, text="Preliminar", command=self._ajuste_rpreliminar, state=tk.DISABLED)
 
         self.btn_filtrar_negativos_inicial.pack(side=tk.LEFT, padx=5, pady=2)
         self.btn_filtrar_negativos_actual.pack(side=tk.LEFT, padx=5, pady=2)
         self.btn_calcular_ajustes.pack(side=tk.LEFT, padx=5, pady=2)
         self.btn_guardar.pack(side=tk.LEFT, padx=5, pady=2)
         self.btn_limpiar.pack(side=tk.LEFT, padx=5, pady=2)
+        self.btn_rpreliminar.pack(side=tk.LEFT, padx=5, pady=2)
         
         ttk.Button(operacion_frame, text="Cerrar", command=self.destroy).pack(side=tk.RIGHT, padx=5, pady=2)
 
@@ -229,12 +229,16 @@ class DialogCalculoExistencia(tk.Toplevel):
         self.btn_filtrar_negativos_actual.config(state=tk.NORMAL)
         self.btn_calcular_ajustes.config(state=tk.NORMAL)
         self.btn_guardar.config(state=tk.NORMAL)
+        self.btn_limpiar.config(state=tk.NORMAL)
+        self.btn_rpreliminar.config(state=tk.NORMAL)
 
     def _deshabilitar_botones_operacion(self):
         self.btn_filtrar_negativos_inicial.config(state=tk.DISABLED)
         self.btn_filtrar_negativos_actual.config(state=tk.DISABLED)
         self.btn_calcular_ajustes.config(state=tk.DISABLED)
         self.btn_guardar.config(state=tk.DISABLED)
+        self.btn_limpiar.config(state=tk.DISABLED)
+        self.btn_rpreliminar.config(state=tk.DISABLED)
 
     def _calcular_existencia(self):
         try:
@@ -504,3 +508,45 @@ class DialogCalculoExistencia(tk.Toplevel):
 
             except Exception as e:
                 messagebox.showerror("Error Crítico", f"Falló el guardado:\n{e}")
+    
+    def _ajuste_rpreliminar(self):
+        items = self.tree_resultados.get_children()
+        if not items:
+            messagebox.showwarning("Reporte Preliminar", "No hay datos en el Treeview para generar el reporte.")
+            return
+        
+        try:
+            datos_filas = []
+            for item in items:
+                values = self.tree_resultados.item(item, 'values')
+                producto = values[0]
+                descripcion = values[1]
+                ex_actual = values[4].replace(',', '')
+                entradas = values[5].replace(',', '')
+                salidas = values[6].replace(',', '')
+                inicial_simulado = values[8].replace(',', '')
+                ajuste_estimado = values[10].replace(',', '')
+                datos_filas.append([
+                    producto, descripcion,
+                    inicial_simulado, entradas, salidas,
+                    ajuste_estimado, ex_actual
+                ])
+            
+            from tkinter import filedialog
+            ruta_salida = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("Archivos PDF", "*.pdf")],
+                initialfile=f"preliminar_ajustes_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                title="Guardar Reporte Preliminar"
+            )
+            if not ruta_salida:
+                return
+            
+            from core.generar_pdf import generar_pdf_preajustes
+            generar_pdf_preajustes(ruta_salida, datos_filas)
+            messagebox.showinfo("Éxito", f"Reporte generado exitosamente:\n{ruta_salida}")
+            os.startfile(ruta_salida)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Falló la generación del reporte:\n{e}")
+    
