@@ -675,13 +675,20 @@ def generar_pdf_resumen_preliminar(ruta_salida, uo_id="0", fecha_desde=None, fec
 
 
 # 6. REPORTE DE EXISTENCIA ACTUAL 
-def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos=None):
+def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos=None, filtro_existencia="todas"):
     """
     Genera un reporte PDF de existencias actuales basado en datos de ark_existencia_actual.
-    Permite filtrar por Unidad Operativa y Depósito.
+    Permite filtrar por Unidad Operativa, Depósito y tipo de existencia.
+    
+    Parámetros filtro_existencia:
+        - "todas"      : Sin filtro adicional (comportamiento por defecto)
+        - "igual_cero" : Solo registros donde exa_existencia = 0
+        - "menor_cero" : Solo registros donde exa_existencia < 0
+        - "mayor_cero" : Solo registros donde exa_existencia > 0
     """
     conn = get_db_connection()
     cursor = conn.cursor()
+
     empresa = _obtener_datos_empresa(cursor)
     fecha_str, hora_str = _obtener_fecha_hora()
     estilos = _crear_estilos_reporte(getSampleStyleSheet())
@@ -706,7 +713,7 @@ def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos
             e.exa_codigoproducto,
             COALESCE(i.inv_descripcion, 'Sin descripción') as inv_descripcion,
             e.exa_uo_Codigo as uo_codigo,
-            e.exa_codigodeposito as deposito_codigo, -- Este campo es INTEGER en la tabla
+            e.exa_codigodeposito as deposito_codigo,
             e.exa_existencia as existencia_actual,
             e.exa_existenciadetallada as existencia_detallada
         FROM ark_existencia_actual e
@@ -725,10 +732,20 @@ def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos
         query += " AND e.exa_codigodeposito = (SELECT dep_codigo FROM ark_depositos WHERE dep_IDauto = ?)"
         params.append(deposito_id)
 
-    # Ajuste: Quité el GROUP BY ya que no parece necesario para una foto de existencia actual por producto/depósito
-    # Si se requiere resumen, podría ser útil, pero por defecto se muestran los registros individuales.
+    # NUEVO: Aplicar filtro de existencia según la opción seleccionada
+    filtro_texto = "Todas las existencias"
+    if filtro_existencia == "igual_cero":
+        query += " AND e.exa_existencia = 0"
+        filtro_texto = "Existencia igual a 0"
+    elif filtro_existencia == "menor_cero":
+        query += " AND e.exa_existencia < 0"
+        filtro_texto = "Existencia menor a 0"
+    elif filtro_existencia == "mayor_cero":
+        query += " AND e.exa_existencia > 0"
+        filtro_texto = "Existencia mayor a 0"
+
     query += """
-    ORDER BY e.exa_uo_Codigo, e.exa_codigodeposito, e.exa_codigoproducto
+        ORDER BY e.exa_uo_Codigo, e.exa_codigodeposito, e.exa_codigoproducto
     """
 
     cursor.execute(query, params)
@@ -738,16 +755,15 @@ def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos
     elements = []
     elements.append(_crear_encabezado(empresa, fecha_str, hora_str, usar_landscape=False))
     elements.append(Spacer(1, 15))
-    elements.append(Paragraph("REPORTE DE EXISTENCIA ACTUAL", estilos['title'])) # Corregido el título
+    elements.append(Paragraph("REPORTE DE EXISTENCIA ACTUAL", estilos['title']))
     elements.append(Spacer(1, 5))
 
-    filtros_texto = [f"UO: {uo_nombre}", f"Depósito: {deposito_nombre}"]
-    elements.append(Paragraph(f"Filtros aplicados: {', '.join(filtros_texto)}", estilos['filter'])) # Corregido texto
+    filtros_texto = [f"UO: {uo_nombre}", f"Depósito: {deposito_nombre}", f"Existencia: {filtro_texto}"]
+    elements.append(Paragraph(f"Filtros aplicados: {', '.join(filtros_texto)}", estilos['filter']))
     elements.append(Spacer(1, 10))
 
     col_widths = [0.75*inch, 2.20*inch, 0.75*inch, 0.75*inch, 0.85*inch, 0.85*inch]
-    table_data = [['Código', 'Descripción', 'UO', 'Depósito', 'Exist. Actual', 'Exist. Det.']] # Encabezados más concisos
-
+    table_data = [['Código', 'Descripción', 'UO', 'Depósito', 'Exist. Actual', 'Exist. Det.']]
     total_Existencia = total_Existencia_detallada = 0.0
     total_registros = 0
 
@@ -756,22 +772,15 @@ def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos
         codigo = row[0]
         descripcion = row[1]
         uo_codigo = row[2]
-        # El campo exa_codigodeposito es INTEGER en la tabla, pero en el reporte se muestra el código legible.
-        # La consulta filtra por el código del depósito, pero aquí mostramos el valor directo del campo.
-        # Si se quisiera mostrar la descripción del depósito en lugar del código numérico,
-        # se debería hacer un JOIN adicional o una subconsulta.
-        deposito_codigo = row[3] # Este es el valor INTEGER
-        existencia_actual = row[4] or 0.0 # Manejar posibles None
-        existencia_detallada = row[5] or 0.0 # Manejar posibles None
-
-        # No hay columna 'total' en la consulta, por lo tanto no se suma a 'total_general'
-        # total = row[6] # Esta línea causaba IndexError
+        deposito_codigo = row[3]
+        existencia_actual = row[4] or 0.0
+        existencia_detallada = row[5] or 0.0
 
         table_data.append([
             str(codigo)[:10],
             str(descripcion),
             str(uo_codigo),
-            str(deposito_codigo), # Mostrar código numérico del depósito
+            str(deposito_codigo),
             f"{existencia_actual:,.2f}",
             f"{existencia_detallada:,.2f}"
         ])
@@ -782,38 +791,35 @@ def generar_pdf_existencia_actual(ruta_salida, uo_id="0", deposito_id="0", tipos
 
     # Fila de totales
     table_data.append([
-        '', 'TOTALES:', '', '', # Dejar vacío o poner etiquetas si se desea
+        '', 'TOTALES:', '', '',
         f"{total_Existencia:,.2f}",
         f"{total_Existencia_detallada:,.2f}"
     ])
 
     data_table = Table(table_data, colWidths=col_widths)
     data_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')), # Fondo azul para encabezado
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke), # Texto blanco en encabezado
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'), # Centrado en encabezado
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), # Negrita en encabezado
-        ('FONTSIZE', (0, 0), (-1, 0), 8), # Tamaño de fuente en encabezado
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8), # Espaciado inferior en encabezado
-
-        ('BACKGROUND', (0, 1), (-1, -2), colors.white), # Fondo blanco para filas de datos
-        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black), # Texto negro en filas de datos
-        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'), # Fuente normal en filas de datos
-        ('FONTSIZE', (0, 1), (-1, -2), 6), # Tamaño de fuente en filas de datos
-        ('BOTTOMPADDING', (0, 1), (-1, -2), 4), # Espaciado inferior en filas de datos
-        ('ALIGN', (0, 1), (-1, -2), 'LEFT'), # Alineación izquierda para columnas de texto
-        ('ALIGN', (4, 1), (5, -2), 'RIGHT'), # Alineación derecha para columnas numéricas
-
-        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey), # Líneas de rejilla en cuerpo
-        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]), # Alternado de colores en filas
-
-        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')), # Fondo azul para fila de totales
-        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke), # Texto blanco en fila de totales
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'), # Negrita en fila de totales
-        ('FONTSIZE', (0, -1), (-1, -1), 8), # Tamaño de fuente en fila de totales
-        ('BOTTOMPADDING', (0, -1), (-1, -1), 8), # Espaciado inferior en fila de totales
-        ('ALIGN', (0, -1), (-1, -1), 'RIGHT'), # Alineación derecha en fila de totales (excepto primera columna)
-        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey), # Líneas de rejilla en fila de totales
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -2), colors.black),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -2), 4),
+        ('ALIGN', (0, 1), (-1, -2), 'LEFT'),
+        ('ALIGN', (4, 1), (5, -2), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#4472C4')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+        ('ALIGN', (0, -1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.grey),
     ]))
 
     elements.append(data_table)

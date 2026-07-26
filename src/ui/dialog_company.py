@@ -8,6 +8,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.system_info import get_current_user, get_machine_name
 from db.embedded_db import get_db_connection
+from ui.dialog_main_browser import DialogMainBrowser
 
 class DialogCompany(tk.Toplevel):
     def __init__(self, parent):
@@ -31,10 +32,17 @@ class DialogCompany(tk.Toplevel):
     def _create_widgets(self):
         main_frame = ttk.Frame(self, padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(0, weight=1)
 
-        # --- Sección: Datos Generales ---
         frame_general = ttk.Labelframe(main_frame, text="Datos Generales", padding=10)
-        frame_general.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        frame_general.grid(row=0, column=0, sticky="nsew", pady=(0, 10))
+        
+        frame_general.columnconfigure(0, weight=0)  # Columna labels (fija)
+        frame_general.columnconfigure(1, weight=1)  # Columna campos (expansible)
+        frame_general.columnconfigure(2, weight=1)  # Columna Periodo Fiscal (expansible)
+
 
         ttk.Label(frame_general, text="Código:").grid(row=0, column=0, sticky="w", pady=3)
         self.ent_codigo = ttk.Entry(frame_general, width=20)
@@ -47,6 +55,58 @@ class DialogCompany(tk.Toplevel):
         ttk.Label(frame_general, text="ID Fiscal (RIF):").grid(row=2, column=0, sticky="w", pady=3)
         self.ent_rif = ttk.Entry(frame_general, width=20)
         self.ent_rif.grid(row=2, column=1, padx=5, pady=3, sticky="w")
+        
+        # --- Frame Periodo Fiscal ---
+        # Definir listas
+        dias = [f"{i:02d}" for i in range(1, 32)]
+        meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+
+        frame_periodo = ttk.Labelframe(frame_general, text="Periodo Fiscal", padding=4)
+        frame_periodo.grid(row=2, column=2, rowspan=3, padx=(8,0), pady=3, sticky="nsew")
+
+        # Configurar grid interno (4 columnas)
+        frame_periodo.columnconfigure(0, weight=0)  # Label Día
+        frame_periodo.columnconfigure(1, weight=1)  # Combobox Día
+        frame_periodo.columnconfigure(2, weight=0)  # Label Mes
+        frame_periodo.columnconfigure(3, weight=1)  # Combobox Mes
+        frame_periodo.rowconfigure(0, weight=1)     # Fila Inicio
+        frame_periodo.rowconfigure(1, weight=1)     # Fila Fin
+        frame_periodo.rowconfigure(2, weight=1)     # Fila para Inventario Declarado
+
+        # --- Fila 0: Inicio del Periodo ---
+        ttk.Label(frame_periodo, text="Día Inicio:").grid(row=0, column=0, sticky="w", pady=2)
+        self.cmb_diaini = ttk.Combobox(frame_periodo, values=dias, state="readonly", width=8)
+        self.cmb_diaini.grid(row=0, column=1, padx=(0,5), pady=2, sticky="ew")
+        self.cmb_diaini.set("01")
+
+        ttk.Label(frame_periodo, text="Mes Inicio:").grid(row=0, column=2, sticky="w", pady=2)
+        self.cmb_mesini = ttk.Combobox(frame_periodo, values=meses, state="readonly", width=10)
+        self.cmb_mesini.grid(row=0, column=3, padx=(0,5), pady=2, sticky="ew")
+        self.cmb_mesini.set("Enero")
+
+        # --- Fila 1: Fin del Periodo ---
+        ttk.Label(frame_periodo, text="Día Fin:").grid(row=1, column=0, sticky="w", pady=2)
+        self.cmb_diafin = ttk.Combobox(frame_periodo, values=dias, state="readonly", width=8)
+        self.cmb_diafin.grid(row=1, column=1, padx=(0,5), pady=2, sticky="ew")
+        self.cmb_diafin.set("31")
+
+        ttk.Label(frame_periodo, text="Mes Fin:").grid(row=1, column=2, sticky="w", pady=2)
+        self.cmb_mesfin = ttk.Combobox(frame_periodo, values=meses, state="readonly", width=10)
+        self.cmb_mesfin.grid(row=1, column=3, padx=(0,5), pady=2, sticky="ew")
+        self.cmb_mesfin.set("Diciembre")
+
+       # --- Fila 2: Inventario Declarado ---
+        ttk.Label(frame_periodo, text="Inventario Declarado:").grid(row=2, column=0, sticky="w", pady=2)
+        self.ent_inventario = ttk.Entry(frame_periodo, width=16)
+        self.ent_inventario.grid(row=2, column=1, padx=5, pady=2, sticky="ew")
+        self.ent_inventario.insert(0, "0,00")
+
+        # Formato automático mientras escribe
+        # self.ent_inventario.bind("<KeyRelease>", self._format_money)
+        self.ent_inventario.bind("<FocusOut>", self._format_money)
+
+        # --- Fin Frame Periodo Fiscal ---
 
         ttk.Label(frame_general, text="Estado:").grid(row=3, column=0, sticky="w", pady=3)
         self.cmb_estado = ttk.Combobox(frame_general, values=["Activo", "Inactivo"], state="readonly", width=12)
@@ -60,7 +120,7 @@ class DialogCompany(tk.Toplevel):
 
         # --- Sección: Dirección y Teléfonos ---
         frame_direc = ttk.Labelframe(main_frame, text="Dirección y Teléfonos", padding=10)
-        frame_direc.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        frame_direc.grid(row=1, column=0, sticky="ew", pady=(0, 8))
 
         ttk.Label(frame_direc, text="Dirección Fiscal:").grid(row=0, column=0, sticky="w", pady=3)
         self.ent_dir_fiscal = ttk.Entry(frame_direc, width=50)
@@ -84,7 +144,7 @@ class DialogCompany(tk.Toplevel):
 
         # --- Sección: Contactos (ahora debajo de Dirección y Teléfonos) ---
         frame_contacto = ttk.Labelframe(main_frame, text="Contactos", padding=10)
-        frame_contacto.grid(row=2, column=0, sticky="ew", pady=(0, 10))
+        frame_contacto.grid(row=2, column=0, sticky="ew", pady=(0, 8))
 
         ttk.Label(frame_contacto, text="Representante Legal:").grid(row=0, column=0, sticky="w", pady=3)
         self.ent_rep_legal = ttk.Entry(frame_contacto, width=40)
@@ -102,28 +162,65 @@ class DialogCompany(tk.Toplevel):
         self.ent_email_contacto = ttk.Entry(frame_contacto, width=40)
         self.ent_email_contacto.grid(row=3, column=1, padx=5, pady=3, sticky="ew")
 
-        # --- Barra de acciones (fuera de main_frame, al final) ---
-        # btn_frame = ttk.Frame(self)
-        # btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
-
-        # ttk.Button(btn_frame, text="Incluir", command=self._incluir).pack(side=tk.LEFT, padx=5)
-        # ttk.Button(btn_frame, text="Guardar", command=self._guardar).pack(side=tk.LEFT, padx=5)
-        # ttk.Button(btn_frame, text="Editar", command=self._editar).pack(side=tk.LEFT, padx=5)
-        # ttk.Button(btn_frame, text="Borrar", command=self._borrar).pack(side=tk.LEFT, padx=5)
-        # ttk.Button(btn_frame, text="Cancelar", command=self._cancelar).pack(side=tk.LEFT, padx=5)
-        # ttk.Button(btn_frame, text="Salir", command=self._salir).pack(side=tk.RIGHT, padx=5)
         
         # --- Botones de acción (dentro de main_frame, como antes) ---
         btn_frame = ttk.Frame(main_frame) # <--- CAMBIADO: Dentro de main_frame, no de self
         btn_frame.grid(row=3, column=0, sticky="ew", pady=15, padx=10) # <--- CAMBIADO: grid en main_frame
 
-        # ttk.Button(btn_frame, text="Incluir", command=self._incluir).pack(side=tk.LEFT, padx=5)
+        #ttk.Button(btn_frame, text="Incluir", command=self._incluir).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Guardar", command=self._guardar).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Editar", command=self._editar).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Borrar", command=self._borrar).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Cancelar", command=self._cancelar).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Salir", command=self._salir).pack(side=tk.RIGHT, padx=5) # Puede ser LEFT también si se prefiere
     
+    def _format_money(self, event=None):
+        """Formatea el monto solo cuando el campo pierde el foco"""
+        widget = event.widget if event else self.ent_inventario
+        text = widget.get()
+        
+        # Limpiar caracteres no numéricos
+        clean = ''.join(c for c in text if c.isdigit() or c == ',')
+        
+        # Si está vacío o solo coma, poner 0,00
+        if not clean or clean == ',':
+            widget.delete(0, tk.END)
+            widget.insert(0, "0,00")
+            return
+        
+        # Separar enteros y decimales
+        if ',' in clean:
+            parts = clean.split(',')
+            integer_part = parts[0] if parts[0] else '0'
+            decimal_part = parts[1][:2] if len(parts) > 1 else '00'
+        else:
+            integer_part = clean
+            decimal_part = '00'
+        
+        # Formatear con puntos de miles
+        formatted_integer = ''
+        for i, char in enumerate(reversed(integer_part)):
+            if i > 0 and i % 3 == 0:
+                formatted_integer = '.' + formatted_integer
+            formatted_integer = char + formatted_integer
+        
+        formatted = f"{formatted_integer},{decimal_part}"
+        
+        # Actualizar solo si cambió
+        if formatted != text:
+            widget.delete(0, tk.END)
+            widget.insert(0, formatted)
+
+    def get_inventario(self):
+        """Obtener valor numérico para guardar en BD"""
+        text = self.ent_inventario.get()
+        # Eliminar puntos y cambiar coma por punto
+        clean = text.replace('.', '').replace(',', '.')
+        try:
+            return float(clean)
+        except:
+            return 0.0
+
 
     def _guardar(self):
         try:
@@ -181,7 +278,31 @@ class DialogCompany(tk.Toplevel):
 
     def _editar(self):
         try:
-            messagebox.showinfo("Pendiente", "Funcionalidad de edición será implementada en ticket especial.")
+            config_empresa = {
+                'titulo': 'Seleccionar Empresa para Editar',
+                'tabla': 'ark_company',
+                'columnas': [
+                    ('Código', 'com_Codigo', 100),
+                    ('Razón Social', 'com_Descripcion', 450),
+                    ('RIF', 'com_IDfiscal', 150),
+                    ('Estado', 'com_Status', 80)
+                ],
+                'campos_busqueda': [
+                    ('Código', 'com_Codigo'),
+                    ('Razón Social', 'com_Descripcion'),
+                    ('RIF', 'com_IDfiscal')
+                ],
+                'id_field': 'com_IDauto',
+                'orden_por': 'com_Codigo ASC'
+            }
+            
+            dialog = DialogMainBrowser(self, config_empresa)
+            self.wait_window(dialog)
+            
+            if dialog.resultado:
+                messagebox.showinfo("Éxito", f"Registro seleccionado (Visual): {dialog.resultado}")
+                # Aquí irá la lógica de carga (_cargar_registro_en_formulario) en la siguiente fase
+                
         except Exception as e:
             messagebox.showerror("Error en Editar", f"{type(e).__name__}: {e}")
 
