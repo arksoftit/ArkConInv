@@ -6,6 +6,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.embedded_db import get_db_connection
+from core.path_utils import get_backup_dir
 
 class DialogMainBrowser(tk.Toplevel):
     def __init__(self, parent, config):
@@ -13,6 +14,7 @@ class DialogMainBrowser(tk.Toplevel):
         self.parent = parent
         self.config = config
         self.resultado = None
+        self.modo_archivos = self.config.get('modo_archivos', False)
         
         self.title(self.config.get('titulo', 'Navegador de Registros'))
         self.geometry("850x550")
@@ -87,84 +89,116 @@ class DialogMainBrowser(tk.Toplevel):
 
     def _cargar_datos(self, filtro_sql="", params=None):
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            
-            tabla = self.config.get('tabla')
-            columnas = [field for _, field, _ in self.config.get('columnas', [])]
-            id_field = self.config.get('id_field')
-            orden_por = self.config.get('orden_por', f"{columnas[0]} ASC")
-            filtro_adicional = self.config.get('filtro_adicional', '')
-            
-            columnas_str = ", ".join(columnas)
-            
-            sql = f"""
-                SELECT {id_field}, {columnas_str}
-                FROM {tabla}
-                {filtro_adicional}
-                {filtro_sql}
-                ORDER BY {orden_por}
-            """
-            
-            params = params or ()
-            cursor.execute(sql, params)
-            rows = cursor.fetchall()
-            
-            for item in self.tree.get_children():
-                self.tree.delete(item)
-            
-            for row in rows:
-                registro_id = row[0]
-                valores_fila = row[1:]
-                
-                valores_formateados = []
-                for i, valor in enumerate(valores_fila):
-                    if valor is None:
-                        valores_formateados.append("")
-                    elif isinstance(valor, int):
-                        if columnas[i] == 'com_Status' or columnas[i] == 'uo_active':
-                            valores_formateados.append("Activo" if valor == 1 else "Inactivo")
-                        else:
-                            valores_formateados.append(str(valor))
-                    else:
-                        valores_formateados.append(str(valor))
-                
-                self.tree.insert('', 'end', values=valores_formateados, tags=(str(registro_id),))
-            
-            total_registros = len(rows)
-            self.lbl_status.config(text=f"Total de registros: {total_registros}")
-            
-            conn.close()
-            
+            if self.modo_archivos:
+                self._cargar_archivos()
+            else:
+                self._cargar_desde_bd(filtro_sql, params)
         except Exception as e:
             messagebox.showerror("Error al Cargar Datos", f"{type(e).__name__}: {e}")
             self.lbl_status.config(text="Error al cargar datos")
+            
+    def _cargar_archivos(self):
+        backup_dir = get_backup_dir()
+        archivos = []
+        
+        if os.path.exists(backup_dir):
+            for f in os.listdir(backup_dir):
+                if f.endswith(".db"):
+                    ruta = os.path.join(backup_dir, f)
+                    tamanio = os.path.getsize(ruta)
+                    archivos.append((f, tamanio))
+        
+        archivos.sort(key=lambda x: x[0], reverse=True)
+        
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        for nombre, tamanio in archivos:
+            ruta_backup = os.path.join(backup_dir, nombre)
+            tamanio_mb = round(tamanio / (1024 * 1024), 2)
+            self.tree.insert('', 'end', values=[nombre, f"{tamanio_mb} MB"], tags=(ruta_backup,))
+        
+        self.lbl_status.config(text=f"Total de respaldos: {len(archivos)}")
+
+    def _cargar_desde_bd(self, filtro_sql, params):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        tabla = self.config.get('tabla')
+        columnas = [field for _, field, _ in self.config.get('columnas', [])]
+        id_field = self.config.get('id_field')
+        orden_por = self.config.get('orden_por', f"{columnas[0]} ASC")
+        filtro_adicional = self.config.get('filtro_adicional', '')
+        
+        columnas_str = ", ".join(columnas)
+        
+        sql = f"""
+            SELECT {id_field}, {columnas_str}
+            FROM {tabla}
+            {filtro_adicional}
+            {filtro_sql}
+            ORDER BY {orden_por}
+        """
+        
+        params = params or ()
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+        
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        for row in rows:
+            registro_id = row[0]
+            valores_fila = row[1:]
+            
+            valores_formateados = []
+            for i, valor in enumerate(valores_fila):
+                if valor is None:
+                    valores_formateados.append("")
+                elif isinstance(valor, int):
+                    if columnas[i] == 'com_Status' or columnas[i] == 'uo_active':
+                        valores_formateados.append("Activo" if valor == 1 else "Inactivo")
+                    else:
+                        valores_formateados.append(str(valor))
+                else:
+                    valores_formateados.append(str(valor))
+            
+            self.tree.insert('', 'end', values=valores_formateados, tags=(str(registro_id),))
+        
+        total_registros = len(rows)
+        self.lbl_status.config(text=f"Total de registros: {total_registros}")
+        
+        conn.close()
 
     def _buscar(self):
+        if self.modo_archivos:
+            return
         texto = self.ent_busqueda.get().strip()
-        
+            
         if not texto:
             self._cargar_datos()
             return
-        
+            
         campos_activos = [field for field, var in self.check_vars.items() if var.get()]
-        
+            
         if not campos_activos:
             messagebox.showwarning("Advertencia", "Debe seleccionar al menos un campo para buscar.")
             return
-        
+            
         condiciones = []
         params = []
-        
+            
         for campo in campos_activos:
             condiciones.append(f"{campo} LIKE ?")
             params.append(f"%{texto}%")
-        
+            
         filtro_sql = f"AND ({' OR '.join(condiciones)})"
-        
+            
         self._cargar_datos(filtro_sql=filtro_sql, params=params)
 
     def _limpiar_busqueda(self):
+        if self.modo_archivos:
+            return
         self.ent_busqueda.delete(0, tk.END)
         for var in self.check_vars.values():
             var.set(False)
@@ -180,11 +214,19 @@ class DialogMainBrowser(tk.Toplevel):
         
         item = self.tree.item(seleccion[0])
         valores = item['values']
-        registro_id = item['tags'][0] if item['tags'] else None
+        tags = item.get('tags', [])
         
-        if not registro_id:
-            messagebox.showerror("Error", "No se pudo identificar el registro seleccionado.")
-            return
+        if self.modo_archivos:
+            ruta_completa = tags[0] if tags else None
+            if not ruta_completa:
+                messagebox.showerror("Error", "No se pudo identificar el archivo seleccionado.")
+                return
+            self.resultado = {'ruta': ruta_completa, 'nombre': valores[0]}
+        else:
+            registro_id = tags[0] if tags else None
+            if not registro_id:
+                messagebox.showerror("Error", "No se pudo identificar el registro seleccionado.")
+                return
+            self.resultado = {'id': int(registro_id), 'valores': valores}
         
-        self.resultado = {'id': int(registro_id), 'valores': valores}
         self.destroy()

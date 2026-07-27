@@ -1,14 +1,17 @@
 # ArkConInv - Consolidación de Inventario
 # Desarrollado por Juan E. Páez M. (JUEPAE)
 # Fecha: Junio 2026
-# Version: 0.1.01.10Beta
+# Version: 0.1.01.22Beta
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
 import os
 from ui.dialog_conexiones import DialogConexiones
 from core.system_info import get_date_audit, get_current_user, get_machine_name, get_app_version
+from core.backup_restore import crear_backup, listar_backups, listar_backups, restaurar_backup
+
 from db.embedded_db import init_database
+
 from ui.dialog_company import DialogCompany
 from ui.dialog_unds_operativas import DialogUndsOperativas
 from ui.dialog_users import DialogUsers
@@ -20,7 +23,6 @@ from ui.dialog_factores_historicos import DialogFactoresHistoricos
 from ui.dialog_importar_categorias import DialogImportarCategorias
 from ui.dialog_importar_depositos import DialogImportarDepositos
 from ui.dialog_importar_inventario import DialogImportarInventario
-# from ui.dialog_import_existencia import DialogImportExistencia
 from ui.dialog_import_transacciones import DialogImportTransacciones
 from ui.dialog_reporte_depositos import DialogReporteDepositos
 from ui.dialog_reporte_categorias import DialogReporteCategorias
@@ -31,11 +33,11 @@ from ui.dialog_resumen_preliminar import DialogResumenPreliminar
 from ui.dialog_preliminar import DialogPreliminar
 from ui.dialog_recalculo_costos import DialogRecalculoCostos
 from ui.dialog_calculo_existencia import DialogCalculoExistencia
-
+from ui.dialog_reset_data import DialogResetData
+from ui.dialog_data_backup import DialogBackupRestore
 
 from PIL import Image, ImageTk
 from core.path_utils import get_icon_path, get_logo_path
-
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from core.system_info import get_date_audit, get_current_user, get_machine_name, get_app_version
@@ -88,8 +90,6 @@ class ArkConInvApp(tk.Tk):
         menu_transacciones.add_command(label="Recalculo de un Periodo", command=self._placeholder)
         menu_transacciones.add_command(label="Cierre de un Periodo", command=self._placeholder)
         
-        
-        
         menu_importaciones = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Importaciones", menu=menu_importaciones)
         menu_importaciones.add_command(label="Importar Depósitos", command=self._abrir_importar_depositos)
@@ -127,6 +127,11 @@ class ArkConInvApp(tk.Tk):
         menu_config.add_command(label="Unidad Operativa", command=self._abrir_unds_operativas)
         menu_config.add_command(label="Usuarios", command=self._abrir_dialogo_usuarios)
         menu_config.add_command(label="Conexiones ODBC", command=self._abrir_dialogo_conexiones)
+        menu_config.add_separator()
+        submenu_gestion_data = tk.Menu(menu_config, tearoff=0)
+        menu_config.add_cascade(label="Gestión Base de Datos", menu=submenu_gestion_data)
+        submenu_gestion_data.add_command(label="Respaldar y Restaurar Base de Datos", command=self._abrir_gestor_data)        
+        submenu_gestion_data.add_command(label="Reset Base de Datos", command=self._abrir_reset_data)
 
         menu_ayuda = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Ayuda", menu=menu_ayuda)
@@ -201,13 +206,17 @@ class ArkConInvApp(tk.Tk):
 
     def mostrar_acerca(self):
         info_acerca = (
-            "ArkConInv v0.1.01.10Beta\n\n"
+            "ArkConInv v0.1.01.22Beta\n\n"
             "Desarrollado por Juan E. Páez M.\n"
             "JUEPAE\n"
             "Fecha: Junio 2026\n\n"
             "Consolidación de Inventario"
         )
         messagebox.showinfo("Acerca de ArkConInv", info_acerca)
+
+    
+    
+    #==========invocaciones a los diálogos de la aplicación=========================
     
     def _abrir_dialogo_empresa(self):
         DialogCompany(self)
@@ -248,8 +257,8 @@ class ArkConInvApp(tk.Tk):
     def _abrir_importar_transacciones(self):
         DialogImportTransacciones(self)
     
-    # def _abrir_importar_existencia_actual(self):
-    #    DialogImportExistencia(self)
+    def _abrir_gestor_data(self):   
+        DialogBackupRestore(self)
         
     def _abrir_preliminar(self):
         DialogPreliminar(self)
@@ -280,6 +289,9 @@ class ArkConInvApp(tk.Tk):
     
     def _abrir_recalculo_costos(self):
         DialogRecalculoCostos(self)
+
+    def _abrir_reset_data(self):
+        DialogResetData(self)
     
     
 

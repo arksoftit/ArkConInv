@@ -1,0 +1,15 @@
+ArkConInv_estructua_actuales.txt
+ArkConInv_estructura_20260726_1301
+ArkConInv_estructura_20260726_1301.txt
+ArkConInvDB/
+assets/
+config/
+convertir_a_txt.py
+debug_importacion.log
+Docs/
+drivers/
+logs/
+README.md
+requirements.txt
+src/
+venv_arkconinv/
