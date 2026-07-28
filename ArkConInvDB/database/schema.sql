@@ -752,23 +752,21 @@ CREATE TABLE IF NOT EXISTS ark_status_operacion (
 
 -- 13- Tabla de ark_periodos
 CREATE TABLE IF NOT EXISTS ark_periodos (
-    pdo_Idauto INTEGER PRIMARY KEY,    
-    pdo_fecha_ini TEXT NOT NULL,
-    pdo_fecha_fin TEXT NOT NULL,
-    pdo_anio INTEGER NOT NULL,
-    pdo_uo_id INTEGER NOT NULL,
-    pdo_uo_Codigo TEXT NOT NULL,
-    pdo_status INTEGER NOT NULL,
-    pdo_SystemDate TEXT DEFAULT (date('now')),
-    pdo_SystemTime TEXT DEFAULT (time('now')),
-    pdo_NameMachine TEXT,
-    pdo_UserCreator TEXT,
+    pdo_Idauto         INTEGER PRIMARY KEY AUTOINCREMENT,
+    pdo_fecha_ini      TEXT    NOT NULL,
+    pdo_fecha_fin      TEXT    NOT NULL,
+    pdo_anio           INTEGER NOT NULL,
+    pdo_status         INTEGER NOT NULL,
+    pdo_SystemDate     TEXT    DEFAULT (date('now') ),
+    pdo_SystemTime     TEXT    DEFAULT (time('now') ),
+    pdo_NameMachine    TEXT,
+    pdo_UserCreator    TEXT,
     pdo_LastUpdateDate TEXT,
     pdo_LastUpdateTime TEXT,
-    pdo_LastMachine TEXT,
-    pdo_UserLastUpdate TEXT,
-    FOREIGN KEY (pdo_uo_id) REFERENCES ark_unds_operativas (uo_id)
+    pdo_LastMachine    TEXT,
+    pdo_UserLastUpdate TEXT
 );
+
 
 -- 14- Tabla de ark_existencia_calculadas
 CREATE TABLE IF NOT EXISTS ark_existencia_calculadas (
@@ -1034,9 +1032,9 @@ CREATE INDEX IF NOT EXISTS idx_dti_documento
 CREATE INDEX IF NOT EXISTS idx_dti_depositos 
     ON ark_detalletraninv(dti_depositosource, dti_depositotarget);
 
--- Optimiza la búsqueda de períodos por Unidad Operativa y por Año o Estatus (ej. buscar el período activo)
-CREATE INDEX IF NOT EXISTS idx_pdo_uo_anio_status 
-    ON ark_periodos (pdo_uo_Codigo, pdo_anio, pdo_status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uidx_pdo_anio_mes
+ON ark_periodos (pdo_anio, pdo_fecha_ini, pdo_fecha_fin);
 
 -- Optimiza los filtros o validaciones basados en rangos de fechas
 CREATE INDEX IF NOT EXISTS idx_pdo_fechas 
