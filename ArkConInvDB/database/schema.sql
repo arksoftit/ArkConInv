@@ -770,59 +770,68 @@ CREATE TABLE IF NOT EXISTS ark_periodos (
 
 -- 14- Tabla de ark_existencia_calculadas
 CREATE TABLE IF NOT EXISTS ark_existencia_calculadas (
-    exc_idauto INTEGER PRIMARY KEY,
+    exc_idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    exc_pdo_idauto INTEGER,
+    exc_fecha_desde TEXT,
+    exc_fecha_hasta TEXT,
     exc_uo_Codigo TEXT NOT NULL,
     exc_dep_codigo TEXT NOT NULL,
     exc_item_codigo TEXT NOT NULL,
-    exc_inicial REAL,
-    exc_costos_local REAL,
-    exc_costos_referencial REAL,
-    exc_factor_referencial REAL,
-    exc_transferencias_mas REAL,
-    exc_cargos REAL,
-    exc_ajustes_mas REAL,
-    exc_compras REAL,
-    exc_nota_entrega_proveedor REAL,
-    exc_dev_ventas REAL,
-    exc_descargos REAL,
-    exc_dev_compras REAL,
-    exc_ventas REAL,
-    exc_nota_entrega_clientes REAL,
-    exc_transferencias_menos REAL,
-    exc_ajustes_menos REAL,
-    exc_final REAL,
-    exc_final_mayor REAL,
-    exc_final_menor REAL,
-    exc_inicial_estimado REAL,
-    exc_ajuste_requerido REAL,
-    exc_SystemDate TEXT DEFAULT (date('now')),
-    exc_SystemTime TEXT DEFAULT (time('now')),
+    exc_inicial REAL DEFAULT 0.0,
+    exc_costos_local REAL DEFAULT 0.0,
+    exc_costos_referencial REAL DEFAULT 0.0,
+    exc_factor_referencial REAL DEFAULT 1.0,
+    exc_compras REAL DEFAULT 0.0,
+    exc_cargos REAL DEFAULT 0.0,
+    exc_nota_entrega_proveedor REAL DEFAULT 0.0,
+    exc_dev_ventas REAL DEFAULT 0.0,
+    exc_ajustes_mas REAL DEFAULT 0.0,
+    exc_ajustes_menos REAL DEFAULT 0.0,
+    exc_transferencias_mas REAL DEFAULT 0.0,
+    exc_transferencias_menos REAL DEFAULT 0.0,
+    exc_ventas REAL DEFAULT 0.0,
+    exc_descargos REAL DEFAULT 0.0,
+    exc_nota_entrega_clientes REAL DEFAULT 0.0,
+    exc_dev_compras REAL DEFAULT 0.0,
+    exc_final REAL DEFAULT 0.0,
+    exc_SystemDate TEXT,
+    exc_SystemTime TEXT,
     exc_NameMachine TEXT,
     exc_UserCreator TEXT,
-    exc_LastUpdateDate TEXT,
-    exc_LastUpdateTime TEXT,
-    exc_LastMachine TEXT,
-    exc_UserLastUpdate TEXT,
-    FOREIGN KEY (exc_item_codigo) REFERENCES ark_inventario (inv_codigo)
+    UNIQUE(exc_uo_Codigo, exc_dep_codigo, exc_item_codigo),
+    FOREIGN KEY (exc_pdo_idauto) REFERENCES ark_periodos(pdo_Idauto)
 );
+
+CREATE INDEX IF NOT EXISTS idx_exc_llave ON ark_existencia_calculadas(exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
+CREATE INDEX IF NOT EXISTS idx_exc_periodo ON ark_existencia_calculadas(exc_pdo_idauto);    
 
     -- 15- Tabla de ark_existencia_periodo
 CREATE TABLE IF NOT EXISTS ark_existencia_periodo (
-    exp_idauto INTEGER PRIMARY KEY,
+    exp_idauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    exp_pdo_id TEXT NOT NULL,
     exp_uo_Codigo TEXT NOT NULL,
     exp_dep_codigo TEXT NOT NULL,
     exp_item_codigo TEXT NOT NULL,
-    exp_costos_local REAL,
-    exp_costos_referencial REAL,
-    exp_factor_referencial REAL,
-    exp_inicial REAL,
-    exp_op_entradas REAL,
-    exp_op_salidas REAL,
-    exp_cant_entradas REAL,
-    exp_cant_salidas REAL,
-    exp_final REAL,
-    exp_fecha_ini TEXT,
-    exp_fecha_fin TEXT,
+    exp_descripcion TEXT,
+    exp_unidad TEXT,
+    exp_inicial REAL DEFAULT 0.0,
+    exp_cant_entradas REAL DEFAULT 0.0,
+    exp_cant_salidas REAL DEFAULT 0.0,
+    exp_calculada REAL DEFAULT 0.0,
+    exp_sistema REAL DEFAULT 0.0,
+    exp_diferencia REAL DEFAULT 0.0,
+    exp_costo_local REAL DEFAULT 0.0,
+    exp_costo_referencial REAL DEFAULT 0.0,
+    exp_factor_referencial REAL DEFAULT 1.0,
+    exp_valor_inicial_local REAL DEFAULT 0.0,
+    exp_valor_inicial_ref REAL DEFAULT 0.0,
+    exp_valor_final_local REAL DEFAULT 0.0,
+    exp_valor_final_ref REAL DEFAULT 0.0,
+    exp_es_negativo INTEGER DEFAULT 0,
+    exp_tiene_diferencia INTEGER DEFAULT 0,
+    exp_requiere_ajuste INTEGER DEFAULT 0,
+    exp_fecha_ini TEXT NOT NULL,
+    exp_fecha_fin TEXT NOT NULL,
     exp_SystemDate TEXT DEFAULT (date('now')),
     exp_SystemTime TEXT DEFAULT (time('now')),
     exp_NameMachine TEXT,
@@ -1045,12 +1054,14 @@ CREATE INDEX IF NOT EXISTS idx_exc_uo_dep_item
     ON ark_existencia_calculadas (exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
 
 -- Índice compuesto para resolver agrupaciones y saldos de stock en un depósito por UO
+CREATE INDEX IF NOT EXISTS idx_exp_pdo_id 
+    ON ark_existencia_periodo (exp_pdo_id);
+
 CREATE INDEX IF NOT EXISTS idx_exp_uo_dep_item 
     ON ark_existencia_periodo (exp_uo_Codigo, exp_dep_codigo, exp_item_codigo);
 
--- Optimiza reportes históricos o consultas basadas en rangos de fechas específicos
-CREATE INDEX IF NOT EXISTS idx_exp_fechas 
-    ON ark_existencia_periodo (exp_fecha_ini, exp_fecha_fin);
+CREATE INDEX IF NOT EXISTS idx_exp_flags 
+    ON ark_existencia_periodo (exp_pdo_id, exp_es_negativo, exp_tiene_diferencia);
 
 -- Agiliza los JOINs directos entre el histórico de existencias y la tabla de períodos
 CREATE INDEX IF NOT EXISTS idx_exh_periodo_id 

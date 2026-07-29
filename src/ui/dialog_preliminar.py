@@ -291,6 +291,23 @@ class DialogPreliminar(tk.Toplevel):
             maquina = get_machine_name()
             fecha_hoy = datetime.now().strftime("%Y-%m-%d")
             hora_hoy = datetime.now().strftime("%H:%M:%S")
+
+            cursor.execute("""
+                SELECT pdo_Idauto 
+                FROM ark_periodos 
+                WHERE ? >= pdo_fecha_ini AND ? <= pdo_fecha_fin
+            """, (fecha_desde_sql, fecha_hasta_sql))
+            row_pdo = cursor.fetchone()
+            pdo_idauto = row_pdo[0] if row_pdo else None
+
+            if not pdo_idauto:
+                cursor.execute("""
+                    SELECT pdo_Idauto 
+                    FROM ark_periodos 
+                    WHERE ? BETWEEN pdo_fecha_ini AND pdo_fecha_fin
+                """, (fecha_desde_sql,))
+                row_pdo = cursor.fetchone()
+                pdo_idauto = row_pdo[0] if row_pdo else None
             
             total_registros = len(balance_existencias)
             procesados = 0
@@ -308,14 +325,16 @@ class DialogPreliminar(tk.Toplevel):
 
                 cursor.execute("""
                     INSERT OR REPLACE INTO ark_existencia_calculadas (
+                        exc_pdo_idauto, exc_fecha_desde, exc_fecha_hasta,
                         exc_uo_Codigo, exc_dep_codigo, exc_item_codigo, exc_inicial, 
                         exc_costos_local, exc_costos_referencial, exc_factor_referencial,
                         exc_compras, exc_cargos, exc_nota_entrega_proveedor, exc_dev_ventas, 
                         exc_ajustes_mas, exc_ajustes_menos, exc_transferencias_mas, exc_transferencias_menos,
                         exc_ventas, exc_descargos, exc_nota_entrega_clientes, exc_dev_compras,
                         exc_final, exc_SystemDate, exc_SystemTime, exc_NameMachine, exc_UserCreator
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
+                    pdo_idauto, fecha_desde_sql, fecha_hasta_sql,
                     uo, dep, item, 0.0,
                     formato_monto(costo_local), formato_monto(costo_referencial), formato_monto(factor),
                     formato_cantidad(datos['compras']), formato_cantidad(datos['cargos']), 
