@@ -49,30 +49,52 @@ class DBConnectionManager:
         return dsn_list
 
     def load_connections(self):
-        if os.path.exists(self.config_path):
-            try:
-                with open(self.config_path, 'r', encoding='utf-8') as f:
-                    content = f.read().strip()
-                    if not content:
-                        return []
-                    return json.loads(content)
-            except json.JSONDecodeError:
-                return []
-        return []
+        if not os.path.exists(self.config_path):
+            return []
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                if not content:
+                    return []
+                raw = json.loads(content)
+        except json.JSONDecodeError:
+            return []
+        conexiones = []
+        for item in raw:
+            entry = {
+                k.strip(): (v.strip() if isinstance(v, str) else v)
+                for k, v in item.items()
+            }
+            activa = entry.get('Activa', False)
+            if isinstance(activa, str):
+                entry['Activa'] = activa.lower() == 'true'
+            else:
+                entry['Activa'] = bool(activa)
+            conexiones.append(entry)
+        return conexiones
 
     def save_connection(self, dsn, usuario, password):
         conexiones = self.load_connections()
+        for c in conexiones:
+            c['Activa'] = False
         nueva_conexion = {
-            'dsn': dsn,
+            'dsn': dsn.strip(),
             'usuario': usuario,
             'password': password,
-            'fecha': datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            'fecha': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'Activa': True
         }
-        conexiones = [c for c in conexiones if c['dsn'] != dsn]
+        conexiones = [c for c in conexiones if c['dsn'] != dsn.strip()]
         conexiones.insert(0, nueva_conexion)
         conexiones = conexiones[:10]
         with open(self.config_path, 'w', encoding='utf-8') as f:
             json.dump(conexiones, f, indent=4)
+            
+    def get_active_connection(self):
+        for c in self.load_connections():
+            if c.get('Activa'):
+                return c
+        return None
 
     def connect(self, dsn, usuario, password):
         try:

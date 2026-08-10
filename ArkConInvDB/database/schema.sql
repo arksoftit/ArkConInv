@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS ark_company (
     com_SystemTime TEXT DEFAULT (time('now')),
     com_NameMachine TEXT,
     com_UserCreator TEXT,
-    com_LastUpdateDate TEXT,
-    com_LastUpdateTime TEXT,
+    com_LastUpdateDate TEXT DEFAULT (date('now')),
+    com_LastUpdateTime TEXT DEFAULT (time('now')),
     com_LastMachine TEXT,
     com_UserLastUpdate TEXT
 );
@@ -51,8 +51,8 @@ CREATE TABLE IF NOT EXISTS ark_unds_operativas (
     uo_SystemTime TEXT DEFAULT (time('now')),
     uo_NameMachine TEXT,
     uo_UserCreator TEXT,
-    uo_LastUpdateDate TEXT,
-    uo_LastUpdateTime TEXT,
+    uo_LastUpdateDate TEXT DEFAULT (date('now')),
+    uo_LastUpdateTime TEXT DEFAULT (time('now')),
     uo_LastMachine TEXT,
     uo_UserLastUpdate TEXT,
     FOREIGN KEY (uo_empresa_id) REFERENCES ark_company (com_IDauto)
@@ -76,8 +76,8 @@ CREATE TABLE IF NOT EXISTS ark_users (
     usr_SystemTime TEXT DEFAULT (time('now')),
     usr_NameMachine TEXT,
     usr_UserCreator TEXT,
-    usr_LastUpdateDate TEXT,
-    usr_LastUpdateTime TEXT,
+    usr_LastUpdateDate TEXT DEFAULT (date('now')),
+    usr_LastUpdateTime TEXT DEFAULT (time('now')),
     usr_LastMachine TEXT,
     usr_UserLastUpdate TEXT,
     FOREIGN KEY (id_company) REFERENCES ark_company(com_IDauto)
@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS ark_categoria (
     cat_SystemTime TEXT DEFAULT (time('now')),
     cat_NameMachine TEXT,
     cat_UserCreator TEXT,
-    cat_LastUpdateDate TEXT,
-    cat_LastUpdateTime TEXT,
+    cat_LastUpdateDate TEXT DEFAULT (date('now')),
+    cat_LastUpdateTime TEXT DEFAULT (time('now')),
     cat_LastMachine TEXT,
     cat_UserLastUpdate TEXT
 );
@@ -151,9 +151,10 @@ CREATE TABLE IF NOT EXISTS ark_categoria (
 -- 5-Inventario
 CREATE TABLE IF NOT EXISTS ark_inventario (
     inv_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
-    inv_codigo	TEXT NOT NULL UNIQUE,
+    inv_codigo	TEXT NOT NULL,
     inv_descripcion	TEXT,
-    inv_categoria	TEXT,
+    inv_categoria	TEXT NOT NULL,
+    inv_uo_id INTEGER NOT NULL,
     inv_descripciondetallada	TEXT,
     inv_vendedor	TEXT,
     inv_status	INTEGER,
@@ -228,14 +229,102 @@ CREATE TABLE IF NOT EXISTS ark_inventario (
     inv_SystemTime TEXT DEFAULT (time('now')),
     inv_NameMachine TEXT,
     inv_UserCreator TEXT,
-    inv_LastUpdateDate TEXT,
-    inv_LastUpdateTime TEXT,
+    inv_LastUpdateDate TEXT DEFAULT (date('now')),
+    inv_LastUpdateTime TEXT DEFAULT (time('now')),
     inv_LastMachine TEXT,
     inv_UserLastUpdate TEXT,
-    FOREIGN KEY (inv_categoria) REFERENCES ark_categoria(cat_IDauto)
+    FOREIGN KEY (inv_categoria) REFERENCES ark_categoria(cat_IDauto),
+    FOREIGN KEY (inv_uo_id) REFERENCES ark_unds_operativas(uo_id)
 );
 
--- 6-Depositos
+-- 6-Maestro de inventario
+CREATE TABLE IF NOT EXISTS ark_maestro_inventario  (
+    mts_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
+    mts_codigo	TEXT NOT NULL UNIQUE,
+    mts_descripcion	TEXT,
+    mts_categoria	TEXT,
+    mts_descripciondetallada	TEXT,
+    mts_vendedor	TEXT,
+    mts_status	INTEGER,
+    mts_unidad	TEXT,
+    mts_tipocodigobarra	INTEGER,
+    mts_imagen	BLOB,
+    mts_sustituto1	TEXT,
+    mts_sustituto2	TEXT,
+    mts_sustituto3	TEXT,
+    mts_referencia	TEXT,
+    mts_marca	TEXT,
+    mts_moneda	TEXT,
+    mts_factorconversion	REAL,
+    mts_undexistencia2	TEXT,
+    mts_puesto	TEXT,
+    mts_sujetoacomision	INTEGER,
+    mts_montocomision	REAL,
+    mts_cuentascontables	INTEGER,
+    mts_pesoproducto	REAL,
+    mts_diasdereposicion	INTEGER,
+    mts_presentacion	INTEGER,
+    mts_garantia	INTEGER,
+    mts_sustituto4	TEXT,
+    mts_sustituto5	TEXT,
+    mts_montocomisionp	INTEGER,
+    mts_depositos	INTEGER,
+    mts_ofertas	INTEGER,
+    mts_vencimientos	INTEGER,
+    mts_clasificacion	INTEGER,
+    mts_manejoinventario	INTEGER,
+    mts_seriales	INTEGER,
+    mts_creacion	TEXT,
+    mts_inventarioinicialunidades	REAL,
+    mts_inventarioinicialcosto	REAL,
+    mts_capacidad	REAL,
+    mts_existdecimal	INTEGER,
+    mts_compuestoseriales	INTEGER,
+    mts_vendedorfijo	TEXT,
+    mts_vendedorfijoactivo	INTEGER,
+    mts_modelo	TEXT,
+    mts_subcategoria	TEXT,
+    mts_pesoafectacosto	INTEGER,
+    mts_impresora	TEXT,
+    mts_base_autoincrement	INTEGER,
+    mts_zextra1	REAL,
+    mts_zextra2	REAL,
+    mts_zextra3	REAL,
+    mts_zextra4	REAL,
+    mts_zextra5	REAL,
+    mts_zextra6	REAL,
+    mts_zextra1venta	INTEGER,
+    mts_zextra2venta	INTEGER,
+    mts_zextra3venta	INTEGER,
+    mts_zextra4venta	INTEGER,
+    mts_zextra5venta	INTEGER,
+    mts_zextra6venta	INTEGER,
+    mts_zextra1ventamod	INTEGER,
+    mts_zextra2ventamod	INTEGER,
+    mts_zextra3ventamod	INTEGER,
+    mts_zextra4ventamod	INTEGER,
+    mts_zextra5ventamod	INTEGER,
+    mts_zextra6ventamod	INTEGER,
+    mts_internet	INTEGER,
+    mts_balanza	INTEGER,
+    mts_codigobarra	INTEGER,
+    mts_preciolista	INTEGER,
+    mts_aprovechaporc	REAL,
+    mts_arancel	TEXT,
+    mts_posentrega	INTEGER,
+    mts_cargosextras	TEXT,
+    mts_SystemDate TEXT DEFAULT (date('now')),
+    mts_SystemTime TEXT DEFAULT (time('now')),
+    mts_NameMachine TEXT,
+    mts_UserCreator TEXT,
+    mts_LastUpdateDate TEXT DEFAULT (date('now')),
+    mts_LastUpdateTime TEXT DEFAULT (time('now')),
+    mts_LastMachine TEXT,
+    mts_UserLastUpdate TEXT,
+    FOREIGN KEY (mts_categoria) REFERENCES ark_categoria(cat_IDauto)
+);
+
+-- 7-Depositos
 CREATE TABLE IF NOT EXISTS ark_depositos (
     dep_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
     dep_codigo	TEXT NOT NULL,
@@ -253,8 +342,8 @@ CREATE TABLE IF NOT EXISTS ark_depositos (
     dep_SystemTime TEXT DEFAULT (time('now')),
     dep_NameMachine TEXT,
     dep_UserCreator TEXT,
-    dep_LastUpdateDate TEXT,
-    dep_LastUpdateTime TEXT,
+    dep_LastUpdateDate TEXT DEFAULT (date('now')),
+    dep_LastUpdateTime TEXT DEFAULT (time('now')),
     dep_LastMachine TEXT,
     dep_UserLastUpdate TEXT,
     FOREIGN KEY (dep_uo_origen) REFERENCES ark_unds_operativas(uo_id)
@@ -265,11 +354,11 @@ CREATE TABLE IF NOT EXISTS ark_depositos (
 -- TABLAS DE TRANSACCIONES 
 -- ============================================================================
 
--- 7-Transacciones (Cabecera - Homóloga de SOperacionInv)
+-- 8-Transacciones (Cabecera - Homóloga de SOperacionInv)
 CREATE TABLE IF NOT EXISTS ark_transacciones (
     trn_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
     trn_idunico TEXT UNIQUE,
-    trn_uo_id INTEGER NOT NULL,
+    trn_uo_id   INTEGER NOT NULL,
     trn_uo_Codigo TEXT NOT NULL,
     trn_autoincrement INTEGER,
     trn_documento TEXT NOT NULL,
@@ -422,16 +511,16 @@ CREATE TABLE IF NOT EXISTS ark_transacciones (
     trn_SystemTime TEXT DEFAULT (time('now')),
     trn_NameMachine TEXT,
     trn_UserCreator TEXT,
-    trn_LastUpdateDate TEXT,
-    trn_LastUpdateTime TEXT,
+    trn_LastUpdateDate TEXT DEFAULT (date('now')),
+    trn_LastUpdateTime TEXT DEFAULT (time('now')),
     trn_LastMachine TEXT,
     trn_UserLastUpdate TEXT,
-    FOREIGN KEY (trn_uo_id) REFERENCES ark_unds_operativas(uo_id)
+    FOREIGN KEY (trn_uo_id) REFERENCES ark_unds_operativas(uo_id),
     FOREIGN KEY (trn_tipo) REFERENCES ark_tipos_operacion(topo_id),
     FOREIGN KEY (trn_status) REFERENCES ark_status_operacion(stpo_id)
 );
 
--- 8-Detalle Transacciones de Ventas (Homóloga de SDetalleVenta)
+-- 9-Detalle Transacciones de Ventas (Homóloga de SDetalleVenta)
 CREATE TABLE IF NOT EXISTS ark_detalletranvtas (
     dtv_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
     dtv_idunico TEXT UNIQUE,
@@ -527,15 +616,15 @@ CREATE TABLE IF NOT EXISTS ark_detalletranvtas (
     dtv_SystemTime TEXT DEFAULT (time('now')),
     dtv_NameMachine TEXT,
     dtv_UserCreator TEXT,
-    dtv_LastUpdateDate TEXT,
-    dtv_LastUpdateTime TEXT,
+    dtv_LastUpdateDate TEXT DEFAULT (date('now')),
+    dtv_LastUpdateTime TEXT DEFAULT (time('now')),
     dtv_LastMachine TEXT,
     dtv_UserLastUpdate TEXT,
     FOREIGN KEY (dtv_uo_id) REFERENCES ark_unds_operativas(uo_id),
-    FOREIGN KEY (dtv_codigo) REFERENCES ark_inventario(inv_codigo)
+    FOREIGN KEY (dtv_codigo) REFERENCES ark_maestro_inventario(mts_codigo)
 );
 
--- 9-Detalle Transacciones de Compras (Homóloga de SDetalleCompra)
+-- 10-Detalle Transacciones de Compras (Homóloga de SDetalleCompra)
 CREATE TABLE IF NOT EXISTS ark_detalletrancomp (
     dtc_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
     dtc_idunico TEXT UNIQUE,
@@ -627,15 +716,15 @@ CREATE TABLE IF NOT EXISTS ark_detalletrancomp (
     dtc_SystemTime TEXT DEFAULT (time('now')),
     dtc_NameMachine TEXT,
     dtc_UserCreator TEXT,
-    dtc_LastUpdateDate TEXT,
-    dtc_LastUpdateTime TEXT,
+    dtc_LastUpdateDate TEXT DEFAULT (date('now')),
+    dtc_LastUpdateTime TEXT DEFAULT (time('now')),
     dtc_LastMachine TEXT,
     dtc_UserLastUpdate TEXT,
     FOREIGN KEY (dtc_uo_id) REFERENCES ark_unds_operativas(uo_id),
-    FOREIGN KEY (dtc_codigo) REFERENCES ark_inventario(inv_codigo)
+    FOREIGN KEY (dtc_codigo) REFERENCES ark_maestro_inventario(mts_codigo)
 );
 
--- 10-Detalle Transacciones de Inventario (Homóloga de SDetalleInv)
+-- 11-Detalle Transacciones de Inventario (Homóloga de SDetalleInv)
 CREATE TABLE IF NOT EXISTS ark_detalletraninv (
     dti_Idauto INTEGER PRIMARY KEY AUTOINCREMENT,
     dti_idunico TEXT UNIQUE,
@@ -727,15 +816,15 @@ CREATE TABLE IF NOT EXISTS ark_detalletraninv (
     dti_SystemTime TEXT DEFAULT (time('now')),
     dti_NameMachine TEXT,
     dti_UserCreator TEXT,
-    dti_LastUpdateDate TEXT,
-    dti_LastUpdateTime TEXT,
+    dti_LastUpdateDate TEXT DEFAULT (date('now')),
+    dti_LastUpdateTime TEXT DEFAULT (time('now')),
     dti_LastMachine TEXT,
     dti_UserLastUpdate TEXT,
     FOREIGN KEY (dti_uo_id) REFERENCES ark_unds_operativas(uo_id),
-    FOREIGN KEY (dti_codigo) REFERENCES ark_inventario(inv_codigo)
+    FOREIGN KEY (dti_codigo) REFERENCES ark_maestro_inventario(mts_codigo)
 );
 
--- 11- Tabla de Tipos de Operación
+-- 12- Tabla de Tipos de Operación
 CREATE TABLE IF NOT EXISTS ark_tipos_operacion (
     topo_id INTEGER PRIMARY KEY,
     topo_descripcion TEXT NOT NULL,
@@ -743,14 +832,14 @@ CREATE TABLE IF NOT EXISTS ark_tipos_operacion (
     topo_afecta_inventario INTEGER NOT NULL  -- 1=Si, 0=No
 );
 
--- 12- Tabla de Status de Operaciones
+-- 13- Tabla de Status de Operaciones
 CREATE TABLE IF NOT EXISTS ark_status_operacion (
     stpo_id INTEGER PRIMARY KEY,
     stpo_descripcion TEXT NOT NULL,
     stpo_es_activa INTEGER NOT NULL  -- 1=Si (se importa), 0=No (se ignora)
 );
 
--- 13- Tabla de ark_periodos
+-- 14- Tabla de ark_periodos
 CREATE TABLE IF NOT EXISTS ark_periodos (
     pdo_Idauto         INTEGER PRIMARY KEY AUTOINCREMENT,
     pdo_fecha_ini      TEXT    NOT NULL,
@@ -761,14 +850,14 @@ CREATE TABLE IF NOT EXISTS ark_periodos (
     pdo_SystemTime     TEXT    DEFAULT (time('now') ),
     pdo_NameMachine    TEXT,
     pdo_UserCreator    TEXT,
-    pdo_LastUpdateDate TEXT,
-    pdo_LastUpdateTime TEXT,
+    pdo_LastUpdateDate TEXT DEFAULT (date('now') ),
+    pdo_LastUpdateTime TEXT DEFAULT (time('now') ),
     pdo_LastMachine    TEXT,
     pdo_UserLastUpdate TEXT
 );
 
 
--- 14- Tabla de ark_existencia_calculadas
+-- 15- Tabla de ark_existencia_calculadas
 CREATE TABLE IF NOT EXISTS ark_existencia_calculadas (
     exc_idauto INTEGER PRIMARY KEY AUTOINCREMENT,
     exc_pdo_idauto INTEGER,
@@ -794,10 +883,19 @@ CREATE TABLE IF NOT EXISTS ark_existencia_calculadas (
     exc_nota_entrega_clientes REAL DEFAULT 0.0,
     exc_dev_compras REAL DEFAULT 0.0,
     exc_final REAL DEFAULT 0.0,
-    exc_SystemDate TEXT,
-    exc_SystemTime TEXT,
+    exc_final_mayor REAL DEFAULT 0.0,
+    exc_final_menor REAL DEFAULT 0.0,
+    exc_inicial_estimado REAL DEFAULT 0.0,
+    exc_ajuste_requerido REAL DEFAULT 0.0,
+    exc_correcciones REAL DEFAULT 0.0,       
+    exc_SystemDate TEXT DEFAULT (date('now') ),
+    exc_SystemTime TEXT DEFAULT (time('now') ),
     exc_NameMachine TEXT,
     exc_UserCreator TEXT,
+    exc_LastUpdateDate TEXT DEFAULT (date('now') ),
+    exc_LastUpdateTime TEXT DEFAULT (time('now') ),
+    exc_LastMachine TEXT,
+    exc_UserLastUpdate TEXT,
     UNIQUE(exc_uo_Codigo, exc_dep_codigo, exc_item_codigo),
     FOREIGN KEY (exc_pdo_idauto) REFERENCES ark_periodos(pdo_Idauto)
 );
@@ -805,7 +903,7 @@ CREATE TABLE IF NOT EXISTS ark_existencia_calculadas (
 CREATE INDEX IF NOT EXISTS idx_exc_llave ON ark_existencia_calculadas(exc_uo_Codigo, exc_dep_codigo, exc_item_codigo);
 CREATE INDEX IF NOT EXISTS idx_exc_periodo ON ark_existencia_calculadas(exc_pdo_idauto);    
 
-    -- 15- Tabla de ark_existencia_periodo
+    -- 16- Tabla de ark_existencia_periodo
 CREATE TABLE IF NOT EXISTS ark_existencia_periodo (
     exp_idauto INTEGER PRIMARY KEY AUTOINCREMENT,
     exp_pdo_id TEXT NOT NULL,
@@ -836,14 +934,14 @@ CREATE TABLE IF NOT EXISTS ark_existencia_periodo (
     exp_SystemTime TEXT DEFAULT (time('now')),
     exp_NameMachine TEXT,
     exp_UserCreator TEXT,
-    exp_LastUpdateDate TEXT,
-    exp_LastUpdateTime TEXT,
+    exp_LastUpdateDate TEXT DEFAULT (date('now')),
+    exp_LastUpdateTime TEXT DEFAULT (time('now')),
     exp_LastMachine TEXT,
     exp_UserLastUpdate TEXT,
-    FOREIGN KEY (exp_item_codigo) REFERENCES ark_inventario (inv_codigo)
+    FOREIGN KEY (exp_item_codigo) REFERENCES ark_maestro_inventario (mts_codigo)
 );
 
-    -- 16- Tabla de ark_existencia_historico
+-- 17- Tabla de ark_existencia_historico
 CREATE TABLE IF NOT EXISTS ark_existencia_historico (
     exh_idauto INTEGER PRIMARY KEY,
     exh_uo_Codigo TEXT NOT NULL,
@@ -865,15 +963,15 @@ CREATE TABLE IF NOT EXISTS ark_existencia_historico (
     exh_SystemTime TEXT DEFAULT (time('now')),
     exh_NameMachine TEXT,
     exh_UserCreator TEXT,
-    exh_LastUpdateDate TEXT,
-    exh_LastUpdateTime TEXT,
+    exh_LastUpdateDate TEXT DEFAULT (date('now')),
+    exh_LastUpdateTime TEXT DEFAULT (time('now')),
     exh_LastMachine TEXT,
     exh_UserLastUpdate TEXT,
-    FOREIGN KEY (exh_item_codigo) REFERENCES ark_inventario (inv_codigo),
+    FOREIGN KEY (exh_item_codigo) REFERENCES ark_maestro_inventario (mts_codigo),
     FOREIGN KEY (exh_pdo_Idauto) REFERENCES ark_periodos (pdo_Idauto)  
 );
 
--- 17- Tabla de ark_existencia_actual
+-- 18- Tabla de ark_existencia_actual
 CREATE TABLE IF NOT EXISTS ark_existencia_actual(
     exa_idauto INTEGER PRIMARY KEY,
     exa_uo_id INTEGER,
@@ -905,14 +1003,14 @@ CREATE TABLE IF NOT EXISTS ark_existencia_actual(
     exa_SystemTime TEXT DEFAULT (time('now')),
     exa_NameMachine TEXT,
     exa_UserCreator TEXT,
-    exa_LastUpdateDate TEXT,
-    exa_LastUpdateTime TEXT,
+    exa_LastUpdateDate TEXT DEFAULT (date('now')),
+    exa_LastUpdateTime TEXT DEFAULT (time('now')),
     exa_LastMachine TEXT,
     exa_UserLastUpdate TEXT,
-    FOREIGN KEY (exa_codigoproducto) REFERENCES ark_inventario (inv_codigo)
-    FOREIGN KEY (exa_uo_Codigo) REFERENCES ark_unds_operativas(uo_id)
+    FOREIGN KEY (exa_codigoproducto) REFERENCES ark_maestro_inventario (mts_codigo),
+    FOREIGN KEY (exa_uo_Codigo) REFERENCES ark_unds_operativas(uo_Codigo)
 );
--- 18- Tabla de ark_monedas
+-- 19- Tabla de ark_monedas
 CREATE TABLE IF NOT EXISTS ark_monedas(
     mon_idauto INTEGER PRIMARY KEY,
     mon_codigo INTEGER NOT NULL,
@@ -924,13 +1022,13 @@ CREATE TABLE IF NOT EXISTS ark_monedas(
     mon_SystemTime TEXT DEFAULT (time('now')),
     mon_NameMachine TEXT,
     mon_UserCreator TEXT,
-    mon_LastUpdateDate TEXT,
-    mon_LastUpdateTime TEXT,
+    mon_LastUpdateDate TEXT DEFAULT (date('now')),
+    mon_LastUpdateTime TEXT DEFAULT (time('now')),
     mon_LastMachine TEXT,
     mon_UserLastUpdate TEXT
 );
 
--- 18- Tabla de ark_factor_hstorico
+-- 20- Tabla de ark_factor_hstorico
 CREATE TABLE IF NOT EXISTS ark_factor_hstorico(
     fac_Idauto	INTEGER PRIMARY KEY,
     fac_mon_codigo	INTEGER NOT NULL,
@@ -939,6 +1037,7 @@ CREATE TABLE IF NOT EXISTS ark_factor_hstorico(
     FOREIGN KEY (fac_mon_codigo) REFERENCES ark_monedas(mon_codigo)
 );
 
+-- 21- Tabla de ark_costos
 CREATE TABLE IF NOT EXISTS ark_costos (
     cts_IDauto INTEGER PRIMARY KEY AUTOINCREMENT,
     cts_codigo TEXT NOT NULL UNIQUE,          
@@ -961,7 +1060,11 @@ CREATE TABLE IF NOT EXISTS ark_costos (
     cts_SystemTime TEXT DEFAULT (time('now')),
     cts_NameMachine TEXT,
     cts_UserCreator TEXT,
-    FOREIGN KEY (cts_codigo) REFERENCES ark_inventario(inv_codigo)
+    cts_LastUpdateDate TEXT DEFAULT (date('now')),
+    cts_LastUpdateTime TEXT DEFAULT (time('now')),
+    cts_LastMachine TEXT,
+    cts_UserLastUpdate TEXT,
+    FOREIGN KEY (cts_codigo) REFERENCES ark_maestro_inventario(mts_codigo)
 );
 
 -- Insertar datos iniciales

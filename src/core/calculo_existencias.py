@@ -130,7 +130,7 @@ def calcular_existencia_inicial_periodo(periodo_id, uo_id, deposito_id):
         conn.close()
         return []
     
-    # 3. Obtener existencia actual (foto del 26-05-2026)
+    # 3. Obtener existencia actual para la UO
     cursor.execute("""
         SELECT exa_codigoproducto, exa_codigodeposito, exa_existencia
         FROM ark_existencia_actual

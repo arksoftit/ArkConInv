@@ -1,0 +1,1054 @@
+
+=== TABLA: ark_categoria ===
+  cat_IDauto | INTEGER | notnull=0 | default=None | pk=1
+  cat_codigo | TEXT | notnull=1 | default=None | pk=0
+  cat_descripcion | TEXT | notnull=0 | default=None | pk=0
+  cat_descripciondetallada | TEXT | notnull=0 | default=None | pk=0
+  cat_status | INTEGER | notnull=0 | default=None | pk=0
+  cat_porcentajeutilidad1 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajeutilidad2 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajeutilidad3 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajeutilidad4 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajeutilidad5 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajeutilidad6 | REAL | notnull=0 | default=None | pk=0
+  cat_comvtaproductos | INTEGER | notnull=0 | default=None | pk=0
+  cat_comcobroproductos | INTEGER | notnull=0 | default=None | pk=0
+  cat_clasificacion | INTEGER | notnull=0 | default=None | pk=0
+  cat_manejoinventario | INTEGER | notnull=0 | default=None | pk=0
+  cat_seriales | INTEGER | notnull=0 | default=None | pk=0
+  cat_vencimiento | INTEGER | notnull=0 | default=None | pk=0
+  cat_ofertas | INTEGER | notnull=0 | default=None | pk=0
+  cat_tallas_ejex | INTEGER | notnull=0 | default=None | pk=0
+  cat_tallas_ejey | INTEGER | notnull=0 | default=None | pk=0
+  cat_nroproductos | INTEGER | notnull=0 | default=None | pk=0
+  cat_depositos | INTEGER | notnull=0 | default=None | pk=0
+  cat_porcentajedescuento1 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajedescuento2 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajedescuento3 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajedescuento4 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajedescuento5 | REAL | notnull=0 | default=None | pk=0
+  cat_porcentajedescuento6 | REAL | notnull=0 | default=None | pk=0
+  cat_tallas_descrx | TEXT | notnull=0 | default=None | pk=0
+  cat_tallas_descry | TEXT | notnull=0 | default=None | pk=0
+  cat_indexporcent | INTEGER | notnull=0 | default=None | pk=0
+  cat_comisionvta1 | REAL | notnull=0 | default=None | pk=0
+  cat_comisionvta2 | REAL | notnull=0 | default=None | pk=0
+  cat_comisionvta3 | REAL | notnull=0 | default=None | pk=0
+  cat_comisionvta4 | REAL | notnull=0 | default=None | pk=0
+  cat_comisionvta5 | REAL | notnull=0 | default=None | pk=0
+  cat_comisionvta6 | REAL | notnull=0 | default=None | pk=0
+  cat_comisioncob1 | REAL | notnull=0 | default=None | pk=0
+  cat_comisioncob2 | REAL | notnull=0 | default=None | pk=0
+  cat_comisioncob3 | REAL | notnull=0 | default=None | pk=0
+  cat_comisioncob4 | REAL | notnull=0 | default=None | pk=0
+  cat_comisioncob5 | REAL | notnull=0 | default=None | pk=0
+  cat_comisioncob6 | REAL | notnull=0 | default=None | pk=0
+  cat_comisionvtamin | REAL | notnull=0 | default=None | pk=0
+  cat_comisioncobmin | REAL | notnull=0 | default=None | pk=0
+  cat_tolerancia | TEXT | notnull=0 | default=None | pk=0
+  cat_detalle_ejex | TEXT | notnull=0 | default=None | pk=0
+  cat_detalle_ejey | TEXT | notnull=0 | default=None | pk=0
+  cat_prefijo | TEXT | notnull=0 | default=None | pk=0
+  base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  cat_psicotropico | INTEGER | notnull=0 | default=None | pk=0
+  cat_arancel | TEXT | notnull=0 | default=None | pk=0
+  cat_impresora | TEXT | notnull=0 | default=None | pk=0
+  cat_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  cat_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  cat_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  cat_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  cat_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  cat_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  cat_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  cat_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_company ===
+  com_IDauto | INTEGER | notnull=0 | default=None | pk=1
+  com_Codigo | TEXT | notnull=1 | default=None | pk=0
+  com_Descripcion | TEXT | notnull=0 | default=None | pk=0
+  com_IDfiscal | TEXT | notnull=0 | default=None | pk=0
+  com_Dia_Inicio_Fiscal | TEXT | notnull=0 | default=None | pk=0
+  com_Mes_Inicio_Fiscal | TEXT | notnull=0 | default=None | pk=0
+  com_Dia_Fin_Fiscal | TEXT | notnull=0 | default=None | pk=0
+  com_Mes_Fin_Fiscal | TEXT | notnull=0 | default=None | pk=0
+  com_InvDeclarado | REAL | notnull=0 | default=None | pk=0
+  com_Status | INTEGER | notnull=0 | default=1 | pk=0
+  com_DireccionF | TEXT | notnull=0 | default=None | pk=0
+  com_DireccionL | TEXT | notnull=0 | default=None | pk=0
+  com_Telefono1 | TEXT | notnull=0 | default=None | pk=0
+  com_Telefono2 | TEXT | notnull=0 | default=None | pk=0
+  com_Representante | TEXT | notnull=0 | default=None | pk=0
+  com_Id_Representante | TEXT | notnull=0 | default=None | pk=0
+  com_TelefonoContacto | TEXT | notnull=0 | default=None | pk=0
+  com_EmailContacto | TEXT | notnull=0 | default=None | pk=0
+  com_EmailEmpresa | TEXT | notnull=0 | default=None | pk=0
+  com_TipoContribuyente | INTEGER | notnull=0 | default=None | pk=0
+  com_FechaCreacion | TEXT | notnull=0 | default=datetime('now') | pk=0
+  com_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  com_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  com_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  com_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  com_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  com_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  com_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  com_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_costos ===
+  cts_IDauto | INTEGER | notnull=0 | default=None | pk=1
+  cts_codigo | TEXT | notnull=1 | default=None | pk=0
+  cts_periodo_desde | TEXT | notnull=1 | default=None | pk=0
+  cts_periodo_hasta | TEXT | notnull=1 | default=None | pk=0
+  cts_dtv_costo | REAL | notnull=0 | default=0 | pk=0
+  cts_dtc_costo | REAL | notnull=0 | default=0 | pk=0
+  cts_dti_costo | REAL | notnull=0 | default=0 | pk=0
+  cts_dtv_cantidad | REAL | notnull=0 | default=0 | pk=0
+  cts_dtc_cantidad | REAL | notnull=0 | default=0 | pk=0
+  cts_dti_cantidad | REAL | notnull=0 | default=0 | pk=0
+  cts_dtv_moneda | INTEGER | notnull=0 | default=1 | pk=0
+  cts_dtv_factorcambio | REAL | notnull=0 | default=1.0 | pk=0
+  cts_dtc_moneda | INTEGER | notnull=0 | default=1 | pk=0
+  cts_dtc_factorcambio | REAL | notnull=0 | default=1.0 | pk=0
+  cts_dti_moneda | INTEGER | notnull=0 | default=1 | pk=0
+  cts_dti_factorcambio | REAL | notnull=0 | default=1.0 | pk=0
+  cts_fecha_ultima_operacion | TEXT | notnull=0 | default=None | pk=0
+  cts_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  cts_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  cts_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  cts_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  cts_LastUpdateDate | TEXT | notnull=0 | default=date('now') | pk=0
+  cts_LastUpdateTime | TEXT | notnull=0 | default=time('now') | pk=0
+  cts_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  cts_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_depositos ===
+  dep_IDauto | INTEGER | notnull=0 | default=None | pk=1
+  dep_codigo | TEXT | notnull=1 | default=None | pk=0
+  dep_descripcion | TEXT | notnull=0 | default=None | pk=0
+  dep_status | INTEGER | notnull=0 | default=None | pk=0
+  dep_descripciondetallada | TEXT | notnull=0 | default=None | pk=0
+  dep_responsable | TEXT | notnull=0 | default=None | pk=0
+  dep_base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  dep_code | TEXT | notnull=0 | default=None | pk=0
+  dep_serie | TEXT | notnull=0 | default=None | pk=0
+  dep_uo_origen | INTEGER | notnull=0 | default=None | pk=0
+  dep_uo_codigo | TEXT | notnull=0 | default=None | pk=0
+  dep_uo_nombre | TEXT | notnull=0 | default=None | pk=0
+  dep_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  dep_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  dep_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  dep_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  dep_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  dep_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  dep_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  dep_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_detalletrancomp ===
+  dtc_Idauto | INTEGER | notnull=0 | default=None | pk=1
+  dtc_idunico | TEXT | notnull=1 | default=None | pk=0
+  dtc_uo_id | INTEGER | notnull=1 | default=None | pk=0
+  dtc_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  dtc_tipooperacion | INTEGER | notnull=1 | default=None | pk=0
+  dtc_codigo | TEXT | notnull=1 | default=None | pk=0
+  dtc_linea | INTEGER | notnull=1 | default=None | pk=0
+  dtc_documento | TEXT | notnull=1 | default=None | pk=0
+  dtc_autoincrement | INTEGER | notnull=1 | default=None | pk=0
+  dtc_clienteproveedor | TEXT | notnull=0 | default=None | pk=0
+  dtc_tipodocumentoorigen | INTEGER | notnull=0 | default=None | pk=0
+  dtc_statusdocumentoorigen | INTEGER | notnull=0 | default=None | pk=0
+  dtc_documentoorigen | TEXT | notnull=0 | default=None | pk=0
+  dtc_lineaorigen | INTEGER | notnull=0 | default=None | pk=0
+  dtc_clasificacion | INTEGER | notnull=0 | default=None | pk=0
+  dtc_status | INTEGER | notnull=0 | default=None | pk=0
+  dtc_visible | INTEGER | notnull=0 | default=None | pk=0
+  dtc_costo | REAL | notnull=0 | default=None | pk=0
+  dtc_cantidad | REAL | notnull=0 | default=None | pk=0
+  dtc_cantidadpendiente | REAL | notnull=0 | default=None | pk=0
+  dtc_lote | TEXT | notnull=0 | default=None | pk=0
+  dtc_loterandom | INTEGER | notnull=0 | default=None | pk=0
+  dtc_newlote | INTEGER | notnull=0 | default=None | pk=0
+  dtc_depositosource | INTEGER | notnull=0 | default=None | pk=0
+  dtc_depositotarget | INTEGER | notnull=0 | default=None | pk=0
+  dtc_operacion_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  dtc_decimales | INTEGER | notnull=0 | default=None | pk=0
+  dtc_decimalespen | INTEGER | notnull=0 | default=None | pk=0
+  dtc_serialnumber | INTEGER | notnull=0 | default=None | pk=0
+  dtc_usaseriales | INTEGER | notnull=0 | default=None | pk=0
+  dtc_usadepositos | INTEGER | notnull=0 | default=None | pk=0
+  dtc_costooperacion | REAL | notnull=0 | default=None | pk=0
+  dtc_memodetalle | TEXT | notnull=0 | default=None | pk=0
+  dtc_moneda | INTEGER | notnull=0 | default=None | pk=0
+  dtc_factorcambio | REAL | notnull=0 | default=None | pk=0
+  dtc_detallecostosimportacion | TEXT | notnull=0 | default=None | pk=0
+  dtc_detalleplanillaimportacion | TEXT | notnull=0 | default=None | pk=0
+  dtc_existedetalleimportacion | INTEGER | notnull=0 | default=None | pk=0
+  dtc_existedetalledecostos | INTEGER | notnull=0 | default=None | pk=0
+  dtc_alicuotafleteotros | REAL | notnull=0 | default=None | pk=0
+  dtc_impuesto1 | REAL | notnull=0 | default=None | pk=0
+  dtc_porcentimpuesto1 | INTEGER | notnull=0 | default=None | pk=0
+  dtc_montoimpuesto1 | REAL | notnull=0 | default=None | pk=0
+  dtc_impuesto2 | REAL | notnull=0 | default=None | pk=0
+  dtc_porcentimpuesto2 | INTEGER | notnull=0 | default=None | pk=0
+  dtc_montoimpuesto2 | REAL | notnull=0 | default=None | pk=0
+  dtc_origenprice | INTEGER | notnull=0 | default=None | pk=0
+  dtc_porcentdescparcial | REAL | notnull=0 | default=None | pk=0
+  dtc_descuentoparcial | REAL | notnull=0 | default=None | pk=0
+  dtc_preciosindescuento | REAL | notnull=0 | default=None | pk=0
+  dtc_preciocondescuento | REAL | notnull=0 | default=None | pk=0
+  dtc_preciodeventa | REAL | notnull=0 | default=None | pk=0
+  dtc_rounddesctparcial | INTEGER | notnull=0 | default=None | pk=0
+  dtc_comisionfija | REAL | notnull=0 | default=None | pk=0
+  dtc_comisionfijap | INTEGER | notnull=0 | default=None | pk=0
+  dtc_unddescarga | REAL | notnull=0 | default=None | pk=0
+  dtc_undcapacidad | REAL | notnull=0 | default=None | pk=0
+  dtc_unddetallada | INTEGER | notnull=0 | default=None | pk=0
+  dtc_indexprices | INTEGER | notnull=0 | default=None | pk=0
+  dtc_partesusanseriales | INTEGER | notnull=0 | default=None | pk=0
+  dtc_costodeventas | REAL | notnull=0 | default=None | pk=0
+  dtc_descripcionoferta | TEXT | notnull=0 | default=None | pk=0
+  dtc_vendedorasignado | TEXT | notnull=0 | default=None | pk=0
+  dtc_montocomision | REAL | notnull=0 | default=None | pk=0
+  dtc_preciobasecomision | REAL | notnull=0 | default=None | pk=0
+  dtc_comisionbloqueada | INTEGER | notnull=0 | default=None | pk=0
+  dtc_comisionyapagada | INTEGER | notnull=0 | default=None | pk=0
+  dtc_documentoliberacion | TEXT | notnull=0 | default=None | pk=0
+  dtc_tipodecomision | INTEGER | notnull=0 | default=None | pk=0
+  dtc_priceforcomision | INTEGER | notnull=0 | default=None | pk=0
+  dtc_fechaoperacion | TEXT | notnull=0 | default=None | pk=0
+  dtc_user | INTEGER | notnull=0 | default=None | pk=0
+  dtc_porcentdescuento1 | REAL | notnull=0 | default=None | pk=0
+  dtc_porcentdescuento2 | REAL | notnull=0 | default=None | pk=0
+  dtc_costosupdate | INTEGER | notnull=0 | default=None | pk=0
+  dtc_base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  dtc_totalpeso | REAL | notnull=0 | default=None | pk=0
+  dtc_ctocosto | INTEGER | notnull=0 | default=None | pk=0
+  dtc_autorizado | TEXT | notnull=0 | default=None | pk=0
+  dtc_markperiodo | INTEGER | notnull=0 | default=None | pk=0
+  dtc_ctocostostr | TEXT | notnull=0 | default=None | pk=0
+  dtc_costoactualnacional | REAL | notnull=0 | default=None | pk=0
+  dtc_costoactualext | REAL | notnull=0 | default=None | pk=0
+  dtc_prefixinventario | TEXT | notnull=0 | default=None | pk=0
+  dtc_costoajustado | REAL | notnull=0 | default=None | pk=0
+  dtc_fechalibro | TEXT | notnull=0 | default=None | pk=0
+  dtc_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  dtc_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  dtc_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  dtc_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  dtc_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  dtc_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  dtc_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  dtc_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_detalletraninv ===
+  dti_Idauto | INTEGER | notnull=0 | default=None | pk=1
+  dti_idunico | TEXT | notnull=1 | default=None | pk=0
+  dti_uo_id | INTEGER | notnull=1 | default=None | pk=0
+  dti_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  dti_tipooperacion | INTEGER | notnull=1 | default=None | pk=0
+  dti_codigo | TEXT | notnull=1 | default=None | pk=0
+  dti_linea | INTEGER | notnull=1 | default=None | pk=0
+  dti_documento | TEXT | notnull=1 | default=None | pk=0
+  dti_autoincrement | INTEGER | notnull=1 | default=None | pk=0
+  dti_clienteproveedor | TEXT | notnull=0 | default=None | pk=0
+  dti_tipodocumentoorigen | INTEGER | notnull=0 | default=None | pk=0
+  dti_statusdocumentoorigen | INTEGER | notnull=0 | default=None | pk=0
+  dti_documentoorigen | TEXT | notnull=0 | default=None | pk=0
+  dti_lineaorigen | INTEGER | notnull=0 | default=None | pk=0
+  dti_clasificacion | INTEGER | notnull=0 | default=None | pk=0
+  dti_status | INTEGER | notnull=0 | default=None | pk=0
+  dti_visible | INTEGER | notnull=0 | default=None | pk=0
+  dti_costo | REAL | notnull=0 | default=None | pk=0
+  dti_cantidad | REAL | notnull=0 | default=None | pk=0
+  dti_cantidadpendiente | REAL | notnull=0 | default=None | pk=0
+  dti_lote | TEXT | notnull=0 | default=None | pk=0
+  dti_loterandom | INTEGER | notnull=0 | default=None | pk=0
+  dti_newlote | INTEGER | notnull=0 | default=None | pk=0
+  dti_depositosource | INTEGER | notnull=0 | default=None | pk=0
+  dti_depositotarget | INTEGER | notnull=0 | default=None | pk=0
+  dti_operacion_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  dti_decimales | INTEGER | notnull=0 | default=None | pk=0
+  dti_decimalespen | INTEGER | notnull=0 | default=None | pk=0
+  dti_serialnumber | INTEGER | notnull=0 | default=None | pk=0
+  dti_usaseriales | INTEGER | notnull=0 | default=None | pk=0
+  dti_usadepositos | INTEGER | notnull=0 | default=None | pk=0
+  dti_costooperacion | REAL | notnull=0 | default=None | pk=0
+  dti_memodetalle | TEXT | notnull=0 | default=None | pk=0
+  dti_moneda | INTEGER | notnull=0 | default=None | pk=0
+  dti_factorcambio | REAL | notnull=0 | default=None | pk=0
+  dti_detallecostosimportacion | TEXT | notnull=0 | default=None | pk=0
+  dti_detalleplanillaimportacion | TEXT | notnull=0 | default=None | pk=0
+  dti_existedetalleimportacion | INTEGER | notnull=0 | default=None | pk=0
+  dti_existedetalledecostos | INTEGER | notnull=0 | default=None | pk=0
+  dti_alicuotafleteotros | REAL | notnull=0 | default=None | pk=0
+  dti_impuesto1 | REAL | notnull=0 | default=None | pk=0
+  dti_porcentimpuesto1 | INTEGER | notnull=0 | default=None | pk=0
+  dti_montoimpuesto1 | REAL | notnull=0 | default=None | pk=0
+  dti_impuesto2 | REAL | notnull=0 | default=None | pk=0
+  dti_porcentimpuesto2 | INTEGER | notnull=0 | default=None | pk=0
+  dti_montoimpuesto2 | REAL | notnull=0 | default=None | pk=0
+  dti_origenprice | INTEGER | notnull=0 | default=None | pk=0
+  dti_porcentdescparcial | REAL | notnull=0 | default=None | pk=0
+  dti_descuentoparcial | REAL | notnull=0 | default=None | pk=0
+  dti_preciosindescuento | REAL | notnull=0 | default=None | pk=0
+  dti_preciocondescuento | REAL | notnull=0 | default=None | pk=0
+  dti_preciodeventa | REAL | notnull=0 | default=None | pk=0
+  dti_rounddesctparcial | INTEGER | notnull=0 | default=None | pk=0
+  dti_comisionfija | REAL | notnull=0 | default=None | pk=0
+  dti_comisionfijap | INTEGER | notnull=0 | default=None | pk=0
+  dti_unddescarga | REAL | notnull=0 | default=None | pk=0
+  dti_undcapacidad | REAL | notnull=0 | default=None | pk=0
+  dti_unddetallada | INTEGER | notnull=0 | default=None | pk=0
+  dti_indexprices | INTEGER | notnull=0 | default=None | pk=0
+  dti_partesusanseriales | INTEGER | notnull=0 | default=None | pk=0
+  dti_costodeventas | REAL | notnull=0 | default=None | pk=0
+  dti_descripcionoferta | TEXT | notnull=0 | default=None | pk=0
+  dti_vendedorasignado | TEXT | notnull=0 | default=None | pk=0
+  dti_montocomision | REAL | notnull=0 | default=None | pk=0
+  dti_preciobasecomision | REAL | notnull=0 | default=None | pk=0
+  dti_comisionbloqueada | INTEGER | notnull=0 | default=None | pk=0
+  dti_comisionyapagada | INTEGER | notnull=0 | default=None | pk=0
+  dti_documentoliberacion | TEXT | notnull=0 | default=None | pk=0
+  dti_tipodecomision | INTEGER | notnull=0 | default=None | pk=0
+  dti_priceforcomision | INTEGER | notnull=0 | default=None | pk=0
+  dti_fechaoperacion | TEXT | notnull=0 | default=None | pk=0
+  dti_user | INTEGER | notnull=0 | default=None | pk=0
+  dti_porcentdescuento1 | REAL | notnull=0 | default=None | pk=0
+  dti_porcentdescuento2 | REAL | notnull=0 | default=None | pk=0
+  dti_costosupdate | INTEGER | notnull=0 | default=None | pk=0
+  dti_base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  dti_totalpeso | REAL | notnull=0 | default=None | pk=0
+  dti_ctocosto | INTEGER | notnull=0 | default=None | pk=0
+  dti_autorizado | TEXT | notnull=0 | default=None | pk=0
+  dti_markperiodo | INTEGER | notnull=0 | default=None | pk=0
+  dti_ctocostostr | TEXT | notnull=0 | default=None | pk=0
+  dti_costoactualnacional | REAL | notnull=0 | default=None | pk=0
+  dti_costoactualext | REAL | notnull=0 | default=None | pk=0
+  dti_prefixinventario | TEXT | notnull=0 | default=None | pk=0
+  dti_costoajustado | REAL | notnull=0 | default=None | pk=0
+  dti_fechalibro | TEXT | notnull=0 | default=None | pk=0
+  dti_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  dti_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  dti_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  dti_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  dti_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  dti_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  dti_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  dti_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_detalletranvtas ===
+  dtv_Idauto | INTEGER | notnull=0 | default=None | pk=1
+  dtv_idunico | TEXT | notnull=1 | default=None | pk=0
+  dtv_uo_id | INTEGER | notnull=1 | default=None | pk=0
+  dtv_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  dtv_tipooperacion | INTEGER | notnull=1 | default=None | pk=0
+  dtv_codigo | TEXT | notnull=1 | default=None | pk=0
+  dtv_linea | INTEGER | notnull=1 | default=None | pk=0
+  dtv_documento | TEXT | notnull=1 | default=None | pk=0
+  dtv_autoincrement | INTEGER | notnull=1 | default=None | pk=0
+  dtv_clienteproveedor | TEXT | notnull=0 | default=None | pk=0
+  dtv_documentoorigen | TEXT | notnull=0 | default=None | pk=0
+  dtv_lineaorigen | INTEGER | notnull=0 | default=None | pk=0
+  dtv_clasificacion | INTEGER | notnull=0 | default=None | pk=0
+  dtv_status | INTEGER | notnull=0 | default=None | pk=0
+  dtv_visible | INTEGER | notnull=0 | default=None | pk=0
+  dtv_costo | REAL | notnull=0 | default=None | pk=0
+  dtv_cantidad | REAL | notnull=0 | default=None | pk=0
+  dtv_cantidadpendiente | REAL | notnull=0 | default=None | pk=0
+  dtv_lote | TEXT | notnull=0 | default=None | pk=0
+  dtv_loterandom | INTEGER | notnull=0 | default=None | pk=0
+  dtv_newlote | INTEGER | notnull=0 | default=None | pk=0
+  dtv_depositosource | INTEGER | notnull=0 | default=None | pk=0
+  dtv_depositotarget | INTEGER | notnull=0 | default=None | pk=0
+  dtv_operacion_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  dtv_decimales | INTEGER | notnull=0 | default=None | pk=0
+  dtv_decimalespen | INTEGER | notnull=0 | default=None | pk=0
+  dtv_serialnumber | INTEGER | notnull=0 | default=None | pk=0
+  dtv_usaseriales | INTEGER | notnull=0 | default=None | pk=0
+  dtv_usadepositos | INTEGER | notnull=0 | default=None | pk=0
+  dtv_costooperacion | REAL | notnull=0 | default=None | pk=0
+  dtv_memodetalle | TEXT | notnull=0 | default=None | pk=0
+  dtv_moneda | INTEGER | notnull=0 | default=None | pk=0
+  dtv_factorcambio | REAL | notnull=0 | default=None | pk=0
+  dtv_detallecostosimportacion | TEXT | notnull=0 | default=None | pk=0
+  dtv_detalleplanillaimportacion | TEXT | notnull=0 | default=None | pk=0
+  dtv_existedetalleimportacion | INTEGER | notnull=0 | default=None | pk=0
+  dtv_existedetalledecostos | INTEGER | notnull=0 | default=None | pk=0
+  dtv_alicuotafleteotros | REAL | notnull=0 | default=None | pk=0
+  dtv_impuesto1 | REAL | notnull=0 | default=None | pk=0
+  dtv_porcentimpuesto1 | INTEGER | notnull=0 | default=None | pk=0
+  dtv_montoimpuesto1 | REAL | notnull=0 | default=None | pk=0
+  dtv_impuesto2 | REAL | notnull=0 | default=None | pk=0
+  dtv_porcentimpuesto2 | INTEGER | notnull=0 | default=None | pk=0
+  dtv_montoimpuesto2 | REAL | notnull=0 | default=None | pk=0
+  dtv_origenprice | INTEGER | notnull=0 | default=None | pk=0
+  dtv_porcentdescparcial | REAL | notnull=0 | default=None | pk=0
+  dtv_descuentoparcial | REAL | notnull=0 | default=None | pk=0
+  dtv_preciosindescuento | REAL | notnull=0 | default=None | pk=0
+  dtv_preciocondescuento | REAL | notnull=0 | default=None | pk=0
+  dtv_preciodeventa | REAL | notnull=0 | default=None | pk=0
+  dtv_rounddesctparcial | INTEGER | notnull=0 | default=None | pk=0
+  dtv_comisionfija | REAL | notnull=0 | default=None | pk=0
+  dtv_comisionfijap | INTEGER | notnull=0 | default=None | pk=0
+  dtv_unddescarga | REAL | notnull=0 | default=None | pk=0
+  dtv_undcapacidad | REAL | notnull=0 | default=None | pk=0
+  dtv_unddetallada | INTEGER | notnull=0 | default=None | pk=0
+  dtv_indexprices | INTEGER | notnull=0 | default=None | pk=0
+  dtv_partesusanseriales | INTEGER | notnull=0 | default=None | pk=0
+  dtv_costodeventas | REAL | notnull=0 | default=None | pk=0
+  dtv_descripcionoferta | TEXT | notnull=0 | default=None | pk=0
+  dtv_vendedorasignado | TEXT | notnull=0 | default=None | pk=0
+  dtv_montocomision | REAL | notnull=0 | default=None | pk=0
+  dtv_preciobasecomision | REAL | notnull=0 | default=None | pk=0
+  dtv_comisionbloqueada | INTEGER | notnull=0 | default=None | pk=0
+  dtv_comisionyapagada | INTEGER | notnull=0 | default=None | pk=0
+  dtv_documentoliberacion | TEXT | notnull=0 | default=None | pk=0
+  dtv_tipodecomision | INTEGER | notnull=0 | default=None | pk=0
+  dtv_priceforcomision | INTEGER | notnull=0 | default=None | pk=0
+  dtv_fechaoperacion | TEXT | notnull=0 | default=None | pk=0
+  dtv_user | INTEGER | notnull=0 | default=None | pk=0
+  dtv_porcentdescuento1 | REAL | notnull=0 | default=None | pk=0
+  dtv_porcentdescuento2 | REAL | notnull=0 | default=None | pk=0
+  dtv_costosupdate | INTEGER | notnull=0 | default=None | pk=0
+  dtv_base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  dtv_totalpeso | REAL | notnull=0 | default=None | pk=0
+  dtv_ctocosto | INTEGER | notnull=0 | default=None | pk=0
+  dtv_autorizado | TEXT | notnull=0 | default=None | pk=0
+  dtv_markperiodo | INTEGER | notnull=0 | default=None | pk=0
+  dtv_ctocostostr | TEXT | notnull=0 | default=None | pk=0
+  dtv_costoactualnacional | REAL | notnull=0 | default=None | pk=0
+  dtv_costoactualext | REAL | notnull=0 | default=None | pk=0
+  dtv_prefixinventario | TEXT | notnull=0 | default=None | pk=0
+  dtv_costoajustado | REAL | notnull=0 | default=None | pk=0
+  dtv_fechalibro | TEXT | notnull=0 | default=None | pk=0
+  dtv_montoliquidado | REAL | notnull=0 | default=None | pk=0
+  dtv_tipodocumentoorigen | INTEGER | notnull=0 | default=None | pk=0
+  dtv_statusdocumentoorigen | INTEGER | notnull=0 | default=None | pk=0
+  dtv_dctoiva | REAL | notnull=0 | default=None | pk=0
+  dtv_montoimpuesto1dcto | REAL | notnull=0 | default=None | pk=0
+  dtv_preciodeventadcto | REAL | notnull=0 | default=None | pk=0
+  dtv_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  dtv_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  dtv_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  dtv_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  dtv_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  dtv_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  dtv_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  dtv_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_existencia_actual ===
+  exa_idauto | INTEGER | notnull=0 | default=None | pk=1
+  exa_uo_id | INTEGER | notnull=0 | default=None | pk=0
+  exa_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  exa_tipo | INTEGER | notnull=1 | default=None | pk=0
+  exa_codigoproducto | TEXT | notnull=0 | default=None | pk=0
+  exa_codigodeposito | TEXT | notnull=0 | default=None | pk=0
+  exa_lote | TEXT | notnull=0 | default=None | pk=0
+  exa_loteautoincrement | INTEGER | notnull=0 | default=None | pk=0
+  exa_nolinea | INTEGER | notnull=0 | default=None | pk=0
+  exa_status | INTEGER | notnull=0 | default=None | pk=0
+  exa_puesto | TEXT | notnull=0 | default=None | pk=0
+  exa_existencia | REAL | notnull=0 | default=None | pk=0
+  exa_existenciadetallada | REAL | notnull=0 | default=None | pk=0
+  exa_existenciaapartada | REAL | notnull=0 | default=None | pk=0
+  exa_existenciaordencompra | REAL | notnull=0 | default=None | pk=0
+  exa_existenciapedido | REAL | notnull=0 | default=None | pk=0
+  exa_inventarioinicialbs | REAL | notnull=0 | default=None | pk=0
+  exa_inventarioinicialbscierre | REAL | notnull=0 | default=None | pk=0
+  exa_inventarioinicialund | REAL | notnull=0 | default=None | pk=0
+  exa_inventarioinicialcierre | REAL | notnull=0 | default=None | pk=0
+  exa_ctdtransito | REAL | notnull=0 | default=None | pk=0
+  exa_visible | INTEGER | notnull=0 | default=None | pk=0
+  exa_codebarra | TEXT | notnull=0 | default=None | pk=0
+  exa_existenciaajuste | REAL | notnull=0 | default=None | pk=0
+  exa_base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  exa_code | TEXT | notnull=0 | default=None | pk=0
+  exa_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  exa_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  exa_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  exa_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  exa_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  exa_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  exa_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  exa_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_existencia_calculadas ===
+  exc_idauto | INTEGER | notnull=0 | default=None | pk=1
+  exc_pdo_idauto | INTEGER | notnull=0 | default=None | pk=0
+  exc_fecha_desde | TEXT | notnull=0 | default=None | pk=0
+  exc_fecha_hasta | TEXT | notnull=0 | default=None | pk=0
+  exc_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  exc_dep_codigo | TEXT | notnull=1 | default=None | pk=0
+  exc_item_codigo | TEXT | notnull=1 | default=None | pk=0
+  exc_inicial | REAL | notnull=0 | default=0.0 | pk=0
+  exc_costos_local | REAL | notnull=0 | default=0.0 | pk=0
+  exc_costos_referencial | REAL | notnull=0 | default=0.0 | pk=0
+  exc_factor_referencial | REAL | notnull=0 | default=1.0 | pk=0
+  exc_compras | REAL | notnull=0 | default=0.0 | pk=0
+  exc_cargos | REAL | notnull=0 | default=0.0 | pk=0
+  exc_nota_entrega_proveedor | REAL | notnull=0 | default=0.0 | pk=0
+  exc_dev_ventas | REAL | notnull=0 | default=0.0 | pk=0
+  exc_ajustes_mas | REAL | notnull=0 | default=0.0 | pk=0
+  exc_ajustes_menos | REAL | notnull=0 | default=0.0 | pk=0
+  exc_transferencias_mas | REAL | notnull=0 | default=0.0 | pk=0
+  exc_transferencias_menos | REAL | notnull=0 | default=0.0 | pk=0
+  exc_ventas | REAL | notnull=0 | default=0.0 | pk=0
+  exc_descargos | REAL | notnull=0 | default=0.0 | pk=0
+  exc_nota_entrega_clientes | REAL | notnull=0 | default=0.0 | pk=0
+  exc_dev_compras | REAL | notnull=0 | default=0.0 | pk=0
+  exc_final | REAL | notnull=0 | default=0.0 | pk=0
+  exc_final_mayor | REAL | notnull=0 | default=0.0 | pk=0
+  exc_final_menor | REAL | notnull=0 | default=0.0 | pk=0
+  exc_inicial_estimado | REAL | notnull=0 | default=0.0 | pk=0
+  exc_ajuste_requerido | REAL | notnull=0 | default=0.0 | pk=0
+  exc_correcciones | REAL | notnull=0 | default=0.0 | pk=0
+  exc_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  exc_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  exc_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  exc_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  exc_LastUpdateDate | TEXT | notnull=0 | default=date('now') | pk=0
+  exc_LastUpdateTime | TEXT | notnull=0 | default=time('now') | pk=0
+  exc_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  exc_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_existencia_historico ===
+  exh_idauto | INTEGER | notnull=0 | default=None | pk=1
+  exh_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  exh_dep_codigo | TEXT | notnull=1 | default=None | pk=0
+  exh_item_codigo | TEXT | notnull=1 | default=None | pk=0
+  exh_inicial | REAL | notnull=0 | default=None | pk=0
+  exh_costos_local | REAL | notnull=0 | default=None | pk=0
+  exh_costos_referencial | REAL | notnull=0 | default=None | pk=0
+  exh_factor_referencial | REAL | notnull=0 | default=None | pk=0
+  exh_op_entradas | REAL | notnull=0 | default=None | pk=0
+  exh_op_salidas | REAL | notnull=0 | default=None | pk=0
+  exh_cant_entradas | REAL | notnull=0 | default=None | pk=0
+  exh_cant_salidas | REAL | notnull=0 | default=None | pk=0
+  exh_final | REAL | notnull=0 | default=None | pk=0
+  exh_fecha_ini | TEXT | notnull=0 | default=None | pk=0
+  exh_fecha_fin | TEXT | notnull=0 | default=None | pk=0
+  exh_pdo_Idauto | INTEGER | notnull=0 | default=None | pk=0
+  exh_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  exh_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  exh_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  exh_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  exh_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  exh_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  exh_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  exh_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_existencia_periodo ===
+  exp_idauto | INTEGER | notnull=0 | default=None | pk=1
+  exp_pdo_id | TEXT | notnull=1 | default=None | pk=0
+  exp_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  exp_dep_codigo | TEXT | notnull=1 | default=None | pk=0
+  exp_item_codigo | TEXT | notnull=1 | default=None | pk=0
+  exp_descripcion | TEXT | notnull=0 | default=None | pk=0
+  exp_unidad | TEXT | notnull=0 | default=None | pk=0
+  exp_inicial | REAL | notnull=0 | default=0.0 | pk=0
+  exp_cant_entradas | REAL | notnull=0 | default=0.0 | pk=0
+  exp_cant_salidas | REAL | notnull=0 | default=0.0 | pk=0
+  exp_calculada | REAL | notnull=0 | default=0.0 | pk=0
+  exp_sistema | REAL | notnull=0 | default=0.0 | pk=0
+  exp_diferencia | REAL | notnull=0 | default=0.0 | pk=0
+  exp_costo_local | REAL | notnull=0 | default=0.0 | pk=0
+  exp_costo_referencial | REAL | notnull=0 | default=0.0 | pk=0
+  exp_factor_referencial | REAL | notnull=0 | default=1.0 | pk=0
+  exp_valor_inicial_local | REAL | notnull=0 | default=0.0 | pk=0
+  exp_valor_inicial_ref | REAL | notnull=0 | default=0.0 | pk=0
+  exp_valor_final_local | REAL | notnull=0 | default=0.0 | pk=0
+  exp_valor_final_ref | REAL | notnull=0 | default=0.0 | pk=0
+  exp_es_negativo | INTEGER | notnull=0 | default=0 | pk=0
+  exp_tiene_diferencia | INTEGER | notnull=0 | default=0 | pk=0
+  exp_requiere_ajuste | INTEGER | notnull=0 | default=0 | pk=0
+  exp_fecha_ini | TEXT | notnull=1 | default=None | pk=0
+  exp_fecha_fin | TEXT | notnull=1 | default=None | pk=0
+  exp_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  exp_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  exp_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  exp_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  exp_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  exp_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  exp_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  exp_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_factor_hstorico ===
+  fac_Idauto | INTEGER | notnull=0 | default=None | pk=1
+  fac_mon_codigo | INTEGER | notnull=1 | default=None | pk=0
+  fac_fecha | TEXT | notnull=0 | default=None | pk=0
+  fac_tasa_dia | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_inventario ===
+  inv_IDauto | INTEGER | notnull=0 | default=None | pk=1
+  inv_codigo | TEXT | notnull=1 | default=None | pk=0
+  inv_descripcion | TEXT | notnull=0 | default=None | pk=0
+  inv_categoria | TEXT | notnull=1 | default=None | pk=0
+  inv_uo_id | INTEGER | notnull=1 | default=None | pk=0
+  inv_dep_IDauto | INTEGER | notnull=1 | default=None | pk=0
+  inv_descripciondetallada | TEXT | notnull=0 | default=None | pk=0
+  inv_vendedor | TEXT | notnull=0 | default=None | pk=0
+  inv_status | INTEGER | notnull=0 | default=None | pk=0
+  inv_unidad | TEXT | notnull=0 | default=None | pk=0
+  inv_tipocodigobarra | INTEGER | notnull=0 | default=None | pk=0
+  inv_imagen | BLOB | notnull=0 | default=None | pk=0
+  inv_sustituto1 | TEXT | notnull=0 | default=None | pk=0
+  inv_sustituto2 | TEXT | notnull=0 | default=None | pk=0
+  inv_sustituto3 | TEXT | notnull=0 | default=None | pk=0
+  inv_referencia | TEXT | notnull=0 | default=None | pk=0
+  inv_marca | TEXT | notnull=0 | default=None | pk=0
+  inv_moneda | TEXT | notnull=0 | default=None | pk=0
+  inv_factorconversion | REAL | notnull=0 | default=None | pk=0
+  inv_undexistencia2 | TEXT | notnull=0 | default=None | pk=0
+  inv_puesto | TEXT | notnull=0 | default=None | pk=0
+  inv_sujetoacomision | INTEGER | notnull=0 | default=None | pk=0
+  inv_montocomision | REAL | notnull=0 | default=None | pk=0
+  inv_cuentascontables | INTEGER | notnull=0 | default=None | pk=0
+  inv_pesoproducto | REAL | notnull=0 | default=None | pk=0
+  inv_diasdereposicion | INTEGER | notnull=0 | default=None | pk=0
+  inv_presentacion | INTEGER | notnull=0 | default=None | pk=0
+  inv_garantia | INTEGER | notnull=0 | default=None | pk=0
+  inv_sustituto4 | TEXT | notnull=0 | default=None | pk=0
+  inv_sustituto5 | TEXT | notnull=0 | default=None | pk=0
+  inv_montocomisionp | INTEGER | notnull=0 | default=None | pk=0
+  inv_depositos | INTEGER | notnull=0 | default=None | pk=0
+  inv_ofertas | INTEGER | notnull=0 | default=None | pk=0
+  inv_vencimientos | INTEGER | notnull=0 | default=None | pk=0
+  inv_clasificacion | INTEGER | notnull=0 | default=None | pk=0
+  inv_manejoinventario | INTEGER | notnull=0 | default=None | pk=0
+  inv_seriales | INTEGER | notnull=0 | default=None | pk=0
+  inv_creacion | TEXT | notnull=0 | default=None | pk=0
+  inv_inventarioinicialunidades | REAL | notnull=0 | default=None | pk=0
+  inv_inventarioinicialcosto | REAL | notnull=0 | default=None | pk=0
+  inv_capacidad | REAL | notnull=0 | default=None | pk=0
+  inv_existdecimal | INTEGER | notnull=0 | default=None | pk=0
+  inv_compuestoseriales | INTEGER | notnull=0 | default=None | pk=0
+  inv_vendedorfijo | TEXT | notnull=0 | default=None | pk=0
+  inv_vendedorfijoactivo | INTEGER | notnull=0 | default=None | pk=0
+  inv_modelo | TEXT | notnull=0 | default=None | pk=0
+  inv_subcategoria | TEXT | notnull=0 | default=None | pk=0
+  inv_pesoafectacosto | INTEGER | notnull=0 | default=None | pk=0
+  inv_impresora | TEXT | notnull=0 | default=None | pk=0
+  inv_base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra1 | REAL | notnull=0 | default=None | pk=0
+  inv_zextra2 | REAL | notnull=0 | default=None | pk=0
+  inv_zextra3 | REAL | notnull=0 | default=None | pk=0
+  inv_zextra4 | REAL | notnull=0 | default=None | pk=0
+  inv_zextra5 | REAL | notnull=0 | default=None | pk=0
+  inv_zextra6 | REAL | notnull=0 | default=None | pk=0
+  inv_zextra1venta | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra2venta | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra3venta | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra4venta | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra5venta | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra6venta | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra1ventamod | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra2ventamod | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra3ventamod | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra4ventamod | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra5ventamod | INTEGER | notnull=0 | default=None | pk=0
+  inv_zextra6ventamod | INTEGER | notnull=0 | default=None | pk=0
+  inv_internet | INTEGER | notnull=0 | default=None | pk=0
+  inv_balanza | INTEGER | notnull=0 | default=None | pk=0
+  inv_codigobarra | INTEGER | notnull=0 | default=None | pk=0
+  inv_preciolista | INTEGER | notnull=0 | default=None | pk=0
+  inv_aprovechaporc | REAL | notnull=0 | default=None | pk=0
+  inv_arancel | TEXT | notnull=0 | default=None | pk=0
+  inv_posentrega | INTEGER | notnull=0 | default=None | pk=0
+  inv_cargosextras | TEXT | notnull=0 | default=None | pk=0
+  inv_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  inv_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  inv_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  inv_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  inv_LastUpdateDate | TEXT | notnull=0 | default=date('now') | pk=0
+  inv_LastUpdateTime | TEXT | notnull=0 | default=time('now') | pk=0
+  inv_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  inv_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_maestro_inventario ===
+  mts_IDauto | INTEGER | notnull=0 | default=None | pk=1
+  mts_codigo | TEXT | notnull=1 | default=None | pk=0
+  mts_descripcion | TEXT | notnull=0 | default=None | pk=0
+  mts_categoria | TEXT | notnull=0 | default=None | pk=0
+  mts_descripciondetallada | TEXT | notnull=0 | default=None | pk=0
+  mts_vendedor | TEXT | notnull=0 | default=None | pk=0
+  mts_status | INTEGER | notnull=0 | default=None | pk=0
+  mts_unidad | TEXT | notnull=0 | default=None | pk=0
+  mts_tipocodigobarra | INTEGER | notnull=0 | default=None | pk=0
+  mts_imagen | BLOB | notnull=0 | default=None | pk=0
+  mts_sustituto1 | TEXT | notnull=0 | default=None | pk=0
+  mts_sustituto2 | TEXT | notnull=0 | default=None | pk=0
+  mts_sustituto3 | TEXT | notnull=0 | default=None | pk=0
+  mts_referencia | TEXT | notnull=0 | default=None | pk=0
+  mts_marca | TEXT | notnull=0 | default=None | pk=0
+  mts_moneda | TEXT | notnull=0 | default=None | pk=0
+  mts_factorconversion | REAL | notnull=0 | default=None | pk=0
+  mts_undexistencia2 | TEXT | notnull=0 | default=None | pk=0
+  mts_puesto | TEXT | notnull=0 | default=None | pk=0
+  mts_sujetoacomision | INTEGER | notnull=0 | default=None | pk=0
+  mts_montocomision | REAL | notnull=0 | default=None | pk=0
+  mts_cuentascontables | INTEGER | notnull=0 | default=None | pk=0
+  mts_pesoproducto | REAL | notnull=0 | default=None | pk=0
+  mts_diasdereposicion | INTEGER | notnull=0 | default=None | pk=0
+  mts_presentacion | INTEGER | notnull=0 | default=None | pk=0
+  mts_garantia | INTEGER | notnull=0 | default=None | pk=0
+  mts_sustituto4 | TEXT | notnull=0 | default=None | pk=0
+  mts_sustituto5 | TEXT | notnull=0 | default=None | pk=0
+  mts_montocomisionp | INTEGER | notnull=0 | default=None | pk=0
+  mts_depositos | INTEGER | notnull=0 | default=None | pk=0
+  mts_ofertas | INTEGER | notnull=0 | default=None | pk=0
+  mts_vencimientos | INTEGER | notnull=0 | default=None | pk=0
+  mts_clasificacion | INTEGER | notnull=0 | default=None | pk=0
+  mts_manejoinventario | INTEGER | notnull=0 | default=None | pk=0
+  mts_seriales | INTEGER | notnull=0 | default=None | pk=0
+  mts_creacion | TEXT | notnull=0 | default=None | pk=0
+  mts_inventarioinicialunidades | REAL | notnull=0 | default=None | pk=0
+  mts_inventarioinicialcosto | REAL | notnull=0 | default=None | pk=0
+  mts_capacidad | REAL | notnull=0 | default=None | pk=0
+  mts_existdecimal | INTEGER | notnull=0 | default=None | pk=0
+  mts_compuestoseriales | INTEGER | notnull=0 | default=None | pk=0
+  mts_vendedorfijo | TEXT | notnull=0 | default=None | pk=0
+  mts_vendedorfijoactivo | INTEGER | notnull=0 | default=None | pk=0
+  mts_modelo | TEXT | notnull=0 | default=None | pk=0
+  mts_subcategoria | TEXT | notnull=0 | default=None | pk=0
+  mts_pesoafectacosto | INTEGER | notnull=0 | default=None | pk=0
+  mts_impresora | TEXT | notnull=0 | default=None | pk=0
+  mts_base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra1 | REAL | notnull=0 | default=None | pk=0
+  mts_zextra2 | REAL | notnull=0 | default=None | pk=0
+  mts_zextra3 | REAL | notnull=0 | default=None | pk=0
+  mts_zextra4 | REAL | notnull=0 | default=None | pk=0
+  mts_zextra5 | REAL | notnull=0 | default=None | pk=0
+  mts_zextra6 | REAL | notnull=0 | default=None | pk=0
+  mts_zextra1venta | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra2venta | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra3venta | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra4venta | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra5venta | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra6venta | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra1ventamod | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra2ventamod | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra3ventamod | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra4ventamod | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra5ventamod | INTEGER | notnull=0 | default=None | pk=0
+  mts_zextra6ventamod | INTEGER | notnull=0 | default=None | pk=0
+  mts_internet | INTEGER | notnull=0 | default=None | pk=0
+  mts_balanza | INTEGER | notnull=0 | default=None | pk=0
+  mts_codigobarra | INTEGER | notnull=0 | default=None | pk=0
+  mts_preciolista | INTEGER | notnull=0 | default=None | pk=0
+  mts_aprovechaporc | REAL | notnull=0 | default=None | pk=0
+  mts_arancel | TEXT | notnull=0 | default=None | pk=0
+  mts_posentrega | INTEGER | notnull=0 | default=None | pk=0
+  mts_cargosextras | TEXT | notnull=0 | default=None | pk=0
+  mts_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  mts_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  mts_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  mts_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  mts_LastUpdateDate | TEXT | notnull=0 | default=date('now') | pk=0
+  mts_LastUpdateTime | TEXT | notnull=0 | default=time('now') | pk=0
+  mts_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  mts_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_monedas ===
+  mon_idauto | INTEGER | notnull=0 | default=None | pk=1
+  mon_codigo | INTEGER | notnull=1 | default=None | pk=0
+  mon_descripcion | TEXT | notnull=1 | default=None | pk=0
+  mon_simbolo | TEXT | notnull=0 | default=None | pk=0
+  mon_tasa | REAL | notnull=0 | default=None | pk=0
+  mon_status | INTEGER | notnull=0 | default=None | pk=0
+  mon_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  mon_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  mon_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  mon_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  mon_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  mon_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  mon_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  mon_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_periodos ===
+  pdo_Idauto | INTEGER | notnull=0 | default=None | pk=1
+  pdo_fecha_ini | TEXT | notnull=1 | default=None | pk=0
+  pdo_fecha_fin | TEXT | notnull=1 | default=None | pk=0
+  pdo_anio | INTEGER | notnull=1 | default=None | pk=0
+  pdo_status | INTEGER | notnull=1 | default=None | pk=0
+  pdo_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  pdo_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  pdo_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  pdo_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  pdo_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  pdo_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  pdo_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  pdo_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_status_operacion ===
+  stpo_id | INTEGER | notnull=0 | default=None | pk=1
+  stpo_descripcion | TEXT | notnull=1 | default=None | pk=0
+  stpo_es_activa | INTEGER | notnull=1 | default=None | pk=0
+
+=== TABLA: ark_tipos_operacion ===
+  topo_id | INTEGER | notnull=0 | default=None | pk=1
+  topo_descripcion | TEXT | notnull=1 | default=None | pk=0
+  topo_categoria | TEXT | notnull=1 | default=None | pk=0
+  topo_afecta_inventario | INTEGER | notnull=1 | default=None | pk=0
+
+=== TABLA: ark_transacciones ===
+  trn_Idauto | INTEGER | notnull=0 | default=None | pk=1
+  trn_idunico | TEXT | notnull=1 | default=None | pk=0
+  trn_uo_id | INTEGER | notnull=1 | default=None | pk=0
+  trn_uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  trn_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  trn_documento | TEXT | notnull=1 | default=None | pk=0
+  trn_tipo | INTEGER | notnull=1 | default=None | pk=0
+  trn_status | INTEGER | notnull=1 | default=None | pk=0
+  trn_visible | INTEGER | notnull=0 | default=None | pk=0
+  trn_fechaemision | TEXT | notnull=0 | default=None | pk=0
+  trn_depositosource | INTEGER | notnull=0 | default=None | pk=0
+  trn_depositodestino | INTEGER | notnull=0 | default=None | pk=0
+  trn_totalitems | INTEGER | notnull=0 | default=None | pk=0
+  trn_totalitemsinicial | INTEGER | notnull=0 | default=None | pk=0
+  trn_moneda | INTEGER | notnull=0 | default=None | pk=0
+  trn_factorcambio | REAL | notnull=0 | default=None | pk=0
+  trn_totalcosto | REAL | notnull=0 | default=None | pk=0
+  trn_totalcostoreal | REAL | notnull=0 | default=None | pk=0
+  trn_clasificacion | INTEGER | notnull=0 | default=None | pk=0
+  trn_descripclasify | TEXT | notnull=0 | default=None | pk=0
+  trn_user | INTEGER | notnull=0 | default=None | pk=0
+  trn_autorizadopor | TEXT | notnull=0 | default=None | pk=0
+  trn_proposito | TEXT | notnull=0 | default=None | pk=0
+  trn_responsable | TEXT | notnull=0 | default=None | pk=0
+  trn_detalle | TEXT | notnull=0 | default=None | pk=0
+  trn_tienelotes | INTEGER | notnull=0 | default=None | pk=0
+  trn_updateitems | INTEGER | notnull=0 | default=None | pk=0
+  trn_totalbruto | REAL | notnull=0 | default=None | pk=0
+  trn_descuento1porcent | REAL | notnull=0 | default=None | pk=0
+  trn_descuento1monto | REAL | notnull=0 | default=None | pk=0
+  trn_descuento1origen | INTEGER | notnull=0 | default=None | pk=0
+  trn_descuento2porcent | REAL | notnull=0 | default=None | pk=0
+  trn_descuento2monto | REAL | notnull=0 | default=None | pk=0
+  trn_descuento2origen | INTEGER | notnull=0 | default=None | pk=0
+  trn_descuentoparcial | REAL | notnull=0 | default=None | pk=0
+  trn_fleteporcent | REAL | notnull=0 | default=None | pk=0
+  trn_fletemoneda | REAL | notnull=0 | default=None | pk=0
+  trn_fleteorigen | INTEGER | notnull=0 | default=None | pk=0
+  trn_baseimponible | REAL | notnull=0 | default=None | pk=0
+  trn_baseimponible2 | REAL | notnull=0 | default=None | pk=0
+  trn_impuesto1porcent | REAL | notnull=0 | default=None | pk=0
+  trn_impuesto1monto | REAL | notnull=0 | default=None | pk=0
+  trn_impuesto2porcent | REAL | notnull=0 | default=None | pk=0
+  trn_impuesto2monto | REAL | notnull=0 | default=None | pk=0
+  trn_descuentocuadre | REAL | notnull=0 | default=None | pk=0
+  trn_totalneto | REAL | notnull=0 | default=None | pk=0
+  trn_fechavencido | TEXT | notnull=0 | default=None | pk=0
+  trn_diasvencimiento | INTEGER | notnull=0 | default=None | pk=0
+  trn_rifcliente | TEXT | notnull=0 | default=None | pk=0
+  trn_nitcliente | TEXT | notnull=0 | default=None | pk=0
+  trn_personacontacto | TEXT | notnull=0 | default=None | pk=0
+  trn_telefonocontacto | TEXT | notnull=0 | default=None | pk=0
+  trn_direcciondespacho | TEXT | notnull=0 | default=None | pk=0
+  trn_detallecomentario | TEXT | notnull=0 | default=None | pk=0
+  trn_ordencompra | TEXT | notnull=0 | default=None | pk=0
+  trn_planillaimportacion | TEXT | notnull=0 | default=None | pk=0
+  trn_existeplanillaimportacion | INTEGER | notnull=0 | default=None | pk=0
+  trn_porcentfletesinasignar | REAL | notnull=0 | default=None | pk=0
+  trn_saldooperacion | REAL | notnull=0 | default=None | pk=0
+  trn_monedapago | INTEGER | notnull=0 | default=None | pk=0
+  trn_formadepago | TEXT | notnull=0 | default=None | pk=0
+  trn_totalprecio | REAL | notnull=0 | default=None | pk=0
+  trn_vuelto | REAL | notnull=0 | default=None | pk=0
+  trn_autorizados | INTEGER | notnull=0 | default=None | pk=0
+  trn_excento | INTEGER | notnull=0 | default=None | pk=0
+  trn_costodeventa | REAL | notnull=0 | default=None | pk=0
+  trn_tipooperacionorigen | INTEGER | notnull=0 | default=None | pk=0
+  trn_documentoorigen | TEXT | notnull=0 | default=None | pk=0
+  trn_fromcompuestos | INTEGER | notnull=0 | default=None | pk=0
+  trn_vendedorasignado | TEXT | notnull=0 | default=None | pk=0
+  trn_zonaventa | TEXT | notnull=0 | default=None | pk=0
+  trn_pendingforprint | INTEGER | notnull=0 | default=None | pk=0
+  trn_cobradorasignado | TEXT | notnull=0 | default=None | pk=0
+  trn_comisioncobros | REAL | notnull=0 | default=None | pk=0
+  trn_comisioncobrosbloqueada | INTEGER | notnull=0 | default=None | pk=0
+  trn_facturasloterandom | TEXT | notnull=0 | default=None | pk=0
+  trn_multiplevendedor | INTEGER | notnull=0 | default=None | pk=0
+  trn_multipledeposito | INTEGER | notnull=0 | default=None | pk=0
+  trn_timesaved | INTEGER | notnull=0 | default=None | pk=0
+  trn_tipoprecio | INTEGER | notnull=0 | default=None | pk=0
+  base_autoincrement | INTEGER | notnull=0 | default=None | pk=0
+  trn_serie | TEXT | notnull=0 | default=None | pk=0
+  trn_nameformato | TEXT | notnull=0 | default=None | pk=0
+  trn_machinename | TEXT | notnull=0 | default=None | pk=0
+  trn_comisionventa | REAL | notnull=0 | default=None | pk=0
+  trn_montopagado | REAL | notnull=0 | default=None | pk=0
+  trn_montoperiodo | REAL | notnull=0 | default=None | pk=0
+  trn_porcentperiodo | REAL | notnull=0 | default=None | pk=0
+  trn_hora | TEXT | notnull=0 | default=None | pk=0
+  trn_guiadespacho | TEXT | notnull=0 | default=None | pk=0
+  trn_norecibocaja | TEXT | notnull=0 | default=None | pk=0
+  trn_ctocosto | TEXT | notnull=0 | default=None | pk=0
+  trn_costoactualnacional | REAL | notnull=0 | default=None | pk=0
+  trn_costoactualex | REAL | notnull=0 | default=None | pk=0
+  trn_prefixinventario | TEXT | notnull=0 | default=None | pk=0
+  trn_numerocontrol | TEXT | notnull=0 | default=None | pk=0
+  trn_costoajustado | REAL | notnull=0 | default=None | pk=0
+  trn_factorreferencia | REAL | notnull=0 | default=None | pk=0
+  trn_finicial | REAL | notnull=0 | default=None | pk=0
+  trn_fintereses | REAL | notnull=0 | default=None | pk=0
+  trn_finteresesp | REAL | notnull=0 | default=None | pk=0
+  trn_fmanejo | REAL | notnull=0 | default=None | pk=0
+  trn_fmanejop | REAL | notnull=0 | default=None | pk=0
+  trn_fextraordinaria | REAL | notnull=0 | default=None | pk=0
+  trn_fctdextraordinaria | INTEGER | notnull=0 | default=None | pk=0
+  trn_fintextraordinaria | REAL | notnull=0 | default=None | pk=0
+  trn_fmtocuota | REAL | notnull=0 | default=None | pk=0
+  trn_fctdcuota | INTEGER | notnull=0 | default=None | pk=0
+  trn_fcobranza | REAL | notnull=0 | default=None | pk=0
+  trn_totalfinanciado | REAL | notnull=0 | default=None | pk=0
+  trn_detallegiros | TEXT | notnull=0 | default=None | pk=0
+  trn_saldofinanciar | REAL | notnull=0 | default=None | pk=0
+  trn_primeracuota | TEXT | notnull=0 | default=None | pk=0
+  trn_capitalcuotaextra | REAL | notnull=0 | default=None | pk=0
+  trn_credicard | TEXT | notnull=0 | default=None | pk=0
+  trn_maquinafiscal | TEXT | notnull=0 | default=None | pk=0
+  trn_totalpaginas | INTEGER | notnull=0 | default=None | pk=0
+  trn_sucursalorigen | INTEGER | notnull=0 | default=None | pk=0
+  trn_fechalibro | TEXT | notnull=0 | default=None | pk=0
+  trn_ivaintereses | REAL | notnull=0 | default=None | pk=0
+  trn_reimpresafiscal | INTEGER | notnull=0 | default=None | pk=0
+  trn_dctofiscalorigen | TEXT | notnull=0 | default=None | pk=0
+  trn_fechafactura | TEXT | notnull=0 | default=None | pk=0
+  trn_dctoiva | REAL | notnull=0 | default=None | pk=0
+  trn_monedacambio | TEXT | notnull=0 | default=None | pk=0
+  trn_tipofactorcambio | INTEGER | notnull=0 | default=None | pk=0
+  trn_origencambio | INTEGER | notnull=0 | default=None | pk=0
+  trn_factorvuelto | REAL | notnull=0 | default=None | pk=0
+  trn_codecambio | TEXT | notnull=0 | default=None | pk=0
+  trn_vueltoorg | REAL | notnull=0 | default=None | pk=0
+  trn_vtanapago | INTEGER | notnull=0 | default=None | pk=0
+  trn_factorreferencia2 | REAL | notnull=0 | default=None | pk=0
+  trn_multivuelto | TEXT | notnull=0 | default=None | pk=0
+  trn_extrafield01 | TEXT | notnull=0 | default=None | pk=0
+  trn_extrafield02 | TEXT | notnull=0 | default=None | pk=0
+  trn_extrafield03 | TEXT | notnull=0 | default=None | pk=0
+  trn_extrafield04 | TEXT | notnull=0 | default=None | pk=0
+  trn_extrafield05 | TEXT | notnull=0 | default=None | pk=0
+  trn_baseigtf | REAL | notnull=0 | default=None | pk=0
+  trn_extrafield06 | TEXT | notnull=0 | default=None | pk=0
+  trn_imprentaasignacion | TEXT | notnull=0 | default=None | pk=0
+  trn_imprentahora | TEXT | notnull=0 | default=None | pk=0
+  trn_statusimprenta | INTEGER | notnull=0 | default=None | pk=0
+  trn_imprentadocorigen | TEXT | notnull=0 | default=None | pk=0
+  trn_imprentamotivo | TEXT | notnull=0 | default=None | pk=0
+  trn_imprentafechaorigen | TEXT | notnull=0 | default=None | pk=0
+  trn_imprentaserieorigen | TEXT | notnull=0 | default=None | pk=0
+  trn_imprentamtoorigen | REAL | notnull=0 | default=None | pk=0
+  trn_mtootroscargos | REAL | notnull=0 | default=None | pk=0
+  trn_imprentacorrelativo | TEXT | notnull=0 | default=None | pk=0
+  trn_imprentacontrolorigen | TEXT | notnull=0 | default=None | pk=0
+  trn_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  trn_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  trn_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  trn_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  trn_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  trn_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  trn_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  trn_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_unds_operativas ===
+  uo_id | INTEGER | notnull=0 | default=None | pk=1
+  uo_Codigo | TEXT | notnull=1 | default=None | pk=0
+  uo_nombre | TEXT | notnull=1 | default=None | pk=0
+  uo_descripcion | TEXT | notnull=0 | default=None | pk=0
+  uo_empresa_id | INTEGER | notnull=1 | default=None | pk=0
+  uo_dsn_name | TEXT | notnull=1 | default=None | pk=0
+  uo_db_path | TEXT | notnull=0 | default=None | pk=0
+  uo_active | BOOLEAN | notnull=0 | default=1 | pk=0
+  uo_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  uo_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  uo_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  uo_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  uo_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  uo_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  uo_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  uo_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== TABLA: ark_users ===
+  usr_IDauto | INTEGER | notnull=0 | default=None | pk=1
+  usr_Codigo | TEXT | notnull=1 | default=None | pk=0
+  usr_login | TEXT | notnull=0 | default=None | pk=0
+  usr_Descripcion | TEXT | notnull=0 | default=None | pk=0
+  usr_Status | INTEGER | notnull=0 | default=1 | pk=0
+  usr_Telefono | TEXT | notnull=0 | default=None | pk=0
+  usr_Cargo | TEXT | notnull=0 | default=None | pk=0
+  usr_Rol | TEXT | notnull=0 | default=None | pk=0
+  usr_EmailUsuario | TEXT | notnull=0 | default=None | pk=0
+  usr_Password | TEXT | notnull=0 | default=None | pk=0
+  usr_FechaCreacion | TEXT | notnull=0 | default=datetime('now') | pk=0
+  id_company | INTEGER | notnull=0 | default=None | pk=0
+  usr_SystemDate | TEXT | notnull=0 | default=date('now') | pk=0
+  usr_SystemTime | TEXT | notnull=0 | default=time('now') | pk=0
+  usr_NameMachine | TEXT | notnull=0 | default=None | pk=0
+  usr_UserCreator | TEXT | notnull=0 | default=None | pk=0
+  usr_LastUpdateDate | TEXT | notnull=0 | default=None | pk=0
+  usr_LastUpdateTime | TEXT | notnull=0 | default=None | pk=0
+  usr_LastMachine | TEXT | notnull=0 | default=None | pk=0
+  usr_UserLastUpdate | TEXT | notnull=0 | default=None | pk=0
+
+=== INDICES ===
+  ark_costos -> idx_cts_codigo_periodo
+  ark_depositos -> idx_depositos_uo_codigo
+  ark_detalletrancomp -> idx_dtc_codigo_fecha
+  ark_detalletrancomp -> idx_dtc_depositotarget
+  ark_detalletrancomp -> idx_dtc_documento
+  ark_detalletrancomp -> idx_dtc_operacion_autoincrement
+  ark_detalletrancomp -> idx_dtc_uo_codigo
+  ark_detalletraninv -> idx_dti_codigo_fecha
+  ark_detalletraninv -> idx_dti_depositos
+  ark_detalletraninv -> idx_dti_documento
+  ark_detalletraninv -> idx_dti_operacion_autoincrement
+  ark_detalletraninv -> idx_dti_uo_codigo
+  ark_detalletranvtas -> idx_dtv_codigo_fecha
+  ark_detalletranvtas -> idx_dtv_depositotarget
+  ark_detalletranvtas -> idx_dtv_documento
+  ark_detalletranvtas -> idx_dtv_operacion_autoincrement
+  ark_detalletranvtas -> idx_dtv_uo_codigo
+  ark_existencia_calculadas -> idx_exc_llave
+  ark_existencia_calculadas -> idx_exc_periodo
+  ark_existencia_calculadas -> idx_exc_uo_dep_item
+  ark_existencia_calculadas -> uidx_exc_uo_dep_item
+  ark_existencia_historico -> idx_exh_periodo_id
+  ark_existencia_historico -> idx_exh_uo_dep_item
+  ark_existencia_historico -> uidx_exh_uo_dep_item_periodo
+  ark_existencia_periodo -> idx_exp_flags
+  ark_existencia_periodo -> idx_exp_pdo_id
+  ark_existencia_periodo -> idx_exp_uo_dep_item
+  ark_factor_hstorico -> idx_fac_moneda_fecha
+  ark_periodos -> idx_pdo_fechas
+  ark_periodos -> uidx_pdo_anio_mes
+  ark_transacciones -> idx_trn_autoincrement
+  ark_transacciones -> idx_trn_depositos
+  ark_transacciones -> idx_trn_documento
+  ark_transacciones -> idx_trn_status_visible
+  ark_transacciones -> idx_trn_uo_fecha_tipo
+
+=== VERIFICACION ark_existencia_calculadas ===
+  exc_final_mayor: PRESENTE
+  exc_final_menor: PRESENTE
+  exc_inicial_estimado: PRESENTE
+  exc_ajuste_requerido: PRESENTE
+  exc_correcciones: PRESENTE
+
+=== VALIDACION DE ITEMS POR UO ===
+
+UO: 010101 - Gestion Administrativa
+  ark_existencia_actual    : filas=4240 | items=4240
+  ark_existencia_calculadas: filas=4242 | items=4240
+  diferencia de filas      : 2
+
+UO: 010102 - Gestion Financiera
+  ark_existencia_actual    : filas=4240 | items=4240
+  ark_existencia_calculadas: filas=4240 | items=4240
+  diferencia de filas      : 0
+
+UO en calculadas sin registro en ark_unds_operativas: NINGUNA
+
+Combinaciones en calculadas que NO estan en existencia_actual: 2
+  010101 | 2 | 00000005
+  010101 | 2 | 00000006
+
+Combinaciones en existencia_actual que NO estan en calculadas: 0
