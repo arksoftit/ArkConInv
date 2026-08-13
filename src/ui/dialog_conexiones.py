@@ -30,6 +30,7 @@ class DialogConexiones(tk.Toplevel):
         self._create_widgets()
         self._cargar_dsn()
         self._cargar_ultimas_conexiones()
+        self._mostrar_conexion_activa()
 
     def _create_widgets(self):
         frame = ttk.Frame(self, padding=20)
@@ -71,6 +72,18 @@ class DialogConexiones(tk.Toplevel):
         if conexiones:
             self.entry_user.insert(0, conexiones[0]['usuario'])
             self.entry_pass.insert(0, conexiones[0]['password'])
+    
+    def _mostrar_conexion_activa(self):
+        activa = self.manager.get_active_connection()
+        if activa:
+            self.lbl_estado.config(
+                text=f"Conexión activa: {activa['dsn']}",
+                foreground="green")
+        else:
+            self.lbl_estado.config(
+                text="No hay conexión activa. "
+                     "Guarde una conexión para activarla.",
+                foreground="red")
 
     def _seleccionar_dsn(self, event):
         dsn_seleccionado = self.cmb_dsn.get()
@@ -118,5 +131,7 @@ class DialogConexiones(tk.Toplevel):
             return
         
         self.manager.save_connection(dsn, user, pwd)
-        self.lbl_estado.config(text="Conexión guardada correctamente.", foreground="green")
-        messagebox.showinfo("Éxito", f"Conexión para '{dsn}' guardada en el historial.")
+        self._mostrar_conexion_activa()
+        messagebox.showinfo(
+            "Éxito",
+            f"Conexión para '{dsn}' guardada y activada.")

@@ -89,32 +89,37 @@ class DialogImportarInventario(tk.Toplevel):
         self.btn_importar.config(state=tk.DISABLED)
 
     def _iniciar_importacion(self):
-        if not self.cmb_uo.get():
+        uo_display = self.cmb_uo.get()
+        if not uo_display:
             messagebox.showwarning("Advertencia", "Debe seleccionar una Unidad Operativa.")
             return
-
+        uo_id = next((k for k, v in self.uo_data.items() if v == uo_display), None)
+        if uo_id is None:
+            messagebox.showwarning("Advertencia", "Unidad Operativa no válida.")
+            return
+        if not messagebox.askyesno(
+            "Confirmar Importación",
+            "La Información de la tabla de Inventario ark_inventario será reemplazada para la UO seleccionada.\n¿Desea continuar?"
+        ):
+            return
         self.btn_importar.config(state=tk.DISABLED)
         self.progress['value'] = 0
-        
-        thread = threading.Thread(target=self._ejecutar_importacion, daemon=True)
+        thread = threading.Thread(target=self._ejecutar_importacion, args=(uo_id,), daemon=True)
         thread.start()
 
-    def _ejecutar_importacion(self):
+    def _ejecutar_importacion(self, uo_id):
         try:
             with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
                 conexiones = json.load(f)
             if not conexiones:
                 raise Exception("No hay conexiones guardadas.")
-
             conn_info = conexiones[0]
             dsn = conn_info['dsn']
             user = conn_info['usuario']
             pwd = conn_info['password']
-
             conn_str = f"DSN={dsn};UID={user};PWD={pwd};"
             dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
             cursor_dbisam = dbisam_conn.cursor()
-
             query_dbisam = """
                 SELECT FI_CODIGO, FI_DESCRIPCION, FI_CATEGORIA, FI_DESCRIPCIONDETALLADA,
                 FI_VENDEDOR, FI_STATUS, FI_UNIDAD, FI_TIPOCODIGOBARRA, FI_IMAGEN,
@@ -140,47 +145,43 @@ class DialogImportarInventario(tk.Toplevel):
             rows = cursor_dbisam.fetchall()
             total = len(rows)
             dbisam_conn.close()
-
             sqlite_conn = get_db_connection()
             sqlite_cursor = sqlite_conn.cursor()
-
-            # sqlite_cursor.execute("DELETE FROM ark_inventario")
-
-            query_sqlite = """
-                INSERT INTO ark_inventario (
-                    inv_codigo, inv_descripcion, inv_categoria, inv_descripciondetallada,
-                    inv_vendedor, inv_status, inv_unidad, inv_tipocodigobarra, inv_imagen,
-                    inv_sustituto1, inv_sustituto2, inv_sustituto3, inv_referencia, inv_marca,
-                    inv_moneda, inv_factorconversion, inv_undexistencia2, inv_puesto,
-                    inv_sujetoacomision, inv_montocomision, inv_cuentascontables, inv_pesoproducto,
-                    inv_diasdereposicion, inv_presentacion, inv_garantia, inv_sustituto4,
-                    inv_sustituto5, inv_montocomisionp, inv_depositos, inv_ofertas,
-                    inv_vencimientos, inv_clasificacion, inv_manejoinventario, inv_seriales,
-                    inv_creacion, inv_inventarioinicialunidades, inv_inventarioinicialcosto,
-                    inv_capacidad, inv_existdecimal, inv_compuestoseriales, inv_vendedorfijo,
-                    inv_vendedorfijoactivo, inv_modelo, inv_subcategoria, inv_pesoafectacosto,
-                    inv_impresora, inv_base_autoincrement, inv_zextra1, inv_zextra2, inv_zextra3,
-                    inv_zextra4, inv_zextra5, inv_zextra6, inv_zextra1venta, inv_zextra2venta,
-                    inv_zextra3venta, inv_zextra4venta, inv_zextra5venta, inv_zextra6venta,
-                    inv_zextra1ventamod, inv_zextra2ventamod, inv_zextra3ventamod, inv_zextra4ventamod,
-                    inv_zextra5ventamod, inv_zextra6ventamod, inv_internet, inv_balanza,
-                    inv_codigobarra, inv_preciolista, inv_aprovechaporc, inv_arancel,
-                    inv_posentrega, inv_cargosextras,
-                    inv_SystemDate, inv_SystemTime, inv_NameMachine, inv_UserCreator,
-                    inv_LastUpdateDate, inv_LastUpdateTime, inv_LastMachine, inv_UserLastUpdate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
-
+            sqlite_cursor.execute("DELETE FROM ark_inventario WHERE inv_uo_id = ?", (uo_id,))
+            columnas_insert = (
+                "inv_codigo", "inv_descripcion", "inv_categoria", "inv_uo_id", "inv_descripciondetallada",
+                "inv_vendedor", "inv_status", "inv_unidad", "inv_tipocodigobarra", "inv_imagen",
+                "inv_sustituto1", "inv_sustituto2", "inv_sustituto3", "inv_referencia", "inv_marca",
+                "inv_moneda", "inv_factorconversion", "inv_undexistencia2", "inv_puesto",
+                "inv_sujetoacomision", "inv_montocomision", "inv_cuentascontables", "inv_pesoproducto",
+                "inv_diasdereposicion", "inv_presentacion", "inv_garantia", "inv_sustituto4",
+                "inv_sustituto5", "inv_montocomisionp", "inv_depositos", "inv_ofertas",
+                "inv_vencimientos", "inv_clasificacion", "inv_manejoinventario", "inv_seriales",
+                "inv_creacion", "inv_inventarioinicialunidades", "inv_inventarioinicialcosto",
+                "inv_capacidad", "inv_existdecimal", "inv_compuestoseriales", "inv_vendedorfijo",
+                "inv_vendedorfijoactivo", "inv_modelo", "inv_subcategoria", "inv_pesoafectacosto",
+                "inv_impresora", "inv_base_autoincrement", "inv_zextra1", "inv_zextra2", "inv_zextra3",
+                "inv_zextra4", "inv_zextra5", "inv_zextra6", "inv_zextra1venta", "inv_zextra2venta",
+                "inv_zextra3venta", "inv_zextra4venta", "inv_zextra5venta", "inv_zextra6venta",
+                "inv_zextra1ventamod", "inv_zextra2ventamod", "inv_zextra3ventamod", "inv_zextra4ventamod",
+                "inv_zextra5ventamod", "inv_zextra6ventamod", "inv_internet", "inv_balanza",
+                "inv_codigobarra", "inv_preciolista", "inv_aprovechaporc", "inv_arancel",
+                "inv_posentrega", "inv_cargosextras",
+                "inv_SystemDate", "inv_SystemTime", "inv_NameMachine", "inv_UserCreator",
+                "inv_LastUpdateDate", "inv_LastUpdateTime", "inv_LastMachine", "inv_UserLastUpdate"
+            )
+            query_sqlite = (
+                f"INSERT INTO ark_inventario ({', '.join(columnas_insert)}) "
+                f"VALUES ({', '.join(['?'] * len(columnas_insert))})"
+            )
             user_creator = get_current_user()
             machine_name = get_machine_name()
             sys_date = date.today().isoformat()
             sys_time = datetime.now().time().isoformat()
-            
             audit_values = [
                 sys_date, sys_time, machine_name, user_creator,
                 sys_date, sys_time, machine_name, user_creator
             ]
-
             for i, row in enumerate(rows):
                 data = []
                 for value in row:
@@ -188,20 +189,15 @@ class DialogImportarInventario(tk.Toplevel):
                         data.append(float(value) if value is not None else None)
                     else:
                         data.append(value)
+                data.insert(3, uo_id)
                 data.extend(audit_values)
-                
                 sqlite_cursor.execute(query_sqlite, data)
-
                 if (i + 1) % 10 == 0 or i == total - 1:
                     porcentaje = int(((i + 1) / total) * 100)
                     self.after(0, self._actualizar_progreso, porcentaje)
-
             sqlite_conn.commit()
             sqlite_conn.close()
-
-            # self.after(0, self._finalizar_importacion, True)
             self.after(0, self._finalizar_importacion, True, total)
-
         except Exception as e:
             error_msg = str(e)
             if "UNIQUE constraint failed" in error_msg:

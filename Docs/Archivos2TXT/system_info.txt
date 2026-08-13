@@ -3,7 +3,7 @@ import getpass
 import socket
 from datetime import datetime
 
-APP_VERSION = "0.1.01Beta"
+APP_VERSION = "0.1.10Beta"
 APP_DEVELOPER = "Juan E. Páez M. - JUEPAE"
 APP_DATE = "Junio 2026"
 

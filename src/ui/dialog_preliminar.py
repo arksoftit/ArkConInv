@@ -167,37 +167,50 @@ class DialogPreliminar(tk.Toplevel):
             uo_display = self.cmb_uo.get()
             uo_id = next((k for k, v in self.uo_data.items() if v == uo_display), "0")
             uo_codigo_filtro = uo_display.split(" - ")[0] if uo_id != "0" else None
-            
             fecha_desde = self.entry_fecha_desde.get().strip()
             fecha_hasta = self.entry_fecha_hasta.get().strip()
-            
             if not fecha_desde or not fecha_hasta:
                 messagebox.showwarning("Advertencia", "Debe ingresar un rango de fechas.")
                 return
-                
             try:
                 fecha_desde_sql = datetime.strptime(fecha_desde, "%d/%m/%Y").strftime("%Y-%m-%d")
                 fecha_hasta_sql = datetime.strptime(fecha_hasta, "%d/%m/%Y").strftime("%Y-%m-%d")
             except ValueError:
                 messagebox.showwarning("Advertencia", "Formato de fecha inválido. Use DD/MM/AAAA")
                 return
-
             deposito_display = self.cmb_deposito.get()
             deposito_id = next((k for k, v in self.deposito_data.items() if v == deposito_display), "0")
             dep_codigo_filtro = deposito_display.split(" - ")[0] if deposito_id != "0" else None
-
             self.config(cursor="watch")
-            self.progress_lbl.config(text="Consolidando movimientos de cantidades...")
-            self.progress_bar['value'] = 10
+            self.progress_lbl.config(text="Construyendo universo desde ark_existencia_actual...")
+            self.progress_bar['value'] = 5
             self.update()
-
             conn = get_db_connection()
             cursor = conn.cursor()
-            
+            query_universo = """
+                SELECT exa_uo_Codigo, exa_codigodeposito, exa_codigoproducto,
+                       SUM(COALESCE(exa_existencia, 0.0))
+                FROM ark_existencia_actual
+                WHERE exa_codigoproducto IS NOT NULL
+                  AND exa_codigodeposito IS NOT NULL
+            """
+            params_universo = []
+            if uo_codigo_filtro:
+                query_universo += " AND exa_uo_Codigo = ?"
+                params_universo.append(uo_codigo_filtro)
+            if dep_codigo_filtro:
+                query_universo += " AND exa_codigodeposito = ?"
+                params_universo.append(dep_codigo_filtro)
+            query_universo += " GROUP BY exa_uo_Codigo, exa_codigodeposito, exa_codigoproducto"
+            cursor.execute(query_universo, params_universo)
+            universo = {}
+            for uo, dep, item, existencia in cursor.fetchall():
+                universo[(uo, dep, item)] = float(existencia or 0.0)
+            self.progress_lbl.config(text="Consolidando movimientos de cantidades...")
+            self.progress_bar['value'] = 15
+            self.update()
             tipos_validos = [1, 2, 3, 4, 6, 7, 8, 11, 12, 13]
             placeholders = ','.join(['?'] * len(tipos_validos))
-            
-            # SOLO cantidades - sin costos
             query = f"""
             WITH movimientos AS (
                 SELECT dtv_codigo as codigo, dtv_tipooperacion as tipooperacion, dtv_cantidad as cantidad, 
@@ -215,40 +228,25 @@ class DialogPreliminar(tk.Toplevel):
             SELECT codigo, tipooperacion, cantidad, uo_codigo, deposito, deposito_destino
             FROM movimientos WHERE 1=1
             """
-            
             params = (tipos_validos + [fecha_desde_sql, fecha_hasta_sql] + 
                       tipos_validos + [fecha_desde_sql, fecha_hasta_sql] + 
                       tipos_validos + [fecha_desde_sql, fecha_hasta_sql])
             cursor.execute(query, params)
             rows = cursor.fetchall()
-
-            if not rows:
-                self.config(cursor="")
-                self.progress_bar['value'] = 0
-                self.progress_lbl.config(text="")
-                messagebox.showinfo("Información", "No se encontraron movimientos para los filtros seleccionados.")
-                conn.close()
-                return
-
-            # Consolidación de CANTIDADES por (UO, Depósito, Ítem)
-            balance_existencias = {}
+            balance_movimientos = {}
             total_rows = len(rows)
-            
             for i, row in enumerate(rows):
                 if i % 500 == 0:
-                    porcentaje = 10 + int((i / total_rows) * 50)
+                    porcentaje = 15 + int((i / max(total_rows, 1)) * 40)
                     self.progress_bar['value'] = porcentaje
                     self.progress_lbl.config(text=f"Procesando movimientos: {i}/{total_rows}")
                     self.update()
-
                 item_cod, tipo, cant, uo, dep_origen, dep_destino = row
                 cant = float(cant) if cant else 0.0
-                
                 if uo_codigo_filtro and uo != uo_codigo_filtro:
                     continue
-
                 definitivos = []
-                if tipo == 1:  # Traslado
+                if tipo == 1:
                     if dep_origen and (not dep_codigo_filtro or dep_origen == dep_codigo_filtro):
                         definitivos.append((dep_origen, 'trans_menos', cant))
                     if dep_destino and (not dep_codigo_filtro or dep_destino == dep_codigo_filtro):
@@ -259,7 +257,6 @@ class DialogPreliminar(tk.Toplevel):
                         continue
                     if dep_codigo_filtro and dep_afectado != dep_codigo_filtro:
                         continue
-
                     if tipo == 2: definitivos.append((dep_afectado, 'cargos', cant))
                     elif tipo == 3: definitivos.append((dep_afectado, 'descargos', cant))
                     elif tipo == 4:
@@ -271,75 +268,103 @@ class DialogPreliminar(tk.Toplevel):
                     elif tipo == 11: definitivos.append((dep_afectado, 'ventas', cant))
                     elif tipo == 12: definitivos.append((dep_afectado, 'dev_ventas', cant))
                     elif tipo == 13: definitivos.append((dep_afectado, 'notas_entrega_cli', cant))
-
                 for dep, col, q_val in definitivos:
                     clave = (uo, dep, item_cod)
-                    if clave not in balance_existencias:
-                        balance_existencias[clave] = {
+                    if clave not in balance_movimientos:
+                        balance_movimientos[clave] = {
                             'cargos': 0.0, 'descargos': 0.0, 'trans_mas': 0.0, 'trans_menos': 0.0,
                             'compras': 0.0, 'notas_entrega_prov': 0.0, 'dev_ventas': 0.0, 'dev_compras': 0.0,
                             'ventas': 0.0, 'notas_entrega_cli': 0.0, 'ajustes_mas': 0.0, 'ajustes_menos': 0.0
                         }
-                    balance_existencias[clave][col] += q_val
-
-            # Volcado a BD con consulta de costos desde ark_costos
+                    balance_movimientos[clave][col] += q_val
+            for clave in balance_movimientos:
+                if clave not in universo:
+                    universo[clave] = 0.0
+            if not universo:
+                self.config(cursor="")
+                self.progress_bar['value'] = 0
+                self.progress_lbl.config(text="")
+                messagebox.showinfo("Información", "No se encontraron existencias ni movimientos para los filtros seleccionados.")
+                conn.close()
+                return
             self.progress_lbl.config(text="Consultando costos fiscales en ark_costos...")
             self.progress_bar['value'] = 60
             self.update()
-
             usuario = get_current_user()
             maquina = get_machine_name()
             fecha_hoy = datetime.now().strftime("%Y-%m-%d")
             hora_hoy = datetime.now().strftime("%H:%M:%S")
-            
-            total_registros = len(balance_existencias)
+            cursor.execute("""
+                SELECT pdo_Idauto 
+                FROM ark_periodos 
+                WHERE ? >= pdo_fecha_ini AND ? <= pdo_fecha_fin
+            """, (fecha_desde_sql, fecha_hasta_sql))
+            row_pdo = cursor.fetchone()
+            pdo_idauto = row_pdo[0] if row_pdo else None
+            if not pdo_idauto:
+                cursor.execute("""
+                    SELECT pdo_Idauto 
+                    FROM ark_periodos 
+                    WHERE ? BETWEEN pdo_fecha_ini AND pdo_fecha_fin
+                """, (fecha_desde_sql,))
+                row_pdo = cursor.fetchone()
+                pdo_idauto = row_pdo[0] if row_pdo else None
+            total_registros = len(universo)
+            con_movimiento = 0
             procesados = 0
-            
-            for (uo, dep, item), datos in balance_existencias.items():
-                # Calcular saldo físico
-                entradas = datos['compras'] + datos['cargos'] + datos['notas_entrega_prov'] + datos['dev_ventas'] + datos['ajustes_mas'] + datos['trans_mas']
-                salidas = datos['ventas'] + datos['descargos'] + datos['notas_entrega_cli'] + datos['dev_compras'] + datos['ajustes_menos'] + datos['trans_menos']
-                saldo_final = entradas - salidas
-                
-                # Obtener costo fiscal desde ark_costos
+            for (uo, dep, item), exa_real in universo.items():
+                datos = balance_movimientos.get((uo, dep, item))
+                if datos:
+                    con_movimiento += 1
+                    valores_mov = (
+                        formato_cantidad(datos['compras']), formato_cantidad(datos['cargos']),
+                        formato_cantidad(datos['notas_entrega_prov']), formato_cantidad(datos['dev_ventas']),
+                        formato_cantidad(datos['ajustes_mas']), formato_cantidad(datos['ajustes_menos']),
+                        formato_cantidad(datos['trans_mas']), formato_cantidad(datos['trans_menos']),
+                        formato_cantidad(datos['ventas']), formato_cantidad(datos['descargos']),
+                        formato_cantidad(datos['notas_entrega_cli']), formato_cantidad(datos['dev_compras'])
+                    )
+                else:
+                    valores_mov = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
                 costo_local, costo_referencial, factor = self._obtener_costo_fiscal(
                     cursor, item, fecha_desde_sql, fecha_hasta_sql
                 )
-
+                final_mayor = exa_real if exa_real >= 0.0 else 0.0
+                final_menor = exa_real if exa_real < 0.0 else 0.0
                 cursor.execute("""
                     INSERT OR REPLACE INTO ark_existencia_calculadas (
-                        exc_uo_Codigo, exc_dep_codigo, exc_item_codigo, exc_inicial, 
+                        exc_pdo_idauto, exc_fecha_desde, exc_fecha_hasta,
+                        exc_uo_Codigo, exc_dep_codigo, exc_item_codigo, exc_inicial,
                         exc_costos_local, exc_costos_referencial, exc_factor_referencial,
-                        exc_compras, exc_cargos, exc_nota_entrega_proveedor, exc_dev_ventas, 
+                        exc_compras, exc_cargos, exc_nota_entrega_proveedor, exc_dev_ventas,
                         exc_ajustes_mas, exc_ajustes_menos, exc_transferencias_mas, exc_transferencias_menos,
                         exc_ventas, exc_descargos, exc_nota_entrega_clientes, exc_dev_compras,
-                        exc_final, exc_SystemDate, exc_SystemTime, exc_NameMachine, exc_UserCreator
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        exc_final, exc_final_mayor, exc_final_menor,
+                        exc_inicial_estimado, exc_ajuste_requerido, exc_correcciones,
+                        exc_SystemDate, exc_SystemTime, exc_NameMachine, exc_UserCreator
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
+                    pdo_idauto, fecha_desde_sql, fecha_hasta_sql,
                     uo, dep, item, 0.0,
                     formato_monto(costo_local), formato_monto(costo_referencial), formato_monto(factor),
-                    formato_cantidad(datos['compras']), formato_cantidad(datos['cargos']), 
-                    formato_cantidad(datos['notas_entrega_prov']), formato_cantidad(datos['dev_ventas']),
-                    formato_cantidad(datos['ajustes_mas']), formato_cantidad(datos['ajustes_menos']),
-                    formato_cantidad(datos['trans_mas']), formato_cantidad(datos['trans_menos']),
-                    formato_cantidad(datos['ventas']), formato_cantidad(datos['descargos']), 
-                    formato_cantidad(datos['notas_entrega_cli']), formato_cantidad(datos['dev_compras']),
-                    formato_cantidad(saldo_final), fecha_hoy, hora_hoy, maquina, usuario
+                    valores_mov[0], valores_mov[1], valores_mov[2], valores_mov[3],
+                    valores_mov[4], valores_mov[5], valores_mov[6], valores_mov[7],
+                    valores_mov[8], valores_mov[9], valores_mov[10], valores_mov[11],
+                    formato_cantidad(exa_real), formato_cantidad(final_mayor), formato_cantidad(final_menor),
+                    0.0, 0.0, 0.0,
+                    fecha_hoy, hora_hoy, maquina, usuario
                 ))
-                
                 procesados += 1
                 if procesados % 50 == 0:
                     porcentaje = 60 + int((procesados / total_registros) * 40)
                     self.progress_bar['value'] = porcentaje
                     self.progress_lbl.config(text=f"Guardando resultados: {procesados}/{total_registros}")
                     self.update()
-
             conn.commit()
             conn.close()
             self.config(cursor="")
-            messagebox.showinfo("Éxito", f"Cálculo preliminar finalizado.\nSe procesaron {total_registros} combinaciones únicas.")
+            messagebox.showinfo("Éxito", f"Cálculo preliminar finalizado.\nUniverso procesado: {total_registros} combinaciones.\nCon movimientos: {con_movimiento}.\nSin movimientos: {total_registros - con_movimiento}.")
             self.destroy()
-
         except Exception as e:
             self.config(cursor="")
             self.progress_bar['value'] = 0

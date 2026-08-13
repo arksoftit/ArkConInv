@@ -466,44 +466,110 @@ class DialogCalculoExistencia(tk.Toplevel):
             try:
                 conn = get_db_connection()
                 cursor = conn.cursor()
+
+                cursor.execute("""
+                    SELECT exc_pdo_idauto, exc_fecha_desde, exc_fecha_hasta 
+                    FROM ark_existencia_calculadas 
+                    LIMIT 1
+                """)
+                row_meta = cursor.fetchone()
+
+                if not row_meta or not row_meta[0]:
+                    messagebox.showerror("Error", "No se encontró un período fiscal válido en ark_existencia_calculadas.")
+                    conn.close()
+                    return
+
+                periodo_id, fecha_desde, fecha_hasta = row_meta
+
                 usuario = get_current_user()
                 maquina = get_machine_name()
                 fecha_hoy = datetime.now().strftime("%Y-%m-%d")
                 hora_hoy = datetime.now().strftime("%H:%M:%S")
 
-                for i, res in enumerate(self._resultados_originales.values()):
-                    inicial_a_guardar = res.get('inicial_simulado', res.get('saldo_inicial_calculado', 0.0))
-                    cursor.execute("""
-                        INSERT OR REPLACE INTO ark_existencia_periodo (
-                            exp_uo_Codigo, exp_dep_codigo, exp_item_codigo,
-                            exp_costos_local, exp_costos_referencial, exp_factor_referencial,
-                            exp_inicial, exp_op_entradas, exp_op_salidas,
-                            exp_cant_entradas, exp_cant_salidas, exp_final,
-                            exp_fecha_ini, exp_fecha_fin,
-                            exp_SystemDate, exp_SystemTime, exp_NameMachine, exp_UserCreator
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        res.get('uo_codigo'),
-                        res.get('deposito_codigo'),
-                        res.get('codigo_producto'),
-                        res.get('costo_local', 0.0),
-                        res.get('costo_referencial', 0.0),
-                        res.get('factor', 1.0),
-                        inicial_a_guardar,
-                        res.get('entradas', 0.0) * res.get('costo_local', 0.0),
-                        res.get('salidas', 0.0) * res.get('costo_local', 0.0),
-                        res.get('entradas', 0.0),
-                        res.get('salidas', 0.0),
-                        res.get('existencia_actual', 0.0),
-                        fecha_hoy, fecha_hoy,
-                        fecha_hoy, hora_hoy, maquina, usuario
-                    ))
-                    if i % 100 == 0:
-                        conn.commit()
+                cursor.execute("DELETE FROM ark_existencia_periodo WHERE exp_pdo_id = ?", (periodo_id,))
 
+                sql_insert = """
+                    INSERT INTO ark_existencia_periodo (
+                        exp_pdo_id, exp_uo_Codigo, exp_dep_codigo, exp_item_codigo,
+                        exp_descripcion, exp_unidad, exp_inicial, exp_cant_entradas,
+                        exp_cant_salidas, exp_calculada, exp_sistema, exp_diferencia,
+                        exp_costo_local, exp_costo_referencial, exp_factor_referencial,
+                        exp_valor_inicial_local, exp_valor_inicial_ref,
+                        exp_valor_final_local, exp_valor_final_ref,
+                        exp_es_negativo, exp_tiene_diferencia, exp_requiere_ajuste,
+                        exp_fecha_ini, exp_fecha_fin,
+                        exp_SystemDate, exp_SystemTime, exp_NameMachine, exp_UserCreator
+                    ) VALUES (
+                        ?, ?, ?, ?,
+                        ?, ?, ?, ?,
+                        ?, ?, ?, ?,
+                        ?, ?, ?,
+                        ?, ?,
+                        ?, ?,
+                        ?, ?, ?,
+                        ?, ?,
+                        ?, ?, ?, ?
+                    )
+                """
+
+                datos_a_insertar = []
+                for res in self._resultados_originales.values():
+                    inicial = float(res.get('inicial_simulado', res.get('saldo_inicial_calculado', 0.0)) or 0.0)
+                    entradas = float(res.get('entradas', 0.0) or 0.0)
+                    salidas = float(res.get('salidas', 0.0) or 0.0)
+                    calculada = float(res.get('final_simulado', inicial + entradas - salidas) or 0.0)
+                    sistema = float(res.get('existencia_actual', 0.0) or 0.0)
+                    diferencia = calculada - sistema
+
+                    costo_local = float(res.get('costo_local', 0.0) or 0.0)
+                    costo_ref = float(res.get('costo_referencial', 0.0) or 0.0)
+                    factor = float(res.get('factor', 1.0) or 1.0)
+
+                    val_ini_loc = inicial * costo_local
+                    val_ini_ref = inicial * costo_ref
+                    val_fin_loc = calculada * costo_local
+                    val_fin_ref = calculada * costo_ref
+
+                    es_neg = 1 if calculada < 0 else 0
+                    tiene_dif = 1 if abs(diferencia) > 0.0001 else 0
+                    req_ajuste = 1 if float(res.get('ajuste_requerido', 0.0) or 0.0) > 0 else 0
+
+                    datos_a_insertar.append((
+                        periodo_id,
+                        str(res.get('uo_codigo', '')),
+                        str(res.get('deposito_codigo', '')),
+                        str(res.get('codigo_producto', '')),
+                        str(res.get('descripcion_producto', '')),
+                        "UND",
+                        inicial,
+                        entradas,
+                        salidas,
+                        calculada,
+                        sistema,
+                        diferencia,
+                        costo_local,
+                        costo_ref,
+                        factor,
+                        val_ini_loc,
+                        val_ini_ref,
+                        val_fin_loc,
+                        val_fin_ref,
+                        es_neg,
+                        tiene_dif,
+                        req_ajuste,
+                        fecha_desde,
+                        fecha_hasta,
+                        fecha_hoy,
+                        hora_hoy,
+                        maquina,
+                        usuario
+                    ))
+
+                cursor.executemany(sql_insert, datos_a_insertar)
                 conn.commit()
                 conn.close()
-                messagebox.showinfo("Éxito", "Registros guardados exitosamente en ark_existencia_periodo.")
+
+                messagebox.showinfo("Éxito", f"Registros guardados exitosamente en ark_existencia_periodo para el período ID {periodo_id}.")
                 self.btn_guardar.config(state=tk.DISABLED)
 
             except Exception as e:

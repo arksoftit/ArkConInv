@@ -15,3 +15,5 @@ ArkConInvDB/database/arkconinv.db
 
 # Ignorar carpetas locales de logs de eventos
 logs/
+# Ignorar Archivos de inicio de entrenamiento
+Iniciar-Dev.ps1

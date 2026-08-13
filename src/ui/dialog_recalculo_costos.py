@@ -120,10 +120,7 @@ class DialogRecalculoCostos(tk.Toplevel):
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            cursor.execute("""
-                DELETE FROM ark_costos 
-                WHERE cts_periodo_desde = ? AND cts_periodo_hasta = ?
-            """, (fecha_desde_sql, fecha_hasta_sql))
+            cursor.execute("DELETE FROM ark_costos")
             
             query_compras = """
                 SELECT dtc_codigo, dtc_costo, dtc_cantidad, dtc_moneda, dtc_factorcambio, dtc_fechaoperacion
@@ -179,7 +176,7 @@ class DialogRecalculoCostos(tk.Toplevel):
             self.progress_bar['value'] = 70
             self.update()
 
-            cursor.execute("SELECT inv_codigo FROM ark_inventario WHERE inv_status = 1")
+            cursor.execute("SELECT mts_codigo FROM ark_maestro_inventario WHERE mts_status = 1")
             articulos = [row[0] for row in cursor.fetchall()]
             
             total_articulos = len(articulos)

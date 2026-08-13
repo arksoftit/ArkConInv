@@ -465,11 +465,10 @@ def importar_transacciones(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta
         # ---- SinvDep ----
         if "SinvDep" in tablas:
             resultado_invdep = importar_sinvdep(
-                uo_id, uo_codigo, deposito_id,
+                uo_id, uo_codigo,
                 dsn, usuario, password, callback_progreso
             )
-            print(f"[DEBUG] Llamada a importar_sinvdep con {len(locals())} argumentos")
-            resultados.append(resultado_invdep)
+        resultados.append(resultado_invdep)
 
         dbisam_conn.close()
         return f"Importación completada.\n" + "\n".join(resultados)
@@ -720,53 +719,37 @@ def importar_sdetalleinv(uo_id, uo_codigo, uo_nombre, fecha_desde, fecha_hasta, 
     except Exception as e:
         raise e
     
-def importar_sinvdep(uo_id, uo_codigo, deposito_filtro, dsn, user, pwd, callback_progreso=None):
+def importar_sinvdep(uo_id, uo_codigo, dsn, user, pwd, callback_progreso=None):
     sqlite_conn = None
-    sqlite_cursor = None  # <-- Inicializa explícitamente
+    sqlite_cursor = None
     try:
         conn_str = f"DSN={dsn};UID={user};PWD={pwd};"
         dbisam_conn = pyodbc.connect(conn_str, autocommit=True)
         cursor_dbisam = dbisam_conn.cursor()
-
-        query_dbisam = f"""
-            SELECT {', '.join(CAMPOS_SINVDEP)}
-            FROM SinvDep
-            WHERE FT_TIPO = 4
-        """
-        if deposito_filtro != 0:
-            query_dbisam += f" AND FT_CODIGODEPOSITO = {deposito_filtro}"
-
+        query_dbisam = f"SELECT {', '.join(CAMPOS_SINVDEP)} FROM SinvDep"
         cursor_dbisam.execute(query_dbisam)
         rows = cursor_dbisam.fetchall()
-        total = len(rows)
+        leidos = len(rows)
         dbisam_conn.close()
-
-        if total == 0:
-            return "Importación de existencia Actual: No se encontraron registros para el filtro seleccionado."
-
-        # --- Conexión SQLite ---
+        if leidos == 0:
+            return "Existencia Actual: No se encontraron registros en SinvDep de la Unidad Operativa seleccionada."
         sqlite_conn = get_db_connection()
         if sqlite_conn is None:
             raise RuntimeError("No se pudo establecer conexión con la base de datos SQLite.")
-        sqlite_cursor = sqlite_conn.cursor()  # <-- Ahora sí se asigna
-
-        # Limpiar antes de insertar
+        sqlite_cursor = sqlite_conn.cursor()
         sqlite_cursor.execute("DELETE FROM ark_existencia_actual WHERE exa_uo_Codigo = ?", (uo_codigo,))
-
         columnas_insert = [col for col in COLUMNAS_DESTINO_EXA if col != 'exa_idauto']
         placeholders = ', '.join(['?'] * len(columnas_insert))
         query_sqlite = f"INSERT INTO ark_existencia_actual ({', '.join(columnas_insert)}) VALUES ({placeholders})"
-
         user_creator = get_current_user()
         machine_name = get_machine_name()
         sys_date = date.today().isoformat()
         sys_time = datetime.now().strftime("%H:%M:%S")
         audit_values = [sys_date, sys_time, machine_name, user_creator, sys_date, sys_time, machine_name, user_creator]
-
+        insertados = 0
         for i, row in enumerate(rows):
             data = [uo_id, uo_codigo]
             for value in row:
-                # ... procesamiento de tipos ...
                 if isinstance(value, (bytes, bytearray)):
                     data.append(value.decode('utf-8', errors='replace'))
                 elif type(value).__name__ == 'Decimal':
@@ -781,20 +764,24 @@ def importar_sinvdep(uo_id, uo_codigo, deposito_filtro, dsn, user, pwd, callback
                     data.append(value)
             data.extend(audit_values)
             sqlite_cursor.execute(query_sqlite, data)
-
+            insertados += 1
+            if (i + 1) % 50 == 0 or i == leidos - 1:
+                porcentaje = int(((i + 1) / leidos) * 100)
+                if callback_progreso:
+                    callback_progreso(porcentaje, f"Importando existencia actual {i + 1} de {leidos}...")
         sqlite_conn.commit()
-        return f"Importación exitosa. Se procesaron {total} registros de existencia actual de la Unidad Operativa {uo_codigo}."
-
+        sqlite_cursor.close()
+        sqlite_conn.close()
+        return f"Existencia Actual UO {uo_codigo}: Registros leídos: {leidos} | Registros insertados: {insertados}."
     except Exception as e:
-        # Solo cierra si existen
         if sqlite_cursor is not None:
             try:
                 sqlite_cursor.close()
-            except:
+            except Exception:
                 pass
         if sqlite_conn is not None:
             try:
                 sqlite_conn.close()
-            except:
+            except Exception:
                 pass
-        raise e  # Relanza para que la UI lo capture
+        raise e

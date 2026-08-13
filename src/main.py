@@ -15,6 +15,7 @@ from db.embedded_db import init_database
 from ui.dialog_company import DialogCompany
 from ui.dialog_unds_operativas import DialogUndsOperativas
 from ui.dialog_users import DialogUsers
+from ui.dialog_calculo_periodos import DialogPeriodos
 from ui.dialog_depositos import DialogDeposito
 from ui.dialog_categoria import DialogCategoria
 from ui.dialog_inventario import DialogInventario
@@ -33,6 +34,7 @@ from ui.dialog_resumen_preliminar import DialogResumenPreliminar
 from ui.dialog_preliminar import DialogPreliminar
 from ui.dialog_recalculo_costos import DialogRecalculoCostos
 from ui.dialog_calculo_existencia import DialogCalculoExistencia
+from ui.dialog_consolidar_inventario import DialogConsolidarInventario
 from ui.dialog_reset_data import DialogResetData
 from ui.dialog_data_backup import DialogBackupRestore
 
@@ -82,8 +84,10 @@ class ArkConInvApp(tk.Tk):
 
         menu_transacciones = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Transacciones", menu=menu_transacciones)
-        # menu_transacciones.add_command(label="Preliminar", command=self._placeholder)
-        menu_transacciones.add_command(label="Preliminar", command=self._abrir_preliminar)
+        submenu_preliminares = tk.Menu(menu_transacciones, tearoff=0)
+        menu_transacciones.add_cascade(label="Preliminares", menu=submenu_preliminares)
+        submenu_preliminares.add_command(label="Preliminar de Inventario", command=self._abrir_preliminar)
+        submenu_preliminares.add_command(label="Consolidación de Inventario", command=self._abrir_consolidacion_inventario)
         menu_transacciones.add_command(label="Recalculo de costos", command=self._abrir_recalculo_costos)
         menu_transacciones.add_command(label="Cálculo de Existencias", command=self._abrir_calculo_existencia)
         menu_transacciones.add_command(label="Ajustes de Existencias", command=self._placeholder)
@@ -127,6 +131,7 @@ class ArkConInvApp(tk.Tk):
         menu_config.add_command(label="Unidad Operativa", command=self._abrir_unds_operativas)
         menu_config.add_command(label="Usuarios", command=self._abrir_dialogo_usuarios)
         menu_config.add_command(label="Conexiones ODBC", command=self._abrir_dialogo_conexiones)
+        menu_config.add_command(label="Periodos", command=self._abrir_dialogo_periodos)
         menu_config.add_separator()
         submenu_gestion_data = tk.Menu(menu_config, tearoff=0)
         menu_config.add_cascade(label="Gestión Base de Datos", menu=submenu_gestion_data)
@@ -257,12 +262,19 @@ class ArkConInvApp(tk.Tk):
     def _abrir_importar_transacciones(self):
         DialogImportTransacciones(self)
     
+    def _abrir_dialogo_periodos(self):
+        from ui.dialog_calculo_periodos import DialogPeriodos
+        DialogPeriodos(self)
+    
     def _abrir_gestor_data(self):   
         DialogBackupRestore(self)
         
     def _abrir_preliminar(self):
         DialogPreliminar(self)
-
+        
+    def _abrir_consolidacion_inventario(self):
+        DialogConsolidarInventario(self)
+        
     def _placeholder(self):
         messagebox.showinfo("Información", "Funcionalidad en desarrollo.")
     
