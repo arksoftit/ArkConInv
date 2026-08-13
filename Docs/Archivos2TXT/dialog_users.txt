@@ -7,7 +7,10 @@ import hashlib # Para encriptar la contraseña si es necesario
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.system_info import get_current_user, get_machine_name
+from datetime import datetime
 from db.embedded_db import get_db_connection
+from ui.dialog_main_browser import DialogMainBrowser
+
 
 class DialogUsers(tk.Toplevel):
     def __init__(self, parent):
@@ -120,28 +123,24 @@ class DialogUsers(tk.Toplevel):
                 messagebox.showwarning("Advertencia", "El campo 'Código' es obligatorio.")
                 return
 
-            # Validar que se haya seleccionado una empresa (opcional, si no es requerido dejar NULL)
             empresa_id = None
             empresa_seleccionada_idx = self.cmb_empresa.current()
-            if empresa_seleccionada_idx != -1: # Si se seleccionó algo
+            if empresa_seleccionada_idx != -1:
                 empresa_id = self.empresa_ids[empresa_seleccionada_idx]
 
             status = 1 if self.cmb_estado.get() == "Activo" else 0
-            rol_map = {"Administrador": "Admin", "Operador": "Oper", "Consulta": "Cons"} # Ajustar según tu esquema
-            rol = rol_map[self.cmb_rol.get()]
-            # Considerar encriptar la contraseña aquí si no lo haces en la base de datos
-            password_hash = hashlib.sha256(self.ent_password.get().encode()).hexdigest() if self.ent_password.get() else None
+            rol = self.cmb_rol.get()
 
             if messagebox.askyesno("Confirmar Guardado", "¿Guardar los datos del usuario?"):
                 conn = get_db_connection()
                 cursor = conn.cursor()
 
                 if self.current_id is None:
-                    # Insertar nuevo
+                    password_hash = hashlib.sha256(self.ent_password.get().encode()).hexdigest() if self.ent_password.get().strip() else None
                     cursor.execute("""
                         INSERT INTO ark_users (
                             usr_Codigo, usr_login, usr_Descripcion,
-                            usr_Status, usr_Telefono, usr_Rol, usr_Password, -- Añadido usr_Telefono
+                            usr_Status, usr_Telefono, usr_Rol, usr_Password,
                             id_company, usr_Cargo, usr_EmailUsuario,
                             usr_UserCreator, usr_NameMachine
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -150,52 +149,189 @@ class DialogUsers(tk.Toplevel):
                         self.ent_login.get().strip(),
                         self.ent_descripcion.get().strip(),
                         status,
-                        self.ent_telefono.get().strip(), # Nuevo campo
+                        self.ent_telefono.get().strip(),
                         rol,
-                        password_hash, # Guardar hash en lugar de texto plano
+                        password_hash,
                         empresa_id,
                         self.ent_cargo.get().strip(),
                         self.ent_email_usuario.get().strip(),
                         get_current_user(),
                         get_machine_name()
                     ))
-                    self.current_id = cursor.lastrowid
-                    messagebox.showinfo("Éxito", "Usuario guardado correctamente.")
-                    self._limpiar_campos()
                 else:
-                    # Actualizar existente (pendiente para ticket especial)
-                    # UPDATE query aquí si se implementa edición
-                    messagebox.showinfo("Info", "La edición de usuarios no está implementada aún.")
-                    conn.close()
-                    return
+                    now = datetime.now()
+                    if self.ent_password.get().strip():
+                        password_hash = hashlib.sha256(self.ent_password.get().encode()).hexdigest()
+                        cursor.execute("""
+                            UPDATE ark_users SET
+                                usr_Codigo = ?, usr_login = ?, usr_Descripcion = ?,
+                                usr_Status = ?, usr_Telefono = ?, usr_Cargo = ?,
+                                usr_Rol = ?, usr_EmailUsuario = ?, usr_Password = ?,
+                                id_company = ?,
+                                usr_LastUpdateDate = ?, usr_LastUpdateTime = ?,
+                                usr_LastMachine = ?, usr_UserLastUpdate = ?
+                            WHERE usr_IDauto = ?
+                        """, (
+                            self.ent_codigo.get().strip(),
+                            self.ent_login.get().strip(),
+                            self.ent_descripcion.get().strip(),
+                            status,
+                            self.ent_telefono.get().strip(),
+                            self.ent_cargo.get().strip(),
+                            rol,
+                            self.ent_email_usuario.get().strip(),
+                            password_hash,
+                            empresa_id,
+                            now.strftime("%Y-%m-%d"),
+                            now.strftime("%H:%M:%S"),
+                            get_machine_name(),
+                            get_current_user(),
+                            self.current_id
+                        ))
+                    else:
+                        cursor.execute("""
+                            UPDATE ark_users SET
+                                usr_Codigo = ?, usr_login = ?, usr_Descripcion = ?,
+                                usr_Status = ?, usr_Telefono = ?, usr_Cargo = ?,
+                                usr_Rol = ?, usr_EmailUsuario = ?,
+                                id_company = ?,
+                                usr_LastUpdateDate = ?, usr_LastUpdateTime = ?,
+                                usr_LastMachine = ?, usr_UserLastUpdate = ?
+                            WHERE usr_IDauto = ?
+                        """, (
+                            self.ent_codigo.get().strip(),
+                            self.ent_login.get().strip(),
+                            self.ent_descripcion.get().strip(),
+                            status,
+                            self.ent_telefono.get().strip(),
+                            self.ent_cargo.get().strip(),
+                            rol,
+                            self.ent_email_usuario.get().strip(),
+                            empresa_id,
+                            now.strftime("%Y-%m-%d"),
+                            now.strftime("%H:%M:%S"),
+                            get_machine_name(),
+                            get_current_user(),
+                            self.current_id
+                        ))
 
                 conn.commit()
                 conn.close()
-
+                messagebox.showinfo("Éxito", "Usuario guardado correctamente.")
+                self._limpiar_campos()
 
         except Exception as e:
             messagebox.showerror("Error en Guardar", f"{type(e).__name__}: {e}")
 
     def _editar(self):
         try:
-            messagebox.showinfo("Pendiente", "Funcionalidad de edición será implementada en ticket especial.")
+            config_users = {
+                'titulo': 'Seleccionar Usuario para Editar',
+                'tabla': 'ark_users',
+                'columnas': [
+                    ('Código', 'usr_Codigo', 100),
+                    ('Login', 'usr_login', 100),
+                    ('Descripción', 'usr_Descripcion', 300),
+                    ('Estado', 'usr_Status', 80)
+                ],
+                'campos_busqueda': [
+                    ('Código', 'usr_Codigo'),
+                    ('Login', 'usr_login'),
+                    ('Descripción', 'usr_Descripcion')
+                ],
+                'id_field': 'usr_IDauto',
+                'orden_por': 'usr_Codigo ASC'
+            }
+            dialog = DialogMainBrowser(self, config_users)
+            self.wait_window(dialog)
+            if dialog.resultado:
+                self.current_id = dialog.resultado['id']
+                self._cargar_datos(self.current_id)
         except Exception as e:
             messagebox.showerror("Error en Editar", f"{type(e).__name__}: {e}")
+            
+    def _cargar_datos(self, registro_id):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT usr_Codigo, usr_login, usr_Descripcion, usr_Status, 
+                       usr_Telefono, usr_Cargo, usr_Rol, usr_EmailUsuario, 
+                       id_company
+                FROM ark_users WHERE usr_IDauto = ?
+            """, (registro_id,))
+            row = cursor.fetchone()
+            conn.close()
+
+            if not row:
+                messagebox.showwarning("Advertencia", "Registro no encontrado.")
+                self._limpiar_campos()
+                self.current_id = None
+                return
+
+            self.ent_codigo.delete(0, tk.END)
+            self.ent_codigo.insert(0, row[0] or "")
+            
+            self.ent_login.delete(0, tk.END)
+            self.ent_login.insert(0, row[1] or "")
+            
+            self.ent_descripcion.delete(0, tk.END)
+            self.ent_descripcion.insert(0, row[2] or "")
+            
+            self.cmb_estado.set("Activo" if row[3] == 1 else "Inactivo")
+            
+            self.ent_telefono.delete(0, tk.END)
+            self.ent_telefono.insert(0, row[4] or "")
+            
+            self.ent_cargo.delete(0, tk.END)
+            self.ent_cargo.insert(0, row[5] or "")
+            
+            self.cmb_rol.set(row[6] if row[6] else "Consulta")
+            
+            self.ent_email_usuario.delete(0, tk.END)
+            self.ent_email_usuario.insert(0, row[7] or "")
+            
+            empresa_id = row[8]
+            if empresa_id in self.empresa_ids:
+                idx = self.empresa_ids.index(empresa_id)
+                self.cmb_empresa.current(idx)
+            else:
+                self.cmb_empresa.set('')
+
+        except Exception as e:
+            messagebox.showerror("Error al Cargar", f"{type(e).__name__}: {e}")
 
     def _borrar(self):
         try:
-            if self.current_id is None:
-                messagebox.showwarning("Advertencia", "No hay registro seleccionado para borrar.")
-                return
-            if messagebox.askyesno("Confirmar Borrado", "¿Eliminar este usuario? Esta acción no se puede deshacer."):
-                conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("DELETE FROM ark_users WHERE usr_IDauto = ?", (self.current_id,))
-                conn.commit()
-                conn.close()
-                messagebox.showinfo("Éxito", "Usuario eliminado.")
-                self._limpiar_campos()
-                self.current_id = None
+            config_users = {
+                'titulo': 'Seleccionar Usuario para Borrar',
+                'tabla': 'ark_users',
+                'columnas': [
+                    ('Código', 'usr_Codigo', 100),
+                    ('Login', 'usr_login', 100),
+                    ('Descripción', 'usr_Descripcion', 300),
+                    ('Estado', 'usr_Status', 80)
+                ],
+                'campos_busqueda': [
+                    ('Código', 'usr_Codigo'),
+                    ('Login', 'usr_login'),
+                    ('Descripción', 'usr_Descripcion')
+                ],
+                'id_field': 'usr_IDauto',
+                'orden_por': 'usr_Codigo ASC'
+            }
+            dialog = DialogMainBrowser(self, config_users)
+            self.wait_window(dialog)
+            if dialog.resultado:
+                registro_id = dialog.resultado['id']
+                if messagebox.askyesno("Confirmar Borrado", "¿Eliminar este usuario? Esta acción no se puede deshacer."):
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("DELETE FROM ark_users WHERE usr_IDauto = ?", (registro_id,))
+                    conn.commit()
+                    conn.close()
+                    messagebox.showinfo("Éxito", "Usuario eliminado correctamente.")
+                    self._limpiar_campos()
         except Exception as e:
             messagebox.showerror("Error en Borrar", f"{type(e).__name__}: {e}")
 
@@ -203,12 +339,13 @@ class DialogUsers(tk.Toplevel):
         try:
             if any([
                 self.ent_codigo.get(), self.ent_login.get(), self.ent_descripcion.get(),
-                self.ent_password.get(), self.ent_telefono.get(), # Añadido ent_telefono
+                self.ent_password.get(), self.ent_telefono.get(),
                 self.ent_cargo.get(), self.ent_email_usuario.get()
             ]):
                 if not messagebox.askyesno("Confirmar Cancelar", "¿Descartar todos los cambios?"):
                     return
             self._limpiar_campos()
+            self.current_id = None
         except Exception as e:
             messagebox.showerror("Error en Cancelar", f"{type(e).__name__}: {e}")
 

@@ -34,6 +34,7 @@ from ui.dialog_resumen_preliminar import DialogResumenPreliminar
 from ui.dialog_preliminar import DialogPreliminar
 from ui.dialog_recalculo_costos import DialogRecalculoCostos
 from ui.dialog_calculo_existencia import DialogCalculoExistencia
+from ui.dialog_consolidar_inventario import DialogConsolidarInventario
 from ui.dialog_reset_data import DialogResetData
 from ui.dialog_data_backup import DialogBackupRestore
 
@@ -83,8 +84,10 @@ class ArkConInvApp(tk.Tk):
 
         menu_transacciones = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Transacciones", menu=menu_transacciones)
-        # menu_transacciones.add_command(label="Preliminar", command=self._placeholder)
-        menu_transacciones.add_command(label="Preliminar", command=self._abrir_preliminar)
+        submenu_preliminares = tk.Menu(menu_transacciones, tearoff=0)
+        menu_transacciones.add_cascade(label="Preliminares", menu=submenu_preliminares)
+        submenu_preliminares.add_command(label="Preliminar de Inventario", command=self._abrir_preliminar)
+        submenu_preliminares.add_command(label="Consolidación de Inventario", command=self._abrir_consolidacion_inventario)
         menu_transacciones.add_command(label="Recalculo de costos", command=self._abrir_recalculo_costos)
         menu_transacciones.add_command(label="Cálculo de Existencias", command=self._abrir_calculo_existencia)
         menu_transacciones.add_command(label="Ajustes de Existencias", command=self._placeholder)
@@ -268,7 +271,10 @@ class ArkConInvApp(tk.Tk):
         
     def _abrir_preliminar(self):
         DialogPreliminar(self)
-
+        
+    def _abrir_consolidacion_inventario(self):
+        DialogConsolidarInventario(self)
+        
     def _placeholder(self):
         messagebox.showinfo("Información", "Funcionalidad en desarrollo.")
     
