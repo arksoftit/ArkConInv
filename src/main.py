@@ -1,7 +1,7 @@
 # ArkConInv - Consolidación de Inventario
 # Desarrollado por Juan E. Páez M. (JUEPAE)
 # Fecha: Junio 2026
-# Version: 0.1.01.22Beta
+# Version: 0.1.02.24Beta
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
@@ -99,7 +99,6 @@ class ArkConInvApp(tk.Tk):
         menu_importaciones.add_command(label="Importar Depósitos", command=self._abrir_importar_depositos)
         menu_importaciones.add_command(label="Importar Categorías", command=self._abrir_importar_categorias)
         menu_importaciones.add_command(label="Importar Inventario", command=self._abrir_importar_inventario)
-        # menu_importaciones.add_command(label="Importar Existencia Actual", command=self._abrir_importar_existencia_actual)
         menu_importaciones.add_command(label="Importar Transacciones", command=self._abrir_importar_transacciones)
 
         # --- MENÚ REPORTES ---
@@ -211,10 +210,10 @@ class ArkConInvApp(tk.Tk):
 
     def mostrar_acerca(self):
         info_acerca = (
-            "ArkConInv v0.1.01.22Beta\n\n"
+            "ArkConInv v0.1.02.24Beta\n\n"
             "Desarrollado por Juan E. Páez M.\n"
             "JUEPAE\n"
-            "Fecha: Junio 2026\n\n"
+            "Fecha: Agosto 2026\n\n"
             "Consolidación de Inventario"
         )
         messagebox.showinfo("Acerca de ArkConInv", info_acerca)

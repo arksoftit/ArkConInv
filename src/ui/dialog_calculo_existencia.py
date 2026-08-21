@@ -389,8 +389,10 @@ class DialogCalculoExistencia(tk.Toplevel):
                     si_teorico = exa_actual - entradas + salidas
                     ajuste_inicial = max(0.0, -si_teorico)
                     inicial_simulado = si_teorico + ajuste_inicial
-                    final_simulado = inicial_simulado - entradas + salidas
-                    ajuste_total = max(0.0, -si_teorico, -final_simulado)
+                    # final_simulado = inicial_simulado - entradas + salidas
+                    # ajuste_total = max(0.0, -si_teorico, -final_simulado)
+                    final_simulado = inicial_simulado + entradas - salidas
+                    ajuste_total = max(0.0, -si_teorico)
 
                     res['saldo_inicial_calculado'] = si_teorico
                     res['inicial_simulado'] = inicial_simulado

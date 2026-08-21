@@ -95,17 +95,7 @@ class DialogCompany(tk.Toplevel):
         self.cmb_mesfin = ttk.Combobox(frame_periodo, values=meses, state="readonly", width=10)
         self.cmb_mesfin.grid(row=1, column=3, padx=(0,5), pady=2, sticky="ew")
         self.cmb_mesfin.set("Diciembre")
-
-       # --- Fila 2: Inventario Declarado ---
-        ttk.Label(frame_periodo, text="Inventario Declarado:").grid(row=2, column=0, sticky="w", pady=2)
-        self.ent_inventario = ttk.Entry(frame_periodo, width=16)
-        self.ent_inventario.grid(row=2, column=1, padx=5, pady=2, sticky="ew")
-        self.ent_inventario.insert(0, "0,00")
-
-        # Formato automático mientras escribe
-        # self.ent_inventario.bind("<KeyRelease>", self._format_money)
-        self.ent_inventario.bind("<FocusOut>", self._format_money)
-
+        
         # --- Fin Frame Periodo Fiscal ---
 
         ttk.Label(frame_general, text="Estado:").grid(row=3, column=0, sticky="w", pady=3)
@@ -123,11 +113,11 @@ class DialogCompany(tk.Toplevel):
         frame_direc.grid(row=1, column=0, sticky="ew", pady=(0, 8))
 
         ttk.Label(frame_direc, text="Dirección Fiscal:").grid(row=0, column=0, sticky="w", pady=3)
-        self.ent_dir_fiscal = ttk.Entry(frame_direc, width=50)
+        self.ent_dir_fiscal = ttk.Entry(frame_direc, width=60)
         self.ent_dir_fiscal.grid(row=0, column=1, columnspan=2, padx=5, pady=3, sticky="ew")
 
         ttk.Label(frame_direc, text="Dirección Local:").grid(row=1, column=0, sticky="w", pady=3)
-        self.ent_dir_local = ttk.Entry(frame_direc, width=50)
+        self.ent_dir_local = ttk.Entry(frame_direc, width=60)
         self.ent_dir_local.grid(row=1, column=1, columnspan=2, padx=5, pady=3, sticky="ew")
 
         ttk.Label(frame_direc, text="Teléfono Ppal.:").grid(row=2, column=0, sticky="w", pady=3)
@@ -173,55 +163,8 @@ class DialogCompany(tk.Toplevel):
         ttk.Button(btn_frame, text="Borrar", command=self._borrar).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Cancelar", command=self._cancelar).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="Salir", command=self._salir).pack(side=tk.RIGHT, padx=5) # Puede ser LEFT también si se prefiere
-    
-    def _format_money(self, event=None):
-        """Formatea el monto solo cuando el campo pierde el foco"""
-        widget = event.widget if event else self.ent_inventario
-        text = widget.get()
+            
         
-        # Limpiar caracteres no numéricos
-        clean = ''.join(c for c in text if c.isdigit() or c == ',')
-        
-        # Si está vacío o solo coma, poner 0,00
-        if not clean or clean == ',':
-            widget.delete(0, tk.END)
-            widget.insert(0, "0,00")
-            return
-        
-        # Separar enteros y decimales
-        if ',' in clean:
-            parts = clean.split(',')
-            integer_part = parts[0] if parts[0] else '0'
-            decimal_part = parts[1][:2] if len(parts) > 1 else '00'
-        else:
-            integer_part = clean
-            decimal_part = '00'
-        
-        # Formatear con puntos de miles
-        formatted_integer = ''
-        for i, char in enumerate(reversed(integer_part)):
-            if i > 0 and i % 3 == 0:
-                formatted_integer = '.' + formatted_integer
-            formatted_integer = char + formatted_integer
-        
-        formatted = f"{formatted_integer},{decimal_part}"
-        
-        # Actualizar solo si cambió
-        if formatted != text:
-            widget.delete(0, tk.END)
-            widget.insert(0, formatted)
-
-    def get_inventario(self):
-        """Obtener valor numérico para guardar en BD"""
-        text = self.ent_inventario.get()
-        # Eliminar puntos y cambiar coma por punto
-        clean = text.replace('.', '').replace(',', '.')
-        try:
-            return float(clean)
-        except:
-            return 0.0
-
-
     def _guardar(self):
         try:
             if not self.ent_codigo.get().strip():
@@ -278,7 +221,6 @@ class DialogCompany(tk.Toplevel):
                             com_TelefonoContacto = ?, com_EmailContacto = ?,
                             com_Dia_Inicio_Fiscal = ?, com_Mes_Inicio_Fiscal = ?, 
                             com_Dia_Fin_Fiscal = ?, com_Mes_Fin_Fiscal = ?,
-                            com_InvDeclarado = ?,
                             com_LastUpdateDate = ?, com_LastUpdateTime = ?, 
                             com_LastMachine = ?, com_UserLastUpdate = ?
                         WHERE com_IDauto = ?
@@ -301,7 +243,6 @@ class DialogCompany(tk.Toplevel):
                         self.cmb_mesini.get() if self.cmb_mesini.get() else None,
                         int(self.cmb_diafin.get()) if self.cmb_diafin.get() else None,
                         self.cmb_mesfin.get() if self.cmb_mesfin.get() else None,
-                        self.get_inventario(),
                         now.strftime("%Y-%m-%d"),
                         now.strftime("%H:%M:%S"),
                         get_machine_name(),
@@ -354,7 +295,7 @@ class DialogCompany(tk.Toplevel):
                        com_Telefono1, com_Telefono2, com_EmailEmpresa, 
                        com_Representante, com_Id_Representante, com_TelefonoContacto, 
                        com_EmailContacto, com_Dia_Inicio_Fiscal, com_Mes_Inicio_Fiscal, 
-                       com_Dia_Fin_Fiscal, com_Mes_Fin_Fiscal, com_InvDeclarado
+                       com_Dia_Fin_Fiscal, com_Mes_Fin_Fiscal 
                 FROM ark_company WHERE com_IDauto = ?
             """, (registro_id,))
             row = cursor.fetchone()
@@ -410,17 +351,7 @@ class DialogCompany(tk.Toplevel):
             if row[14]: self.cmb_diaini.set(f"{int(row[14]):02d}")
             if row[15]: self.cmb_mesini.set(row[15])
             if row[16]: self.cmb_diafin.set(f"{int(row[16]):02d}")
-            if row[17]: self.cmb_mesfin.set(row[17])
-            
-            if row[18] is not None:
-                valor = float(row[18])
-                parte_entera = f"{int(valor):,}".replace(",", ".")
-                parte_decimal = f"{int(round((valor - int(valor)) * 100)):02d}"
-                self.ent_inventario.delete(0, tk.END)
-                self.ent_inventario.insert(0, f"{parte_entera},{parte_decimal}")
-            else:
-                self.ent_inventario.delete(0, tk.END)
-                self.ent_inventario.insert(0, "0,00")
+            if row[17]: self.cmb_mesfin.set(row[17])     
 
         except Exception as e:
             messagebox.showerror("Error al Cargar", f"{type(e).__name__}: {e}")
